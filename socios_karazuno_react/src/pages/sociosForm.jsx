@@ -1,6 +1,5 @@
 import React from "react";
-function sociosForm() {
+function SociosForm() {
   return <div>socios Form</div>;
 }
-export default sociosForm;
-    
+export default SociosForm;

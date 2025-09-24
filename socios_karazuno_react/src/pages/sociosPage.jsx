@@ -1,6 +1,5 @@
 import React from "react";
-function sociosPage() {
-  return <div>Hola socios</div>;
+function SociosPage() {
+  return <div><h1>Hola socios</h1><p>Bienvenidos a la página de socios</p></div>;
 }
-export default sociosPage;
-    
+export default SociosPage;

@@ -1,0 +1,25 @@
+from django.urls import path, include
+from rest_framework import routers
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+    SpectacularRedocView,
+)
+
+from socios import views
+
+router = routers.DefaultRouter()
+router.register(r'socios', views.SocioViewSet, 'socios')
+
+urlpatterns = [
+    path('api/v1/', include(router.urls)),
+
+    # Endpoint que genera el esquema OpenAPI en JSON
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+
+    # Documentación interactiva con Swagger
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+
+    # Documentación alternativa con Redoc
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+]

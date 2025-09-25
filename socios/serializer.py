@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from .models import Socio
-class SocioSerializer(serializers.ModelSerializer):
+from .models import Usuario
+class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Socio 
+        model = Usuario
         fields = '__all__'

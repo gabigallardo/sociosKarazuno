@@ -65,3 +65,6 @@ django_crud_api/__pycache__/
 django_crud_api/settings.py
 socios/__pycache__/
 socios/migrations/__pycache__/
+django_crud_api/__pycache__/
+/django_crud_api/__pycache__
+/socios/migrations/__pycache__

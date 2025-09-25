@@ -9,7 +9,7 @@ from drf_spectacular.views import (
 from socios import views
 
 router = routers.DefaultRouter()
-router.register(r'socios', views.SocioViewSet, 'socios')
+router.register(r'usuarios', views.UsuarioViewSet, 'usuarios')
 
 urlpatterns = [
     path('api/v1/', include(router.urls)),

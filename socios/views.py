@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from .models import Socio
-from .serializer import SocioSerializer
+from .models import Usuario, Rol, NivelSocio, UsuarioRol, SocioInfo, Disciplina
+from .serializer import UsuarioSerializer
 
 # Create your views here.
-class SocioViewSet(viewsets.ModelViewSet):
-    queryset = Socio.objects.all()
-    serializer_class = SocioSerializer
+class UsuarioViewSet(viewsets.ModelViewSet):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
      

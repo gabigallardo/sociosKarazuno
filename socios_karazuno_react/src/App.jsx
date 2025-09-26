@@ -10,7 +10,7 @@ function App() {
         <Route path="/form" element={<SociosForm />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
 export default App  

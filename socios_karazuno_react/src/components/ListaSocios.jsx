@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSocios } from "../api/socios.api";
-
+import { TarjetaLista } from "./TarjetaLista";
 export default function ListaSocios() {
   const [socios, setSocios] = useState([]);
 
@@ -19,16 +19,17 @@ export default function ListaSocios() {
 
 return (
   <div>
+    <h2>Lista de Socios</h2>
     {socios.length === 0 ? (
       <p>No hay socios para mostrar</p>
     ) : (
       socios.map((socio) => (
-        <div key={socio.id}>
-          {socio.nombre} {socio.apellido}
-        </div>
+        <TarjetaLista key={socio.id} socio={socio} />
       ))
     )}
   </div>
 );
 
 }
+
+

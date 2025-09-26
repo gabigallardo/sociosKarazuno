@@ -1,5 +1,6 @@
 import React from "react";
+import ListaSocios from "../components/ListaSocios.jsx";
 function SociosPage() {
-  return <div><h1>Hola socios</h1><p>Bienvenidos a la página de socios</p></div>;
+  return <ListaSocios />;
 }
 export default SociosPage;

@@ -17,6 +17,11 @@ export const getAllUsuarios = async () => {
   }
 };
 
+export const getUsuarioById = async (id) => {
+  const res = await usuariosApi.get(`/${id}/`);
+  return res.data;
+};
+
 export const createUsuario = async (usuarioData) => {
   try {
     const response = await usuariosApi.post("/", usuarioData);

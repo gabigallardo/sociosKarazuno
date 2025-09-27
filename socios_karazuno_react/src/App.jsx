@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom' 
 import SociosPage from './pages/SociosPage.jsx'
 import SociosForm from './pages/SociosForm.jsx'
+import UsuariosPage from './pages/usuariosPage.jsx'
+import RolesPage from './pages/rolesPage.jsx'
 import './index.css' 
 import { Navigation } from './components/navigation.jsx'
 function App() {
@@ -11,6 +13,8 @@ function App() {
         <Route path="/" element={<Navigate to="/socios" />} />
         <Route path="/socios" element={<SociosPage />} />
         <Route path="/form" element={<SociosForm />} />
+        <Route path="/usuarios" element={<UsuariosPage />} />
+        <Route path="/roles" element={<RolesPage />} />
       </Routes>
     </BrowserRouter>
   );

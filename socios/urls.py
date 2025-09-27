@@ -10,6 +10,7 @@ from socios import views
 
 router = routers.DefaultRouter()
 router.register(r'usuarios', views.UsuarioViewSet, 'usuarios')
+router.register(r'roles', views.RolesViewSet, 'roles')
 
 urlpatterns = [
     path('api/v1/', include(router.urls)),

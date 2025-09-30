@@ -3,6 +3,7 @@ import { createEvento } from "../../api/eventos.api";
 import EventosForm from "../../features/eventos/eventosForm";
 import { useNavigate } from "react-router-dom";
 import { getAllUsuarios } from "../../api/usuarios.api";
+import { FaCalendarPlus } from "react-icons/fa";
 
 export default function EventosCreatePage() {
   const [usuarios, setUsuarios] = useState([]);
@@ -22,8 +23,7 @@ export default function EventosCreatePage() {
 
   const handleCreate = async (data) => {
     try {
-      console.log("Enviando datos:", data); // 👈 verifica
-
+      console.log("Enviando datos:", data);
       await createEvento(data);
       navigate("/eventos");
     } catch (error) {
@@ -32,8 +32,12 @@ export default function EventosCreatePage() {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl mb-4">Crear Evento</h1>
+    <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-100">
+      <h1 className="text-3xl font-extrabold text-red-700 mb-6 flex items-center gap-3 border-b pb-4">
+        <FaCalendarPlus className="text-3xl"/>
+        Crear Nuevo Evento
+      </h1>
+      
       <EventosForm onSubmit={handleCreate} usuarios={usuarios} />
     </div>
   );

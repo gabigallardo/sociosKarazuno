@@ -33,8 +33,20 @@ class LoginView(APIView):
 
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
-        return Response({"token": token, "usuario": {"nombre": usuario.nombre, "apellido": usuario.apellido, "email": usuario.email}})
-
+        return Response({
+            "token": token, 
+            "usuario": {
+                "id": usuario.id,
+                "nombre": usuario.nombre, 
+                "apellido": usuario.apellido, 
+                "email": usuario.email,
+                "nro_documento": usuario.nro_documento,
+                "fecha_nacimiento": usuario.fecha_nacimiento, # Django devuelve objetos Date, asegúrate de que se serialice bien
+                "sexo": usuario.sexo,
+                "foto_url": usuario.foto_url,
+                "qr_token": usuario.qr_token, # Importante para la credencial
+            }
+        })
 
 class RegisterView(APIView):
     def post(self, request):

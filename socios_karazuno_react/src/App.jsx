@@ -14,30 +14,42 @@ import "./index.css";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { UserProviderWrapper } from "./contexts/User.Context.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx"; 
+
 
 function App() {
   return (
     <UserProviderWrapper>
       <BrowserRouter>
         <Routes>
+          {/* ----------------------------------------------------- */}
+          {/* RUTAS PÚBLICAS (Accesibles sin estar logueado) */}
+          {/* ----------------------------------------------------- */}
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/socios" element={<SociosPage />} />
-          <Route path="/form" element={<SociosForm />} />
-          <Route path="/usuarios" element={<UsuariosPage />} />
-          <Route path="/usuarios/crear" element={<UsuariosCreatePage />} />
-          <Route path="/usuarios/editar/:id" element={<UsuariosEditarPage />} />
-          <Route path="/usuarios/:id" element={<UsuarioIdPage />} />
-          <Route path="/roles" element={<RolesPage />} />
-          <Route path="/eventos" element={<EventosPage />} />
-          <Route path="/eventos/crear" element={<EventosCreatePage />} />
-          <Route path="/eventos/editar/:id" element={<EventosEditarPage />} />
-          <Route path="/eventos/:id" element={<EventosIdPage />} />
+
+          {/* ----------------------------------------------------- */}
+          {/* RUTAS PROTEGIDAS*/}
+          {/* ----------------------------------------------------- */}
+          {/* Usa <ProtectedRoute> para todas las demás rutas */}
+          <Route path="/socios" element={<ProtectedRoute element={<SociosPage />} />} />
+          <Route path="/form" element={<ProtectedRoute element={<SociosForm />} />} />
+          <Route path="/usuarios" element={<ProtectedRoute element={<UsuariosPage />} />} />
+          <Route path="/usuarios/crear" element={<ProtectedRoute element={<UsuariosCreatePage />} />} />
+          <Route path="/usuarios/editar/:id" element={<ProtectedRoute element={<UsuariosEditarPage />} />} />
+          <Route path="/usuarios/:id" element={<ProtectedRoute element={<UsuarioIdPage />} />} />
+          <Route path="/roles" element={<ProtectedRoute element={<RolesPage />} />} />
+          <Route path="/eventos" element={<ProtectedRoute element={<EventosPage />} />} />
+          <Route path="/eventos/crear" element={<ProtectedRoute element={<EventosCreatePage />} />} />
+          <Route path="/eventos/editar/:id" element={<ProtectedRoute element={<EventosEditarPage />} />} />
+          <Route path="/eventos/:id" element={<ProtectedRoute element={<EventosIdPage />} />} />
+
         </Routes>
       </BrowserRouter>
     </UserProviderWrapper>
   );
 }
+
 
 export default App;

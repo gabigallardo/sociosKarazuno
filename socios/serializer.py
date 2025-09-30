@@ -38,6 +38,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 # Agregar un serializador para el modelo Evento
 from .models import Evento
 class EventoSerializer(serializers.ModelSerializer):
+    organizador = UsuarioSerializer(read_only=True)
     class Meta:
         model = Evento
         fields = '__all__'

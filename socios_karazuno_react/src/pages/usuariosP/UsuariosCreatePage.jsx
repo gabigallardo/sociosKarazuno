@@ -1,5 +1,5 @@
-import { createUsuario } from "../api/usuarios.api";
-import UsuariosForm from "../features/usuarios/usuariosForm";
+import { createUsuario } from "../../api/usuarios.api";
+import UsuariosForm from "../../features/usuarios/usuariosForm";
 import { useNavigate } from "react-router-dom";
 
 export default function UsuariosCreatePage() {

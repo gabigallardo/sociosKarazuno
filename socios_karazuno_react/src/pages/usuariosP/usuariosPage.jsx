@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import {getAllUsuarios, deleteUsuario,} from "../api/usuarios.api";
+import {getAllUsuarios, deleteUsuario,} from "../../api/usuarios.api";
 import { useNavigate } from "react-router-dom";
-import UsuariosList from "../features/usuarios/listaUsuarios";
+import UsuariosList from "../../features/usuarios/listaUsuarios";
 
 export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState([]);

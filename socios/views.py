@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 from .models import Usuario, Rol
-from .serializer import UsuarioSerializer, RolSerializer, RegisterSerializer
+from .serializer import UsuarioSerializer, EventoSerializer, RolSerializer, RegisterSerializer
 import jwt
 from datetime import datetime, timedelta
 from django.conf import settings
@@ -53,3 +53,8 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 class RolesViewSet(viewsets.ModelViewSet):
     queryset = Rol.objects.all()
     serializer_class = RolSerializer
+
+class EventoViewSet(viewsets.ModelViewSet):
+    from .models import Evento
+    queryset = Evento.objects.all()
+    serializer_class = EventoSerializer

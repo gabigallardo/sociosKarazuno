@@ -35,3 +35,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         return usuario
 
+# Agregar un serializador para el modelo Evento
+from .models import Evento
+class EventoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Evento
+        fields = '__all__'

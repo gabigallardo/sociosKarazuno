@@ -12,6 +12,7 @@ from socios.views import LoginView, RegisterView
 router = routers.DefaultRouter()
 router.register(r'usuarios', views.UsuarioViewSet, 'usuarios')
 router.register(r'roles', views.RolesViewSet, 'roles')
+router.register(r'eventos', views.EventoViewSet, 'eventos')
 
 urlpatterns = [
     path('api/v1/', include(router.urls)),

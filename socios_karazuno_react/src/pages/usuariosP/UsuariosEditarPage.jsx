@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getUsuarioById, updateUsuario } from "../api/usuarios.api";
-import UsuariosForm from "../features/usuarios/usuariosForm";
+import { getUsuarioById, updateUsuario } from "../../api/usuarios.api";
+import UsuariosForm from "../../features/usuarios/usuariosForm";
 import { useParams, useNavigate } from "react-router-dom";
 
 export default function UsuariosEditarPage() {

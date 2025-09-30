@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getUsuarioById } from "../api/usuarios.api";
+import { getUsuarioById } from "../../api/usuarios.api";
 import { useParams, useNavigate } from "react-router-dom";
 
 export default function UsuarioIdPage() {

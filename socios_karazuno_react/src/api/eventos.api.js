@@ -13,8 +13,17 @@ export const getAllEventos = async () => {
 };
 
 export const getEventoById = async (id) => {
-  const response = await eventosApi.get(`/${id}/`);
-  return response.data;
+  try {
+    const response = await eventosApi.get(`/${id}/`);
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      console.error(`Evento con ID ${id} no encontrado.`);
+      return null;
+    }
+    console.error("Error fetching evento by ID:", error);
+    throw error;
+  }
 };
 
 export const createEvento = async (eventoData) => {

@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import { UserContext } from "../contexts/User.Context.jsx";
 import { QRCodeCanvas } from "qrcode.react";
 import { FaFileDownload } from "react-icons/fa"; 
+import patternImg from '../assets/pattern.jpg'; 
 
 function SociosPage() {
   const { user } = useContext(UserContext);
@@ -42,11 +43,11 @@ function SociosPage() {
         
         {/* -------- CREDENCIAL (ORDEN DE LA IMAGEN DE BLOQUES) -------- */}
         <section 
-          className="bg-gradient-to-br from-red-700 to-red-500 text-white p-6 rounded-3xl shadow-2xl transition duration-300 transform hover:scale-[1.03] hover:shadow-red-900/50 relative overflow-hidden flex flex-col"
+          className="bg-gradient-to-br from-red-800 via-red-700 to-black text-white p-6 rounded-3xl shadow-2xl transition duration-300 transform hover:scale-[1.03] hover:shadow-red-900/50 relative overflow-hidden flex flex-col"
           style={{ height: '450px' }} // Altura fija para evitar el corte y forzar el diseño 2x3
         >
           {/* Fondo estético */}
-          <div className="absolute inset-0 opacity-10 bg-repeat bg-center" style={{ backgroundImage: "url('/pattern.svg')" }}></div>
+          <div className="absolute inset-0 opacity-10 bg-repeat bg-center" style={{ backgroundImage: `url(${patternImg})` }}></div>
           
           <h2 className="font-extrabold uppercase tracking-widest text-xl mb-4 text-center z-10 relative">
             Credencial de Socio

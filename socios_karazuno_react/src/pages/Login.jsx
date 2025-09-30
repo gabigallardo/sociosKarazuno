@@ -43,8 +43,9 @@ function Login() {
   };
 
   return (
-
+    
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-800 via-red-700 to-black">
+        
       <div className="p-10 max-w-md w-full bg-white shadow-2xl rounded-xl border border-gray-300 transition duration-500 transform hover:scale-[1.01]">
         
         {/* Header */}

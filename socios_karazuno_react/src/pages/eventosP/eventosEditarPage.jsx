@@ -15,7 +15,10 @@ export default function EventosEditarPage() {
     const fetchEvento = async () => {
       try {
         const data = await getEventoById(id);
-        setEvento(data);
+        setEvento({
+          ...data,
+          organizador: data.organizador.id, // Asegura que organizador sea solo el ID
+        });
       } catch (error) {
         console.error("Error cargando evento:", error);
       } finally {
@@ -40,8 +43,9 @@ export default function EventosEditarPage() {
   const handleUpdate = async (eventoData) => {
     try {
       console.log("Enviando datos:", eventoData); // 👈 verifica
-
-      await updateEvento(id, eventoData);
+      const payload = {...eventoData, organizador_id: eventoData.organizador};
+      delete payload.organizador; // Elimina el campo organizador que no es necesario
+      await updateEvento(id, payload);
       navigate("/eventos");
     } catch (error) {
       console.error("Error actualizando evento:", error);

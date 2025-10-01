@@ -24,7 +24,9 @@ export default function EventosCreatePage() {
   const handleCreate = async (data) => {
     try {
       console.log("Enviando datos:", data);
-      await createEvento(data);
+      const payload = {...data, organizador_id: data.organizador};
+      delete payload.organizador; // Elimina el campo organizador que no es necesario      
+      await createEvento(payload);
       navigate("/eventos");
     } catch (error) {
       console.error("Error creando evento:", error);

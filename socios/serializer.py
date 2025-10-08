@@ -2,9 +2,21 @@ from rest_framework import serializers
 from .models import Usuario, Rol
 
 class UsuarioSerializer(serializers.ModelSerializer):
+    # lectura → devuelve info completa de los roles
+    roles = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+    # escritura → acepta una lista de IDs
+    roles_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Rol.objects.all(), source='roles', many=True, write_only=True
+    )
     class Meta:
         model = Usuario
-        fields = '__all__'
+        fields = [
+            'id', 'tipo_documento', 'nro_documento', 'nombre', 'apellido',
+            'email', 'contrasena', 'telefono', 'fecha_nacimiento', 'direccion',
+            'sexo', 'activo', 'foto_url', 'roles', 'roles_ids', 'qr_token'
+        ]
+
 
 
 class RolSerializer(serializers.ModelSerializer):

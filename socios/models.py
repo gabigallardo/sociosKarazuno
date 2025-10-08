@@ -26,8 +26,6 @@ class Usuario(models.Model):
     SEXO_CHOICES = [
         ("masculino", "Masculino"),
         ("femenino", "Femenino"),
-        ("mixto", "Mixto"),
-        ("otro", "Otro"),
     ]
 
     tipo_documento = models.CharField(max_length=50)

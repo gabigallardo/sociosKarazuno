@@ -42,7 +42,6 @@ export default function EventosEditarPage() {
 
   const handleUpdate = async (eventoData) => {
     try {
-      console.log("Enviando datos:", eventoData); // 👈 verifica
       const payload = {...eventoData, organizador_id: eventoData.organizador};
       delete payload.organizador; // Elimina el campo organizador que no es necesario
       await updateEvento(id, payload);

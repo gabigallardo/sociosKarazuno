@@ -36,8 +36,14 @@ export const createUsuario = async (usuarioData) => {
 };
 
 export const updateUsuario = async (id, usuarioData) => {
-  const res = await usuariosApi.put(`/${id}/`, usuarioData);
-  return res.data;
+  try {
+    const res = await usuariosApi.put(`/${id}/`, usuarioData);
+    console.log("Usuario updated:", res.data);
+    return res.data;
+  } catch (error) {
+    console.error("Error updating usuario:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
 export const deleteUsuario = async (id) => {

@@ -8,6 +8,8 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from .permissions import RolePermission
+from rest_framework.permissions import IsAuthenticated
 
 class LoginView(APIView):
     def post(self, request):
@@ -25,9 +27,12 @@ class LoginView(APIView):
         if usuario.contrasena != contrasena:
             return Response({"error": "Contraseña incorrecta"}, status=status.HTTP_400_BAD_REQUEST)
 
+        roles = list(usuario.roles.values_list('nombre', flat=True))
+
         payload = {
             "id": usuario.id,
             "email": usuario.email,
+            "roles": roles,
             "exp": datetime.utcnow() + timedelta(hours=2),
         }
 
@@ -60,6 +65,8 @@ class RegisterView(APIView):
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
+    permission_classes = [RolePermission]
+    required_roles = ['admin']  # Solo usuarios con rol 'admin' pueden acceder
 
 
 class RolesViewSet(viewsets.ModelViewSet):

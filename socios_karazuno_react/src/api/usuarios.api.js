@@ -1,9 +1,12 @@
 import axios from "axios";
 
+const token = localStorage.getItem("authToken");
+
 const usuariosApi = axios.create({
   baseURL: "http://localhost:8000/socios/api/v1/usuarios/",
   headers: {
     "Content-Type": "application/json",
+    Authorization: token ? `Bearer ${token}` : "",
   },
 });
 

@@ -32,6 +32,20 @@ export default function EventosForm({ onSubmit, initialValues, usuarios }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    // Si se cambia fecha_inicio, validar que fecha_fin no sea anterior
+    if (name === "fecha_inicio" && formData.fecha_fin && value > formData.fecha_fin) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+        fecha_fin: value, // Ajusta fecha_fin a la nueva fecha_inicio
+      }));
+      return;
+    }
+    // Si se cambia fecha_fin, validar que no sea anterior a fecha_inicio
+    if (name === "fecha_fin" && formData.fecha_inicio && value < formData.fecha_inicio) {
+      return; // No actualiza si fecha_fin es anterior a fecha_inicio
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -119,6 +133,7 @@ export default function EventosForm({ onSubmit, initialValues, usuarios }) {
           name="fecha_fin"
           value={formData.fecha_fin}
           onChange={handleChange}
+          min={formData.fecha_inicio} // fecha_fin no puede ser antes de fecha_inicio
           className="border px-2 py-1 w-full"
         />
       </div>

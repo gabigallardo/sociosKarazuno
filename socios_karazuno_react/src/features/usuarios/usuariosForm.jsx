@@ -1,4 +1,4 @@
-import { useState, useEffect, act } from "react";
+import { useState, useEffect } from "react";
 
 export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] }) {
   const [formData, setFormData] = useState({
@@ -15,18 +15,25 @@ export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] })
     activo: true,
     foto_url: "",
     qr_token: "",
-    roles: [], // 👈 inicializado
+    roles: [],
   });
 
   useEffect(() => {
-    if (initialValues) {
+    if (initialValues && allRoles.length > 0) {
+      // Convertir nombres de roles a IDs
+      const rolesIds = initialValues.roles
+        ? allRoles
+            .filter((rol) => initialValues.roles.includes(rol.nombre))
+            .map((rol) => rol.id)
+        : [];
+
       setFormData({
         tipo_documento: initialValues.tipo_documento || "",
         nro_documento: initialValues.nro_documento || "",
         nombre: initialValues.nombre || "",
         apellido: initialValues.apellido || "",
         email: initialValues.email || "",
-        contrasena: "", // ⚠️ no se rellena la contraseña por seguridad
+        contrasena: "",
         telefono: initialValues.telefono || "",
         fecha_nacimiento: initialValues.fecha_nacimiento?.split("T")[0] || "",
         direccion: initialValues.direccion || "",
@@ -34,10 +41,10 @@ export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] })
         activo: initialValues.activo ?? true,
         foto_url: initialValues.foto_url || "",
         qr_token: initialValues.qr_token || "",
-        roles: initialValues.roles || [], // 👈 asegura array
+        roles: rolesIds, // 👈 Ahora son IDs
       });
     }
-  }, [initialValues]);
+  }, [initialValues, allRoles]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -183,7 +190,6 @@ export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] })
         </div>
       </div>
 
-      {/* Campo QR Token (solo lectura) */}
       <div>
         <label className="block font-semibold">QR Token:</label>
         <input

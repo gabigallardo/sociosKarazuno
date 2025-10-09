@@ -1,27 +1,31 @@
+# socios/permissions.py
 from rest_framework.permissions import BasePermission
-import  jwt
-from django.conf import settings
 
 class RolePermission(BasePermission):
+    """
+    Permiso personalizado basado en roles del usuario autenticado.
+    El usuario ya fue autenticado por JWTAuthentication, así que
+    request.user ya está disponible con sus roles.
+    """
+    
     def has_permission(self, request, view):
-        # Revisamos si la view definió roles requeridos
+        # Verificar que el usuario existe (fue autenticado por JWTAuthentication)
+        if not request.user:
+            return False
+        
+        # Obtener los roles requeridos de la vista
         required_roles = getattr(view, 'required_roles', [])
+        
+        # Si no hay roles requeridos, permitir acceso
         if not required_roles:
-            return True  # Si no hay roles requeridos, permitimos el acceso
+            return True
         
-        auth_header = request.headers.get('Authorization')
-        if not auth_header:
-            return False
-        
+        # Obtener los roles del usuario desde la base de datos
         try:
-            token = auth_header.split(' ')[1] # Formato "Bearer <token>"
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-            user_roles = payload.get('roles', [])
-            # Verifica si el usuario tiene al menos un rol requerido
-            required_roles = getattr(view, 'required_roles', [])
-            if not required_roles:
-                return True
-            
-            return any(role in user_roles for role in required_roles)
-        except (IndexError, jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+            user_roles = list(request.user.roles.values_list('nombre', flat=True))
+        except AttributeError:
+            # Si el usuario no tiene el atributo roles, denegar acceso
             return False
+        
+        # Verificar si el usuario tiene al menos uno de los roles requeridos
+        return any(role in user_roles for role in required_roles)

@@ -3,7 +3,11 @@ from .models import Usuario, Rol
 
 class UsuarioSerializer(serializers.ModelSerializer):
     # lectura → devuelve info completa de los roles
-    roles = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    roles = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='nombre'
+    )
 
     # escritura → acepta una lista de IDs
     roles_ids = serializers.PrimaryKeyRelatedField(

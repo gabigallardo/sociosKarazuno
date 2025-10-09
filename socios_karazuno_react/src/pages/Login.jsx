@@ -1,41 +1,53 @@
 import React, { useState, useContext } from "react";
-import axios from "axios";
+import api from "../config/axiosConfig"; // Cambiado de axios a api
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/User.Context.jsx";
 import { FaSignInAlt } from "react-icons/fa"; 
 
 function Login() {
-  const { setUser } = useContext(UserContext); 
+  const { login } = useContext(UserContext); 
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [message, setMessage] = useState("");
 
-  const LOGIN_URL = "http://127.0.0.1:8000/socios/login/";
+  const LOGIN_URL = "/socios/login/"; // Sin la URL base completa
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("Iniciando sesión...");
 
     try {
-      const response = await axios.post(LOGIN_URL, { email, contrasena });
+      const response = await api.post(LOGIN_URL, { email, contrasena }); // Usando api en lugar de axios
       const token = response.data.token;
       const usuario = response.data.usuario;
+
+      console.log("🔍 Respuesta completa del backend:", response.data);
+      console.log("🔍 Token recibido:", token);
+      console.log("🔍 Usuario recibido:", usuario);
+      console.log("🔍 Roles del usuario:", usuario?.roles);
 
       if (!usuario) {
         setMessage("Error: Email o contraseña incorrectos");
         return;
       }
 
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("usuario", JSON.stringify(usuario));
-      setUser(usuario); 
+      // Usamos la función login del contexto
+      login(token, usuario);
+      
+      console.log("Login exitoso, usuario:", usuario);
+      
+      // ⚠️ CRÍTICO: Esperar a que localStorage se actualice
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Verificar que el token se guardó
+      const tokenGuardado = localStorage.getItem('authToken');
+      console.log("🔍 Token verificado en localStorage:", tokenGuardado ? 'SI EXISTE' : 'NO EXISTE');
 
       setMessage("¡Inicio de sesión exitoso! Redirigiendo...");
-      setTimeout(() => {
-        navigate("/socios"); 
-      }, 1000);
+      navigate("/socios");
+      
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
       setMessage("Error: Email o contraseña incorrectos");
@@ -43,9 +55,7 @@ function Login() {
   };
 
   return (
-    
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-800 via-red-700 to-black">
-        
       <div className="p-10 max-w-md w-full bg-white shadow-2xl rounded-xl border border-gray-300 transition duration-500 transform hover:scale-[1.01]">
         
         {/* Header */}

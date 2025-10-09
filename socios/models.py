@@ -44,8 +44,25 @@ class Usuario(models.Model):
     activo = models.BooleanField(default=True)
     roles = models.ManyToManyField("Rol", through="UsuarioRol", related_name="usuarios")
 
+    @property
+    def is_authenticated(self):
+        """
+        Siempre devuelve True para usuarios autenticados.
+        Django REST Framework usa esto para verificar autenticación.
+        """
+        return True
+    
+    @property
+    def is_anonymous(self):
+        """
+        Siempre devuelve False para usuarios reales.
+        Los usuarios anónimos devuelven True.
+        """
+        return False
+
     def __str__(self):
         return f"{self.nombre} {self.apellido}"
+
 
 
 class UsuarioRol(models.Model):

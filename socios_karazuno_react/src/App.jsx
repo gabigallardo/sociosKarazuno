@@ -35,7 +35,7 @@ function App() {
           {/* Usa <ProtectedRoute> para todas las demás rutas */}
           <Route path="/socios" element={<ProtectedRoute element={<SociosPage />} />} />
           <Route path="/form" element={<ProtectedRoute element={<SociosForm />} />} />
-          <Route path="/usuarios" element={<ProtectedRoute element={<UsuariosPage />} />} />
+          <Route path="/usuarios" element={<ProtectedRoute element={<UsuariosPage />} allowedRoles={['admin']} />} />
           <Route path="/usuarios/crear" element={<ProtectedRoute element={<UsuariosCreatePage />} />} />
           <Route path="/usuarios/editar/:id" element={<ProtectedRoute element={<UsuariosEditarPage />} />} />
           <Route path="/usuarios/:id" element={<ProtectedRoute element={<UsuarioIdPage />} />} />

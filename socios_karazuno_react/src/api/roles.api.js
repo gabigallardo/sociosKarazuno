@@ -1,18 +1,14 @@
-import axios from "axios";
+import api from "../config/axiosConfig";
 
-const rolesApi = axios.create({
-  baseURL: "http://localhost:8000/socios/api/v1/roles/",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+const BASE_PATH = "/socios/api/v1/roles";
 
 export const getAllRoles = async () => {
   try {
-    const response = await rolesApi.get("/");
+    const response = await api.get(`${BASE_PATH}/`);
+    console.log("✅ Roles obtenidos:", response.data.length);
     return response.data;
   } catch (error) {
-    console.error("Error fetching roles:", error);
+    console.error("❌ Error fetching roles:", error.response?.status, error.response?.data);
     throw error;
   }
 };

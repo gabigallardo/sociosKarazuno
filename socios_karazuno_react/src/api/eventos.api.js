@@ -1,20 +1,21 @@
-import axios from "axios";
+import api from "../config/axiosConfig";
 
-const eventosApi = axios.create({
-  baseURL: "http://localhost:8000/socios/api/v1/eventos/",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+const BASE_PATH = "http://localhost:8000/socios/api/v1/eventos";
 
 export const getAllEventos = async () => {
-  const response = await eventosApi.get("/");
-  return response.data;
+  try {
+    const response = await api.get(`${BASE_PATH}/`);
+    console.log("✅ Eventos obtenidos:", response.data.length);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error fetching eventos:", error.response?.status, error.response?.data);
+    throw error;
+  }
 };
 
 export const getEventoById = async (id) => {
   try {
-    const response = await eventosApi.get(`/${id}/`);
+    const response = await api.get(`${BASE_PATH}/${id}/`);
     return response.data;
   } catch (error) {
     if (error.response && error.response.status === 404) {
@@ -28,19 +29,32 @@ export const getEventoById = async (id) => {
 
 export const createEvento = async (eventoData) => {
   try {
-    const response = await eventosApi.post("/", eventoData);
+    const response = await api.post(`${BASE_PATH}/`, eventoData);
+    console.log("✅ Evento creado:", response.data);
     return response.data;
   } catch (error) {
-    console.error("Error al crear evento:", error.response?.data || error.message);
+    console.error("❌ Error al crear evento:", error.response?.data || error.message);
     throw error;
   }
 };
 
 export const updateEvento = async (id, eventoData) => {
-  const response = await eventosApi.put(`/${id}/`, eventoData);
-  return response.data;
+  try {
+    const response = await api.put(`${BASE_PATH}/${id}/`, eventoData);
+    console.log("✅ Evento actualizado:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error updating evento:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
 export const deleteEvento = async (id) => {
-  await eventosApi.delete(`/${id}/`);
+  try {
+    await api.delete(`${BASE_PATH}/${id}/`);
+    console.log("✅ Evento eliminado:", id);
+  } catch (error) {
+    console.error("❌ Error deleting evento:", error);
+    throw error;
+  }
 };

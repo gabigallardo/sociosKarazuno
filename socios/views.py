@@ -9,9 +9,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .permissions import RolePermission
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 class LoginView(APIView):
+    permission_classes = [AllowAny]  # Permitir acceso a todos
+
     def post(self, request):
         email = request.data.get("email")
         contrasena = request.data.get("contrasena")
@@ -50,10 +52,12 @@ class LoginView(APIView):
                 "sexo": usuario.sexo,
                 "foto_url": usuario.foto_url,
                 "qr_token": usuario.qr_token, # Importante para la credencial
+                "roles": roles,
             }
         })
 
 class RegisterView(APIView):
+    permission_classes = [AllowAny]  # Permitir acceso a todos
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():

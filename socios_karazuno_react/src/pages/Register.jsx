@@ -2,7 +2,21 @@ import React, { useState, useContext } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/User.Context.jsx"; 
-import { FaUserPlus } from "react-icons/fa"; 
+import { FaUserPlus } from "react-icons/fa";
+
+const InputField = ({ type = "text", placeholder, value, onChange, required = false, className = "", label }) => (
+    <div>
+        <label className="block text-sm font-semibold text-black mb-1">{label}</label>
+        <input 
+            type={type} 
+            placeholder={placeholder} 
+            value={value} 
+            onChange={onChange} 
+            required={required} 
+            className={`w-full px-4 py-2 border border-gray-400 rounded-lg bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-150 ${className}`}
+        />
+    </div>
+  );
 
 function Register() {
   const navigate = useNavigate();
@@ -68,20 +82,6 @@ function Register() {
       setMessage(error.response?.data?.error || "Error en el registro o inicio de sesión automático.");
     }
   };
-
-  const InputField = ({ type = "text", placeholder, value, onChange, required = false, className = "", label }) => (
-    <div>
-        <label className="block text-sm font-semibold text-black mb-1">{label}</label>
-        <input 
-            type={type} 
-            placeholder={placeholder} 
-            value={value} 
-            onChange={onChange} 
-            required={required} 
-            className={`w-full px-4 py-2 border border-gray-400 rounded-lg bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-150 ${className}`}
-        />
-    </div>
-  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-800 via-red-700 to-black p-4">

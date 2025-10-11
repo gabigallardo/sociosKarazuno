@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Usuario, Rol
+from .models import Usuario, Rol, SocioInfo, NivelSocio
 
 class UsuarioSerializer(serializers.ModelSerializer):
     # lectura → devuelve info completa de los roles
@@ -63,4 +63,14 @@ class EventoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Evento
+        fields = '__all__'
+
+class SocioInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SocioInfo
+        fields = '__all__'
+
+class NivelSocioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NivelSocio
         fields = '__all__'

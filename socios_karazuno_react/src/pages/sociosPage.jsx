@@ -1,7 +1,7 @@
 import React, {useEffect, useState, useContext, use } from "react";
 import { UserContext } from "../contexts/User.Context.jsx";
 import { QRCodeCanvas } from "qrcode.react";
-import { FaFileDownload } from "react-icons/fa"; 
+import { FaFileDownload, FaUserPlus } from "react-icons/fa"; 
 import patternImg from '../assets/pattern.jpg';
 import { useNavigate } from "react-router-dom";
 import { getAllEventos } from "../api/eventos.api.js";
@@ -10,6 +10,8 @@ function SociosPage() {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
   const [eventos, setEventos] = React.useState([]);
+  const userRoles = user?.roles || [];
+  const esSocio = userRoles.includes("socio");
 
   if (!user) {
     return (
@@ -55,6 +57,21 @@ function SociosPage() {
 
   return (
     <>
+    {!esSocio && (
+      <div className="bg-gradient-to-r from-red-700 to-red-900 text-white p-6 rounded-3xl shadow-2xl mb-8 flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-extrabold mb-2">¡Unite al Club!</h2>
+          <p className="text-lg">Disfrutá de todos los beneficios siendo socio oficial.</p>
+        </div>
+        <button
+          onClick={() => navigate("/hacerse-socio")}
+          className="bg-white text-red-700 px-6 py-3 rounded-full font-bold shadow-lg transition duration-300 hover:bg-gray-100 transform hover:scale-105 flex items-center gap-2"
+        >
+          <FaUserPlus className="text-xl" />
+          Hacerse Socio
+        </button>
+      </div>
+    )}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         
         {/* -------- CREDENCIAL (ORDEN DE LA IMAGEN DE BLOQUES) -------- */}

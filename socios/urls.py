@@ -13,6 +13,8 @@ router = routers.DefaultRouter()
 router.register(r'usuarios', views.UsuarioViewSet, 'usuarios')
 router.register(r'roles', views.RolesViewSet, 'roles')
 router.register(r'eventos', views.EventoViewSet, 'eventos')
+router.register(r'niveles-socio', views.NivelSocioViewSet, 'niveles-socio')
+router.register(r'socios-info', views.SocioInfoViewSet, 'socios-info')
 
 urlpatterns = [
     path('api/v1/', include(router.urls)),

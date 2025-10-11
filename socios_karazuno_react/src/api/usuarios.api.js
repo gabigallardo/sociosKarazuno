@@ -55,3 +55,14 @@ export const deleteUsuario = async (id) => {
     throw error;
   }
 };
+
+export const hacerseSocio = async (usuarioId) => {
+  try {
+    const response = await api.post(`/socios/api/v1/usuarios/${usuarioId}/hacerse_socio/`);
+    console.log("✅ Usuario se hizo socio:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error haciendo socio al usuario:", error.response?.status, error.response?.data);
+    throw error;
+  }
+};

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import SociosPage from "./pages/SociosPage.jsx";
+import SociosPage from "./pages/sociosPage.jsx";
 import SociosForm from "./pages/SociosForm.jsx";
 import UsuariosPage from "./pages/usuariosP/usuariosPage.jsx";
 import UsuariosCreatePage from "./pages/usuariosP/UsuariosCreatePage.jsx";
@@ -14,7 +14,8 @@ import "./index.css";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { UserProviderWrapper } from "./contexts/User.Context.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx"; 
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import HacerseSocioPage from "./pages/sociosP/HacerseSocioPage.jsx";
 
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
           <Route path="/eventos/crear" element={<ProtectedRoute element={<EventosCreatePage />} />} />
           <Route path="/eventos/editar/:id" element={<ProtectedRoute element={<EventosEditarPage />} />} />
           <Route path="/eventos/:id" element={<ProtectedRoute element={<EventosIdPage />} />} />
+          <Route path="/hacerse-socio" element={<ProtectedRoute element={<HacerseSocioPage />} />} />
 
         </Routes>
       </BrowserRouter>

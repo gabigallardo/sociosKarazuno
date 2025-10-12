@@ -7,9 +7,14 @@ from drf_spectacular.views import (
 )
 
 from socios import views
+from socios.views import LoginView, RegisterView
 
 router = routers.DefaultRouter()
-router.register(r'socios', views.SocioViewSet, 'socios')
+router.register(r'usuarios', views.UsuarioViewSet, 'usuarios')
+router.register(r'roles', views.RolesViewSet, 'roles')
+router.register(r'eventos', views.EventoViewSet, 'eventos')
+router.register(r'niveles-socio', views.NivelSocioViewSet, 'niveles-socio')
+router.register(r'socios-info', views.SocioInfoViewSet, 'socios-info')
 
 urlpatterns = [
     path('api/v1/', include(router.urls)),
@@ -22,4 +27,9 @@ urlpatterns = [
 
     # Documentación alternativa con Redoc
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # Endpoint para login
+    path("login/", LoginView.as_view(), name="login"),
+        # Endpoint para registro
+    path("register/", RegisterView.as_view(), name="register"),
+
 ]

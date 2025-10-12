@@ -16,6 +16,8 @@ import Register from "./pages/Register";
 import { UserProviderWrapper } from "./contexts/User.Context.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import HacerseSocioPage from "./pages/sociosP/HacerseSocioPage.jsx";
+import DeportesPage from "./pages/deportesP/DeportesPage.jsx";
+
 
 
 function App() {
@@ -46,7 +48,15 @@ function App() {
           <Route path="/eventos/editar/:id" element={<ProtectedRoute element={<EventosEditarPage />} />} />
           <Route path="/eventos/:id" element={<ProtectedRoute element={<EventosIdPage />} />} />
           <Route path="/hacerse-socio" element={<ProtectedRoute element={<HacerseSocioPage />} />} />
-
+<Route 
+            path="/deportes" 
+            element={
+              <ProtectedRoute 
+                element={<DeportesPage />} 
+                allowedRoles={['admin', 'profesor', 'dirigente']} 
+              />
+            } 
+          />
         </Routes>
       </BrowserRouter>
     </UserProviderWrapper>

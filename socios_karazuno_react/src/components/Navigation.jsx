@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaHome, FaUser, FaCalendarAlt, FaMoneyBill, FaCalendarCheck, FaUsers } from "react-icons/fa";
+import { FaHome, FaUser, FaCalendarAlt, FaMoneyBill, FaCalendarCheck, FaUsers, FaFutbol  } from "react-icons/fa";
 import logoImg from '../assets/logo.png';
 import { UserContext } from "../contexts/User.Context";
 
@@ -16,8 +16,17 @@ function Navigation() {
     { to: "/eventos", icon: FaCalendarCheck, label: "Eventos" },
   ];
 
-  if (userRoles.includes("admin")) {
+  // --- LÓGICA DE ROLES PARA LOS ENLACES ---
+  const esAdmin = userRoles.includes("admin");
+  const puedeGestionar = esAdmin || userRoles.includes("profesor") || userRoles.includes("dirigente");
+
+  if (puedeGestionar) {
     navItems.push({ to: "/usuarios", icon: FaUsers, label: "Usuarios" });
+  }
+
+  // Se añade el enlace a "Deportes" si el usuario tiene los permisos
+  if (puedeGestionar) {
+    navItems.push({ to: "/deportes", icon: FaFutbol , label: "Deportes" });
   }
 
   return (

@@ -15,6 +15,9 @@ router.register(r'roles', views.RolesViewSet, 'roles')
 router.register(r'eventos', views.EventoViewSet, 'eventos')
 router.register(r'niveles-socio', views.NivelSocioViewSet, 'niveles-socio')
 router.register(r'socios-info', views.SocioInfoViewSet, 'socios-info')
+router.register(r'disciplinas', views.DisciplinaViewSet, 'disciplinas')
+router.register(r'categorias', views.CategoriaViewSet, 'categorias')
+
 
 urlpatterns = [
     path('api/v1/', include(router.urls)),

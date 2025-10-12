@@ -4,7 +4,7 @@ from django.utils import timezone
 
 
 class Rol(models.Model):
-    nombre = models.CharField(max_length=50, unique=True)  # Socio, Jugador, etc.
+    nombre = models.CharField(max_length=50, unique=True)
     descripcion = models.TextField(blank=True, null=True)
 
     def __str__(self):
@@ -26,6 +26,7 @@ class Usuario(models.Model):
     SEXO_CHOICES = [
         ("masculino", "Masculino"),
         ("femenino", "Femenino"),
+        ("otro", "Otro"),
     ]
 
     tipo_documento = models.CharField(max_length=50)
@@ -46,23 +47,14 @@ class Usuario(models.Model):
 
     @property
     def is_authenticated(self):
-        """
-        Siempre devuelve True para usuarios autenticados.
-        Django REST Framework usa esto para verificar autenticación.
-        """
         return True
     
     @property
     def is_anonymous(self):
-        """
-        Siempre devuelve False para usuarios reales.
-        Los usuarios anónimos devuelven True.
-        """
         return False
 
     def __str__(self):
         return f"{self.nombre} {self.apellido}"
-
 
 
 class UsuarioRol(models.Model):
@@ -123,7 +115,7 @@ class CategoriaEntrenador(models.Model):
 class Cuota(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
-    periodo = models.CharField(max_length=50)  # "2025-09" o "Mensual"
+    periodo = models.CharField(max_length=50)
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     vencimiento = models.DateField()
     descuento_aplicado = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
@@ -141,7 +133,7 @@ class Pago(models.Model):
     ]
 
     cuota = models.ForeignKey(Cuota, on_delete=models.CASCADE)
-    medio_pago = models.CharField(max_length=50)  # MP, Efectivo, Tarjeta
+    medio_pago = models.CharField(max_length=50)
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     moneda = models.CharField(max_length=10, default="ARS")
     referencia_externa = models.CharField(max_length=255, blank=True, null=True)
@@ -157,6 +149,12 @@ class Evento(models.Model):
         ("viaje", "Viaje"),
         ("otro", "Otro"),
     ]
+    
+    VISIBILITY_CHOICES = [
+        ('ALL', 'Todos los socios'),
+        ('DISCIPLINE', 'Solo socios del mismo deporte'),
+        ('CATEGORY', 'Solo socios de la misma categoría'),
+    ]
 
     tipo = models.CharField(max_length=50, choices=TIPO_CHOICES)
     titulo = models.CharField(max_length=255)
@@ -169,11 +167,16 @@ class Evento(models.Model):
     costo = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     creado = models.DateTimeField(auto_now_add=True)
     publicado = models.BooleanField(default=True)
+    
+    # Campos añadidos para la nueva funcionalidad
+    disciplina = models.ForeignKey(Disciplina, on_delete=models.SET_NULL, null=True, blank=True)
+    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
+    visibilidad = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='ALL')
 
 
 class CalendarItem(models.Model):
-    usuario = models.ForeignKey("Usuario", on_delete=models.SET_NULL, null=True, blank=True)
-    evento = models.ForeignKey("Evento", on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True)
+    evento = models.ForeignKey(Evento, on_delete=models.CASCADE)
     titulo = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True, null=True)
     start = models.DateTimeField()
@@ -187,7 +190,6 @@ class CalendarItem(models.Model):
                 name="recordatorio_no_negativo"
             )
         ]
-
 
 
 class AsistenciaEntrenamiento(models.Model):
@@ -214,3 +216,5 @@ class GrupoFamiliarIntegrante(models.Model):
 
     class Meta:
         unique_together = ("grupo_familiar", "usuario")
+
+        

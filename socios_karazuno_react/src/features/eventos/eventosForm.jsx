@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaArrowLeft, FaArrowRight, FaCheck, FaCalendar, FaClock } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaCheck, FaCalendar, FaClock, FaUsers, FaTag } from "react-icons/fa";
 
 // --- CONFIGURACIÓN CENTRALIZADA DE LOS PASOS ---
 const stepsConfig = [
@@ -39,11 +39,32 @@ const stepsConfig = [
         }
         const start = new Date(`${formData.fecha_inicio_date}T${formData.fecha_inicio_time}`);
         const end = new Date(`${formData.fecha_fin_date}T${formData.fecha_fin_time}`);
+        // Esta validación asegura que el evento no termine antes de empezar.
         if (end < start) {
-            return "El evento no puede terminar antes de que empiece.";
+            return "La fecha de fin no puede ser anterior a la fecha de inicio.";
         }
         return null;
     }
+  },
+  {
+    id: "asociacion",
+    label: "Si el evento es deportivo, asócialo a una disciplina",
+    type: "disciplina-categoria", // Tipo personalizado para renderizar dos selects
+    icon: FaTag,
+    validation: () => null, // Este paso es opcional
+  },
+  {
+    id: "visibilidad",
+    label: "¿Quiénes podrán ver este evento en su calendario?",
+    type: "select",
+    icon: FaUsers,
+    options: [
+        { value: "ALL", label: "Todos los socios" },
+        { value: "DISCIPLINE", label: "Solo socios del mismo deporte" },
+        { value: "CATEGORY", label: "Solo socios de la misma categoría" },
+    ],
+    condition: (formData) => formData.disciplina_id, // Solo mostrar si se selecciona una disciplina
+    validation: (value) => value ? null : "Debes seleccionar una opción de visibilidad.",
   },
   {
     id: "organizador",
@@ -79,8 +100,7 @@ const stepsConfig = [
   },
 ];
 
-
-export default function EventosForm({ onSubmit, initialValues, usuarios, isLoading = false }) {
+export default function EventosForm({ onSubmit, initialValues, usuarios, disciplinas, categorias, isLoading = false }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [formData, setFormData] = useState({
     tipo: "torneo",
@@ -90,6 +110,9 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, isLoadi
     fecha_inicio_time: "",
     fecha_fin_date: "",
     fecha_fin_time: "",
+    disciplina_id: "",
+    categoria_id: "",
+    visibilidad: "ALL",
     organizador: "",
     descripcion: "",
     requisito_pago: false,
@@ -97,22 +120,20 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, isLoadi
   });
   const [error, setError] = useState(null);
   
-
   useEffect(() => {
     if (initialValues) {
       const { fecha_inicio, fecha_fin, ...rest } = initialValues;
-      
       const startDate = fecha_inicio ? new Date(fecha_inicio) : null;
       const endDate = fecha_fin ? new Date(fecha_fin) : null;
 
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         ...rest,
         fecha_inicio_date: startDate ? startDate.toISOString().split('T')[0] : "",
         fecha_inicio_time: startDate ? startDate.toTimeString().slice(0, 5) : "",
         fecha_fin_date: endDate ? endDate.toISOString().split('T')[0] : "",
         fecha_fin_time: endDate ? endDate.toTimeString().slice(0, 5) : "",
-      });
+      }));
     }
   }, [initialValues]); 
 
@@ -143,19 +164,29 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, isLoadi
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    setFormData((prev) => {
+        const newState = {
+            ...prev,
+            [name]: type === "checkbox" ? checked : value,
+        };
+        // Si se cambia la disciplina, resetear la categoría
+        if (name === 'disciplina_id') {
+            newState.categoria_id = "";
+        }
+        return newState;
+    });
   };
   
   const handleSubmit = () => {
-     const payload = {
+    const payload = {
       ...formData,
       organizador_id: Number(formData.organizador),
+      disciplina_id: formData.disciplina_id ? Number(formData.disciplina_id) : null,
+      categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
       fecha_inicio: formData.fecha_inicio_date && formData.fecha_inicio_time ? new Date(`${formData.fecha_inicio_date}T${formData.fecha_inicio_time}`).toISOString() : null,
       fecha_fin: formData.fecha_fin_date && formData.fecha_fin_time ? new Date(`${formData.fecha_fin_date}T${formData.fecha_fin_time}`).toISOString() : null,
     };
+    // Limpiar campos temporales
     delete payload.organizador;
     delete payload.fecha_inicio_date;
     delete payload.fecha_inicio_time;
@@ -176,58 +207,70 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, isLoadi
       <div className="min-h-[220px]">
         <label className="text-xl font-bold text-gray-800 mb-4 block">{currentStep.label}</label>
 
-        {currentStep.type === "datetime-split" ? (
+        {/* --- RENDERIZADO CONDICIONAL DE PASOS --- */}
+        
+        {currentStep.type === "datetime-split" && (
           <div className="space-y-4">
             <fieldset className="p-4 border rounded-lg">
-                <legend className="px-2 text-sm font-medium text-gray-600">Inicio del Evento</legend>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="relative">
-                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><FaCalendar className="text-gray-400"/></div>
-                         <input type="date" name="fecha_inicio_date" value={formData.fecha_inicio_date} onChange={handleChange} className="w-full p-3 pl-10 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"/>
-                    </div>
-                    <div className="relative">
-                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><FaClock className="text-gray-400"/></div>
-                         <input type="time" name="fecha_inicio_time" value={formData.fecha_inicio_time} onChange={handleChange} className="w-full p-3 pl-10 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"/>
-                    </div>
-                </div>
+              <legend className="px-2 text-sm font-medium text-gray-600">Inicio del Evento</legend>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="relative"><div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><FaCalendar className="text-gray-400"/></div><input type="date" name="fecha_inicio_date" value={formData.fecha_inicio_date} onChange={handleChange} className="w-full p-3 pl-10 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"/></div>
+                <div className="relative"><div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><FaClock className="text-gray-400"/></div><input type="time" name="fecha_inicio_time" value={formData.fecha_inicio_time} onChange={handleChange} className="w-full p-3 pl-10 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"/></div>
+              </div>
             </fieldset>
             <fieldset className="p-4 border rounded-lg">
-                <legend className="px-2 text-sm font-medium text-gray-600">Fin del Evento</legend>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="relative">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><FaCalendar className="text-gray-400"/></div>
-                        <input type="date" name="fecha_fin_date" value={formData.fecha_fin_date} onChange={handleChange} min={formData.fecha_inicio_date} className="w-full p-3 pl-10 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"/>
-                    </div>
-                    <div className="relative">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><FaClock className="text-gray-400"/></div>
-                        <input type="time" name="fecha_fin_time" value={formData.fecha_fin_time} onChange={handleChange} className="w-full p-3 pl-10 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"/>
-                    </div>
-                </div>
+              <legend className="px-2 text-sm font-medium text-gray-600">Fin del Evento</legend>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="relative"><div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><FaCalendar className="text-gray-400"/></div><input type="date" name="fecha_fin_date" value={formData.fecha_fin_date} onChange={handleChange} min={formData.fecha_inicio_date} className="w-full p-3 pl-10 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"/></div>
+                <div className="relative"><div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><FaClock className="text-gray-400"/></div><input type="time" name="fecha_fin_time" value={formData.fecha_fin_time} onChange={handleChange} className="w-full p-3 pl-10 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"/></div>
+              </div>
             </fieldset>
           </div>
-        ) : (
-          <>
-            {currentStep.type === "select" && (
-              <select id={currentStep.id} name={currentStep.id} value={formData[currentStep.id]} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none">
-                {currentStep.id === 'organizador' ? (
-                  <>
-                    <option value="">-- Seleccionar --</option>
-                    {usuarios?.map(u => <option key={u.id} value={u.id}>{`${u.nombre} ${u.apellido}`}</option>)}
-                  </>
-                ) : (
-                  currentStep.options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)
+        )}
+
+        {currentStep.type === "disciplina-categoria" && (
+            <div className="space-y-4">
+                <div>
+                    <label className="text-sm font-medium text-gray-600 block mb-1">Disciplina</label>
+                    <select name="disciplina_id" value={formData.disciplina_id} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none">
+                        <option value="">-- Ninguna --</option>
+                        {disciplinas?.map(d => <option key={d.id} value={d.id}>{d.nombre}</option>)}
+                    </select>
+                </div>
+                {formData.disciplina_id && (
+                    <div>
+                        <label className="text-sm font-medium text-gray-600 block mb-1">Categoría</label>
+                        <select name="categoria_id" value={formData.categoria_id} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none">
+                            <option value="">-- Todas las del deporte --</option>
+                            {categorias?.filter(c => c.disciplina == formData.disciplina_id).map(c => <option key={c.id} value={c.id}>{c.nombre_categoria}</option>)}
+                        </select>
+                    </div>
                 )}
-              </select>
+            </div>
+        )}
+
+        {currentStep.type === "select" && (
+          <select id={currentStep.id} name={currentStep.id} value={formData[currentStep.id]} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none">
+            {currentStep.id === 'organizador' ? (
+              <>
+                <option value="">-- Seleccionar --</option>
+                {usuarios?.map(u => <option key={u.id} value={u.id}>{`${u.nombre} ${u.apellido}`}</option>)}
+              </>
+            ) : (
+              currentStep.options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)
             )}
-            {["text", "number"].includes(currentStep.type) && ( <input id={currentStep.id} name={currentStep.id} type={currentStep.type} value={formData[currentStep.id]} onChange={handleChange} placeholder={currentStep.placeholder} className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"/> )}
-            {currentStep.type === "textarea" && ( <textarea id={currentStep.id} name={currentStep.id} value={formData[currentStep.id]} onChange={handleChange} placeholder={currentStep.placeholder} rows="4" className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"></textarea> )}
-            {currentStep.type === "toggle" && (
-              <div className="flex items-center space-x-4">
-                <button type="button" onClick={() => handleChange({ target: { name: currentStep.id, checked: true, type: 'checkbox' } })} className={`w-full p-3 rounded-lg text-center font-bold ${formData[currentStep.id] ? 'bg-red-600 text-white ring-2 ring-red-700' : 'bg-gray-200'}`}>Sí</button>
-                <button type="button" onClick={() => handleChange({ target: { name: currentStep.id, checked: false, type: 'checkbox' } })} className={`w-full p-3 rounded-lg text-center font-bold ${!formData[currentStep.id] ? 'bg-red-600 text-white ring-2 ring-red-700' : 'bg-gray-200'}`}>No</button>
-              </div>
-            )}
-          </>
+          </select>
+        )}
+
+        {["text", "number"].includes(currentStep.type) && ( <input id={currentStep.id} name={currentStep.id} type={currentStep.type} value={formData[currentStep.id]} onChange={handleChange} placeholder={currentStep.placeholder} className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"/> )}
+        
+        {currentStep.type === "textarea" && ( <textarea id={currentStep.id} name={currentStep.id} value={formData[currentStep.id]} onChange={handleChange} placeholder={currentStep.placeholder} rows="4" className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"></textarea> )}
+        
+        {currentStep.type === "toggle" && (
+          <div className="flex items-center space-x-4">
+            <button type="button" onClick={() => handleChange({ target: { name: currentStep.id, checked: true, type: 'checkbox' } })} className={`w-full p-3 rounded-lg text-center font-bold ${formData[currentStep.id] ? 'bg-red-600 text-white ring-2 ring-red-700' : 'bg-gray-200'}`}>Sí</button>
+            <button type="button" onClick={() => handleChange({ target: { name: currentStep.id, checked: false, type: 'checkbox' } })} className={`w-full p-3 rounded-lg text-center font-bold ${!formData[currentStep.id] ? 'bg-red-600 text-white ring-2 ring-red-700' : 'bg-gray-200'}`}>No</button>
+          </div>
         )}
 
         {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}

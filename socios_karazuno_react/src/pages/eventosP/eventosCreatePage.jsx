@@ -3,27 +3,40 @@ import { createEvento } from "../../api/eventos.api";
 import EventosForm from "../../features/eventos/eventosForm";
 import { useNavigate } from "react-router-dom";
 import { getAllUsuarios } from "../../api/usuarios.api";
+import { getAllDisciplinas } from "../../api/disciplinas.api";
+import { getAllCategorias } from "../../api/categorias.api";
 import { FaCalendarPlus } from "react-icons/fa";
 
 export default function EventosCreatePage() {
   const [usuarios, setUsuarios] = useState([]);
+  const [disciplinas, setDisciplinas] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchUsuarios() {
+    async function fetchData() {
       try {
-        const data = await getAllUsuarios();
-        setUsuarios(data);
+        const [usuariosData, disciplinasData, categoriasData] = await Promise.all([
+          getAllUsuarios(),
+          getAllDisciplinas(),
+          getAllCategorias()
+        ]);
+        setUsuarios(usuariosData || []);
+        setDisciplinas(disciplinasData || []);
+        setCategorias(categoriasData || []);
       } catch (error) {
-        console.error("Error fetching usuarios en eventosCreatePage:", error);
+        console.error("Error fetching data for eventosCreatePage:", error);
+        setUsuarios([]);
+        setDisciplinas([]);
+        setCategorias([]);
       }
     }
-    fetchUsuarios();
+    fetchData();
   }, []);
 
   const handleCreate = async (payload) => {
     try {
-      console.log("Enviando payload final:", payload); 
+      console.log("Enviando payload final:", payload);
       await createEvento(payload);
       navigate("/eventos");
     } catch (error) {
@@ -38,7 +51,12 @@ export default function EventosCreatePage() {
         Crear Nuevo Evento
       </h1>
       
-      <EventosForm onSubmit={handleCreate} usuarios={usuarios} />
+      <EventosForm 
+        onSubmit={handleCreate} 
+        usuarios={usuarios}
+        disciplinas={disciplinas}
+        categorias={categorias}
+      />
     </div>
   );
 }

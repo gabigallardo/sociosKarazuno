@@ -16,9 +16,7 @@ export function UserProviderWrapper({ children }) {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
-        console.log("Sesión restaurada desde localStorage con datos completos:", parsedUser);
       } catch (error) {
-        console.error("Error al restaurar la sesión:", error);
         localStorage.removeItem("authToken");
         localStorage.removeItem("usuario");
       }

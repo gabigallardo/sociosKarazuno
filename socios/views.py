@@ -70,35 +70,25 @@ class RegisterView(APIView):
 
 
 class UsuarioViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para ver y editar usuarios.
+    El acceso a la lista está restringido a administradores.
+    """
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
+    
 
-    def get_permissions(self):
-        """
-        Instancia y devuelve la lista de permisos que requiere esta vista,
-        permitiendo un control dinámico según la acción.
-        """
-        if self.action == 'hacerse_socio':
-            # Para 'hacerse_socio', solo se necesita estar autenticado.
-            permission_classes = [IsAuthenticated]
-        else:
-            role_permission = RolePermission()
-            role_permission.required_roles = ['admin']
-            permission_classes = [role_permission]
-            
-        return [permission() for permission in permission_classes]
+    permission_classes = [RolePermission] 
+    required_roles = ['admin']
 
-    @action(detail=True, methods=['post'])
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def hacerse_socio(self, request, pk=None):
         usuario = self.get_object()
         
         if SocioInfo.objects.filter(usuario=usuario).exists():
             return Response({"error": "El usuario ya es socio."}, status=status.HTTP_400_BAD_REQUEST)
         
-        if not usuario.qr_token:
-            usuario.qr_token = str(uuid.uuid4())
-            usuario.save()
-
         try:
             rol_socio = Rol.objects.get(nombre='socio')
         except Rol.DoesNotExist:
@@ -114,13 +104,12 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             cuota_al_dia=False,
             nivel_socio=nivel_inicial
         )
-        
         UsuarioRol.objects.create(usuario=usuario, rol=rol_socio)
-
+        
         monto_base = 15000.00
         descuento = nivel_inicial.descuento
         monto_final = monto_base * (1 - descuento / 100)
-        periodo = datetime.now().strftime("%Y-%m")
+        periodo = timezone.now().strftime("%Y-%m")
         vencimiento = timezone.now() + timedelta(days=30)
 
         Cuota.objects.create(
@@ -135,10 +124,8 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         return Response({
             "message": "El usuario ahora es socio.",
             "socio_info": SocioInfoSerializer(socio_info).data,
-            "cuota_generada": True,
-            "qr_token": usuario.qr_token 
+            "cuota_generada": True
         }, status=status.HTTP_201_CREATED)
-
 
 class RolesViewSet(viewsets.ModelViewSet):
     queryset = Rol.objects.all()

@@ -1,18 +1,20 @@
+
 from rest_framework import serializers
-from .models import Usuario, Rol, SocioInfo, NivelSocio
+from .models import Usuario, Rol, Evento, SocioInfo, NivelSocio
+from django.contrib.auth.hashers import make_password
 
 class UsuarioSerializer(serializers.ModelSerializer):
-    # lectura → devuelve info completa de los roles
     roles = serializers.SlugRelatedField(
         many=True,
         read_only=True,
         slug_field='nombre'
     )
-
-    # escritura → acepta una lista de IDs
     roles_ids = serializers.PrimaryKeyRelatedField(
         queryset=Rol.objects.all(), source='roles', many=True, write_only=True
     )
+
+    contrasena = serializers.CharField(write_only=True, required=False, allow_blank=True)
+
     class Meta:
         model = Usuario
         fields = [
@@ -21,6 +23,13 @@ class UsuarioSerializer(serializers.ModelSerializer):
             'sexo', 'activo', 'foto_url', 'roles', 'roles_ids', 'qr_token'
         ]
 
+    def update(self, instance, validated_data):
+        if 'contrasena' in validated_data and validated_data['contrasena']:
+            validated_data['contrasena'] = make_password(validated_data['contrasena'])
+        else:
+            validated_data.pop('contrasena', None)
+
+        return super().update(instance, validated_data)
 
 
 class RolSerializer(serializers.ModelSerializer):
@@ -37,26 +46,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ("tipo_documento", "nro_documento", "nombre", "apellido", "email", "contrasena", "telefono", "fecha_nacimiento", "direccion", "sexo")
 
     def create(self, validated_data):
-        usuario = Usuario.objects.create(
-            tipo_documento=validated_data.get("tipo_documento"),
-            nro_documento=validated_data.get("nro_documento"),
-            nombre=validated_data.get("nombre"),
-            apellido=validated_data.get("apellido"),
-            email=validated_data.get("email"),
-            contrasena=validated_data.get("contrasena"),  # hashear después
-            telefono=validated_data.get("telefono"),
-            fecha_nacimiento=validated_data.get("fecha_nacimiento"),
-            direccion=validated_data.get("direccion"),
-            sexo=validated_data.get("sexo"),
-        )
+        validated_data['contrasena'] = make_password(validated_data['contrasena'])
+        
+        usuario = Usuario.objects.create(**validated_data)
         return usuario
 
-# Agregar un serializador para el modelo Evento
-from .models import Evento
 class EventoSerializer(serializers.ModelSerializer):
-    # Para lectura → devuelve objeto Usuario
     organizador = UsuarioSerializer(read_only=True)
-     # Para escritura → acepta un ID
     organizador_id = serializers.PrimaryKeyRelatedField(
         queryset=Usuario.objects.all(), source='organizador', write_only=True
     )

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { FaArrowLeft, FaArrowRight, FaCheck, FaCalendar, FaClock, FaUsers, FaTag } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaCheck, FaCalendar, FaClock, FaTag } from "react-icons/fa";
 
-// --- CONFIGURACIÓN CENTRALIZADA DE LOS PASOS ---
 const stepsConfig = [
   {
     id: "tipo",
@@ -39,7 +38,6 @@ const stepsConfig = [
         }
         const start = new Date(`${formData.fecha_inicio_date}T${formData.fecha_inicio_time}`);
         const end = new Date(`${formData.fecha_fin_date}T${formData.fecha_fin_time}`);
-        // Esta validación asegura que el evento no termine antes de empezar.
         if (end < start) {
             return "La fecha de fin no puede ser anterior a la fecha de inicio.";
         }
@@ -49,22 +47,9 @@ const stepsConfig = [
   {
     id: "asociacion",
     label: "Si el evento es deportivo, asócialo a una disciplina",
-    type: "disciplina-categoria", // Tipo personalizado para renderizar dos selects
+    type: "disciplina-categoria",
     icon: FaTag,
-    validation: () => null, // Este paso es opcional
-  },
-  {
-    id: "visibilidad",
-    label: "¿Quiénes podrán ver este evento en su calendario?",
-    type: "select",
-    icon: FaUsers,
-    options: [
-        { value: "ALL", label: "Todos los socios" },
-        { value: "DISCIPLINE", label: "Solo socios del mismo deporte" },
-        { value: "CATEGORY", label: "Solo socios de la misma categoría" },
-    ],
-    condition: (formData) => formData.disciplina_id, // Solo mostrar si se selecciona una disciplina
-    validation: (value) => value ? null : "Debes seleccionar una opción de visibilidad.",
+    validation: () => null,
   },
   {
     id: "organizador",
@@ -98,6 +83,30 @@ const stepsConfig = [
         return null;
     }
   },
+  {
+    id: "costo_viaje",
+    label: "Costo del viaje/transporte (ARS, opcional)",
+    type: "number",
+    placeholder: "0.00",
+    condition: (formData) => formData.tipo === 'viaje',
+    validation: () => null,
+  },
+  {
+    id: "costo_hospedaje",
+    label: "Costo del hospedaje (ARS, opcional)",
+    type: "number",
+    placeholder: "0.00",
+    condition: (formData) => formData.tipo === 'viaje',
+    validation: () => null,
+  },
+  {
+    id: "costo_comida",
+    label: "Costo estimado de comida (ARS, opcional)",
+    type: "number",
+    placeholder: "0.00",
+    condition: (formData) => formData.tipo === 'viaje',
+    validation: () => null,
+  },
 ];
 
 export default function EventosForm({ onSubmit, initialValues, usuarios, disciplinas, categorias, isLoading = false }) {
@@ -112,11 +121,13 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
     fecha_fin_time: "",
     disciplina_id: "",
     categoria_id: "",
-    visibilidad: "ALL",
     organizador: "",
     descripcion: "",
     requisito_pago: false,
-    costo: 0.0,
+    costo: "",
+    costo_viaje: "",
+    costo_hospedaje: "",
+    costo_comida: "",
   });
   const [error, setError] = useState(null);
   
@@ -165,14 +176,8 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => {
-        const newState = {
-            ...prev,
-            [name]: type === "checkbox" ? checked : value,
-        };
-        // Si se cambia la disciplina, resetear la categoría
-        if (name === 'disciplina_id') {
-            newState.categoria_id = "";
-        }
+        const newState = { ...prev, [name]: type === "checkbox" ? checked : value };
+        if (name === 'disciplina_id') { newState.categoria_id = ""; }
         return newState;
     });
   };
@@ -180,18 +185,25 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
   const handleSubmit = () => {
     const payload = {
       ...formData,
-      organizador_id: Number(formData.organizador),
+      organizador_id: Number(formData.organizador) || null,
       disciplina_id: formData.disciplina_id ? Number(formData.disciplina_id) : null,
       categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
+      
       fecha_inicio: formData.fecha_inicio_date && formData.fecha_inicio_time ? new Date(`${formData.fecha_inicio_date}T${formData.fecha_inicio_time}`).toISOString() : null,
       fecha_fin: formData.fecha_fin_date && formData.fecha_fin_time ? new Date(`${formData.fecha_fin_date}T${formData.fecha_fin_time}`).toISOString() : null,
+      
+      costo: formData.costo === "" || formData.costo === null ? null : Number(formData.costo),
+      costo_viaje: formData.costo_viaje === "" || formData.costo_viaje === null ? null : Number(formData.costo_viaje),
+      costo_hospedaje: formData.costo_hospedaje === "" || formData.costo_hospedaje === null ? null : Number(formData.costo_hospedaje),
+      costo_comida: formData.costo_comida === "" || formData.costo_comida === null ? null : Number(formData.costo_comida),
     };
-    // Limpiar campos temporales
-    delete payload.organizador;
+
+    delete payload.organizador; 
     delete payload.fecha_inicio_date;
     delete payload.fecha_inicio_time;
     delete payload.fecha_fin_date;
     delete payload.fecha_fin_time;
+
     onSubmit(payload);
   };
   
@@ -207,8 +219,6 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
       <div className="min-h-[220px]">
         <label className="text-xl font-bold text-gray-800 mb-4 block">{currentStep.label}</label>
 
-        {/* --- RENDERIZADO CONDICIONAL DE PASOS --- */}
-        
         {currentStep.type === "datetime-split" && (
           <div className="space-y-4">
             <fieldset className="p-4 border rounded-lg">

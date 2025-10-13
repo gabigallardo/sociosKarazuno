@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     Usuario, Rol, Evento, SocioInfo, NivelSocio, 
-    Disciplina, Categoria
+    Disciplina, Categoria, 
 )
 from django.contrib.auth.hashers import make_password
 
@@ -85,7 +85,7 @@ class EventoSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'tipo', 'titulo', 'descripcion', 'fecha_inicio', 'fecha_fin', 
             'lugar', 'organizador', 'requisito_pago', 'costo', 'creado', 'publicado',
-            'disciplina', 'categoria', 'visibilidad', 'organizador_id', 'disciplina_id', 'categoria_id'
+            'disciplina', 'categoria', 'visibilidad', 'organizador_id', 'disciplina_id', 'categoria_id','costo_hospedaje', 'costo_viaje', 'costo_comida'
         ]
 
 

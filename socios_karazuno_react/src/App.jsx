@@ -17,6 +17,8 @@ import { UserProviderWrapper } from "./contexts/User.Context.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import HacerseSocioPage from "./pages/sociosP/HacerseSocioPage.jsx";
 import DeportesPage from "./pages/deportesP/DeportesPage.jsx";
+import MiPerfilPage from './pages/MiPerfilPage';
+
 
 
 
@@ -57,6 +59,8 @@ function App() {
               />
             } 
           />
+                    <Route path="/mi-perfil" element={<ProtectedRoute element={<MiPerfilPage />} rolesRequeridos={['socio']} />} />
+
         </Routes>
       </BrowserRouter>
     </UserProviderWrapper>

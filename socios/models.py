@@ -21,6 +21,32 @@ class NivelSocio(models.Model):
     def __str__(self):
         return f"Nivel {self.nivel}"
 
+# --- Modelos de Deportes y Categorías (MOVIDOS ARRIBA) ---
+
+class Disciplina(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+class Categoria(models.Model):
+    SEXO_CHOICES = [
+        ("masculino", "Masculino"),
+        ("femenino", "Femenino"),
+        ("mixto", "Mixto"),
+    ]
+
+    disciplina = models.ForeignKey(Disciplina, on_delete=models.CASCADE)
+    nombre_categoria = models.CharField(max_length=100)
+    edad_minima = models.IntegerField()
+    edad_maxima = models.IntegerField()
+    sexo = models.CharField(max_length=20, choices=SEXO_CHOICES)
+
+    def __str__(self):
+        return f"{self.nombre_categoria} - {self.disciplina.nombre}"
+
 
 class Usuario(models.Model):
     SEXO_CHOICES = [
@@ -66,41 +92,12 @@ class UsuarioRol(models.Model):
 
 
 class SocioInfo(models.Model):
-    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, primary_key=True)
+    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, primary_key=True, related_name='socioinfo')
     cuota_al_dia = models.BooleanField(default=True)
     nivel_socio = models.ForeignKey(NivelSocio, on_delete=models.SET_NULL, null=True, blank=True)
-
-
-class Disciplina(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
-    descripcion = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.nombre
-
-
-class Categoria(models.Model):
-    SEXO_CHOICES = [
-        ("masculino", "Masculino"),
-        ("femenino", "Femenino"),
-        ("mixto", "Mixto"),
-    ]
-
-    disciplina = models.ForeignKey(Disciplina, on_delete=models.CASCADE)
-    nombre_categoria = models.CharField(max_length=100)
-    edad_minima = models.IntegerField()
-    edad_maxima = models.IntegerField()
-    sexo = models.CharField(max_length=20, choices=SEXO_CHOICES)
-
-    def __str__(self):
-        return f"{self.nombre_categoria} - {self.disciplina.nombre}"
-
-
-class JugadorCategoria(models.Model):
-    usuario = models.ForeignKey(SocioInfo, on_delete=models.CASCADE)
-    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
-    fecha_alta = models.DateField(auto_now_add=True)
-    fecha_baja = models.DateField(blank=True, null=True)
+    
+    disciplina = models.ForeignKey(Disciplina, on_delete=models.SET_NULL, null=True, blank=True, related_name='socios')
+    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True, related_name='socios')
 
 
 class CategoriaEntrenador(models.Model):
@@ -168,7 +165,9 @@ class Evento(models.Model):
     creado = models.DateTimeField(auto_now_add=True)
     publicado = models.BooleanField(default=True)
     
-    # Campos añadidos para la nueva funcionalidad
+    costo_hospedaje = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Costo del hospedaje (si aplica)")
+    costo_viaje = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Costo del viaje/transporte (si aplica)")
+    costo_comida = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Costo estimado de comida (si aplica)")
     disciplina = models.ForeignKey(Disciplina, on_delete=models.SET_NULL, null=True, blank=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
     visibilidad = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='ALL')
@@ -216,5 +215,3 @@ class GrupoFamiliarIntegrante(models.Model):
 
     class Meta:
         unique_together = ("grupo_familiar", "usuario")
-
-        

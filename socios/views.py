@@ -18,6 +18,7 @@ from .permissions import RolePermission
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from django.utils import timezone
+from django.db import models
 
 # --- Vistas de Autenticación ---
 
@@ -32,7 +33,6 @@ class LoginView(APIView):
             usuario = Usuario.objects.get(email=email)
         except Usuario.DoesNotExist:
             return Response({"error": "Email no registrado"}, status=status.HTTP_400_BAD_REQUEST)
-        # Nota: Deberías usar un sistema de hasheo de contraseñas en producción
         if usuario.contrasena != contrasena:
             return Response({"error": "Contraseña incorrecta"}, status=status.HTTP_400_BAD_REQUEST)
         roles = list(usuario.roles.values_list('nombre', flat=True))
@@ -67,7 +67,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     serializer_class = UsuarioSerializer
     
     def get_permissions(self):
-        if self.action == 'list':
+        if self.action in ['list', 'actualizar_perfil_deportivo']:
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [RolePermission]
@@ -88,7 +88,6 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         socio_info = SocioInfo.objects.create(usuario=usuario, cuota_al_dia=False, nivel_socio=nivel_inicial)
         UsuarioRol.objects.create(usuario=usuario, rol=rol_socio)
         
-        # Lógica para crear la primera cuota
         monto_base = 15000.00
         descuento = nivel_inicial.descuento
         monto_final = monto_base * (1 - descuento / 100)
@@ -102,6 +101,23 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             "cuota_generada": True
         }, status=status.HTTP_201_CREATED)
 
+    @action(detail=False, methods=['put'], permission_classes=[IsAuthenticated], url_path='me/actualizar-perfil-deportivo')
+    def actualizar_perfil_deportivo(self, request):
+        usuario = request.user
+        try:
+            socio_info = usuario.socioinfo
+        except SocioInfo.DoesNotExist:
+            return Response({"error": "El usuario no es un socio activo."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        disciplina_id = request.data.get('disciplina_id')
+        categoria_id = request.data.get('categoria_id')
+        
+        socio_info.disciplina_id = disciplina_id
+        socio_info.categoria_id = categoria_id
+        socio_info.save()
+        
+        return Response(SocioInfoSerializer(socio_info).data, status=status.HTTP_200_OK)
+
 
 class RolesViewSet(viewsets.ModelViewSet):
     queryset = Rol.objects.all()
@@ -110,9 +126,35 @@ class RolesViewSet(viewsets.ModelViewSet):
     required_roles = ['admin']
 
 class EventoViewSet(viewsets.ModelViewSet):
-    queryset = Evento.objects.all()
     serializer_class = EventoSerializer
-    permission_classes = [IsAuthenticated] # Todos los autenticados pueden ver, pero solo los roles de gestión pueden escribir (controlado por el frontend)
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Evento.objects.filter(fecha_fin__gte=timezone.now()).order_by('fecha_inicio')
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated], url_path='mis-viajes')
+    def mis_viajes(self, request):
+        usuario = request.user
+        try:
+            socio_info = usuario.socioinfo
+            disciplina_socio = socio_info.disciplina
+            categoria_socio = socio_info.categoria
+        except SocioInfo.DoesNotExist:
+            return Response([], status=status.HTTP_200_OK) 
+
+        if not disciplina_socio:
+            return Response([], status=status.HTTP_200_OK)
+        
+        viajes = Evento.objects.filter(
+            tipo='viaje',
+            disciplina=disciplina_socio,
+            fecha_fin__gte=timezone.now()
+        ).filter(
+            models.Q(categoria__isnull=True) | models.Q(categoria=categoria_socio)
+        ).order_by('fecha_inicio')
+        
+        serializer = self.get_serializer(viajes, many=True)
+        return Response(serializer.data)
 
 class NivelSocioViewSet(viewsets.ModelViewSet):
     queryset = NivelSocio.objects.all()
@@ -124,7 +166,6 @@ class SocioInfoViewSet(viewsets.ModelViewSet):
     serializer_class = SocioInfoSerializer
     permission_classes = [IsAuthenticated]
 
-# --- Vistas para Deportes y Categorías ---
 
 class DisciplinaViewSet(viewsets.ModelViewSet):
     queryset = Disciplina.objects.all()

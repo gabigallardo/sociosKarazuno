@@ -66,3 +66,14 @@ export const hacerseSocio = async (usuarioId) => {
     throw error;
   }
 };
+
+export const actualizarPerfilDeportivo = async (data) => {
+  try {
+    const response = await api.put(`http://localhost:8000/socios/api/v1/usuarios/me/actualizar-perfil-deportivo/`, data);
+    console.log("✅ Perfil deportivo actualizado:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error actualizando perfil deportivo:", error.response?.data || error.message);
+    throw error;
+  }
+};

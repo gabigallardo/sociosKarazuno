@@ -58,3 +58,13 @@ export const deleteEvento = async (id) => {
     throw error;
   }
 };
+export const getMisViajes = async () => {
+  try {
+    const response = await api.get(`${BASE_PATH}/mis-viajes/`);
+    console.log("✅ Mis Viajes obtenidos:", response.data.length);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error fetching mis viajes:", error.response?.status, error.response?.data);
+    throw error;
+  }
+};

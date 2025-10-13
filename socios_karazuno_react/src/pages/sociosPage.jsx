@@ -24,6 +24,8 @@ function SociosPage() {
     const fetchEventos = async () => {
       try {
         const data = await getAllEventos();
+        // La API ya devuelve los eventos futuros y ordenados.
+        // Tomamos solo los primeros 3 para mostrar en la home.
         setEventos(data.slice(0, 3));
       } catch (error) {
         console.error("Error al obtener eventos:", error);

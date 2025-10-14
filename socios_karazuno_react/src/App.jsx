@@ -19,6 +19,7 @@ import HacerseSocioPage from "./pages/sociosP/HacerseSocioPage.jsx";
 import DeportesPage from "./pages/deportesP/DeportesPage.jsx";
 import MiPerfilPage from './pages/MiPerfilPage';
 import MisCuotasPage from "./pages/cuotasP/misCuotasPage.jsx";
+import PagarCuotaPage from "./pages/cuotasP/pagarCuotaPage.jsx";
 
 
 
@@ -52,6 +53,7 @@ function App() {
           <Route path="/eventos/:id" element={<ProtectedRoute element={<EventosIdPage />} />} />
           <Route path="/hacerse-socio" element={<ProtectedRoute element={<HacerseSocioPage />} />} />
           <Route path="/mis-cuotas" element={<ProtectedRoute element={<MisCuotasPage />} rolesRequeridos={['socio']} />} />
+          <Route path="/cuotas/pagar/:id" element={<ProtectedRoute element={<PagarCuotaPage />} rolesRequeridos={['socio']} />} />
 <Route 
             path="/deportes" 
             element={

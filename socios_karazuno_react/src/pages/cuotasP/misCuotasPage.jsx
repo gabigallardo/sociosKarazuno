@@ -2,11 +2,13 @@ import React, { useState, useEffect, useContext } from "react";
 import { getMisCuotas } from "../../api/cuotas.api";
 import { UserContext } from "../../contexts/User.Context.jsx";
 import { FaMoneyBillWave, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 export default function MisCuotasPage() {
   const { user } = useContext(UserContext);
   const [cuotas, setCuotas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchCuotas() {
@@ -133,13 +135,16 @@ export default function MisCuotasPage() {
                 </div>
 
                 {!isPagada && (
-                  <button className={`mt-4 w-full py-2 rounded-lg font-bold transition ${
-                    isVencida 
-                      ? "bg-red-600 text-white hover:bg-red-700" 
-                      : "bg-green-600 text-white hover:bg-green-700"
-                  }`}>
-                    Pagar Ahora
-                  </button>
+                    <button 
+                        onClick={() => navigate(`/cuotas/pagar/${cuota.id}`)}
+                        className={`mt-4 w-full py-2 rounded-lg font-bold transition ${
+                        isVencida 
+                            ? "bg-red-600 text-white hover:bg-red-700" 
+                            : "bg-green-600 text-white hover:bg-green-700"
+                        }`}
+                    >
+                        Pagar Ahora
+                    </button>
                 )}
               </div>
             );

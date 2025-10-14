@@ -1,7 +1,6 @@
 from django.db import models
 import uuid
 from django.utils import timezone
-from django.contrib.auth.hashers import make_password
 
 
 class Rol(models.Model):
@@ -22,6 +21,7 @@ class NivelSocio(models.Model):
     def __str__(self):
         return f"Nivel {self.nivel}"
 
+# --- Modelos de Deportes y Categorías (MOVIDOS ARRIBA) ---
 
 class Disciplina(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
@@ -71,11 +71,6 @@ class Usuario(models.Model):
     activo = models.BooleanField(default=True)
     roles = models.ManyToManyField("Rol", through="UsuarioRol", related_name="usuarios")
 
-    def save(self, *args, **kwargs):
-        if not self.contrasena.startswith(('pbkdf2_sha256$', 'bcrypt$', 'argon2')):
-            self.contrasena = make_password(self.contrasena)
-        super().save(*args, **kwargs)
-
     @property
     def is_authenticated(self):
         return True
@@ -100,6 +95,7 @@ class SocioInfo(models.Model):
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, primary_key=True, related_name='socioinfo')
     cuota_al_dia = models.BooleanField(default=True)
     nivel_socio = models.ForeignKey(NivelSocio, on_delete=models.SET_NULL, null=True, blank=True)
+    
     disciplina = models.ForeignKey(Disciplina, on_delete=models.SET_NULL, null=True, blank=True, related_name='socios')
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True, related_name='socios')
 
@@ -144,8 +140,18 @@ class Pago(models.Model):
 
 
 class Evento(models.Model):
-    TIPO_CHOICES = [("torneo", "Torneo"), ("partido", "Partido"), ("viaje", "Viaje"), ("otro", "Otro")]
-    VISIBILITY_CHOICES = [('ALL', 'Todos'), ('DISCIPLINE', 'Disciplina'), ('CATEGORY', 'Categoría')]
+    TIPO_CHOICES = [
+        ("torneo", "Torneo"),
+        ("partido", "Partido"),
+        ("viaje", "Viaje"),
+        ("otro", "Otro"),
+    ]
+    
+    VISIBILITY_CHOICES = [
+        ('ALL', 'Todos los socios'),
+        ('DISCIPLINE', 'Solo socios del mismo deporte'),
+        ('CATEGORY', 'Solo socios de la misma categoría'),
+    ]
 
     tipo = models.CharField(max_length=50, choices=TIPO_CHOICES)
     titulo = models.CharField(max_length=255)
@@ -153,33 +159,18 @@ class Evento(models.Model):
     fecha_inicio = models.DateTimeField()
     fecha_fin = models.DateTimeField()
     lugar = models.CharField(max_length=255)
-    organizador = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='eventos_organizados')
+    organizador = models.ForeignKey(Usuario, on_delete=models.CASCADE)
     requisito_pago = models.BooleanField(default=False)
     costo = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     creado = models.DateTimeField(auto_now_add=True)
     publicado = models.BooleanField(default=True)
     
-    costo_hospedaje = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    costo_viaje = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    costo_comida = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    
+    costo_hospedaje = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Costo del hospedaje (si aplica)")
+    costo_viaje = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Costo del viaje/transporte (si aplica)")
+    costo_comida = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Costo estimado de comida (si aplica)")
     disciplina = models.ForeignKey(Disciplina, on_delete=models.SET_NULL, null=True, blank=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
     visibilidad = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='ALL')
-    
-    costo_destinatario = models.CharField(max_length=100, blank=True, null=True, help_text="A quién pagar la inscripción")
-    costo_viaje_destinatario = models.CharField(max_length=100, blank=True, null=True, help_text="A quién pagar el viaje")
-    costo_hospedaje_destinatario = models.CharField(max_length=100, blank=True, null=True, help_text="A quién pagar el hospedaje")
-    costo_comida_destinatario = models.CharField(max_length=100, blank=True, null=True, help_text="A quién pagar la comida")
-
-    profesores = models.ManyToManyField(
-        Usuario,
-        related_name='viajes_a_cargo',
-        blank=True,
-        limit_choices_to={'roles__nombre': 'profesor'}
-    )
-    def __str__(self):
-        return self.titulo
 
 
 class CalendarItem(models.Model):

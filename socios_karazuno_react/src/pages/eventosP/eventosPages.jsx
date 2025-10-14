@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getAllEventos, deleteEvento, getMisViajes } from "../../api/eventos.api"; 
 import { getAllDisciplinas } from "../../api/disciplinas.api.js";
+import ListaEventos from "../../features/eventos/listaEventos";
 import { UserContext } from "../../contexts/User.Context.jsx";
-import { FaPlus, FaCalendarAlt, FaPlane, FaEdit, FaTrash } from "react-icons/fa";
+import { FaPlus, FaCalendarAlt, FaPlane } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 
 export default function EventosPage() {
@@ -24,17 +25,14 @@ export default function EventosPage() {
     async function CargarDatos() {
       setLoading(true);
       try {
-        let eventosResponse;
+        let eventosData;
         if (vistaActual === 'todos') {
-          eventosResponse = await getAllEventos();
+          eventosData = await getAllEventos();
         } else {
-          eventosResponse = await getMisViajes();
+          eventosData = await getMisViajes();
         }
         
-        const disciplinasResponse = await getAllDisciplinas();
-
-        const eventosData = Array.isArray(eventosResponse.data) ? eventosResponse.data : [];
-        const disciplinasData = Array.isArray(disciplinasResponse.data) ? disciplinasResponse.data : [];
+        const disciplinasData = await getAllDisciplinas();
 
         setTodosLosEventos(eventosData);
         setEventosFiltrados(eventosData);
@@ -60,35 +58,31 @@ export default function EventosPage() {
     }
   };
 
-  const handleEdit = (e, eventoId) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleEdit = (evento) => {
     if (puedeGestionarEventos) {
-      navigate(`/eventos/editar/${eventoId}`);
+      navigate(`/eventos/editar/${evento.id}`);
     }
   };
 
-  const handleDelete = async (e, id) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDelete = async (id) => {
     if (puedeGestionarEventos) {
-        if (window.confirm('¿Estás seguro de que quieres eliminar este evento?')) {
-            try {
-                await deleteEvento(id);
-                toast.success("Evento eliminado");
-                const nuevosEventos = todosLosEventos.filter(e => e.id !== id);
-                setTodosLosEventos(nuevosEventos);
-                setEventosFiltrados(nuevosEventos);
-            } catch (error) {
-                console.error("Error eliminando evento:", error);
-                toast.error("Error al eliminar el evento.");
-            }
-        }
+      try {
+        await deleteEvento(id);
+        toast.success("Evento eliminado");
+        // Actualizar listas sin recargar
+        const nuevosEventos = todosLosEventos.filter(e => e.id !== id);
+        const nuevosFiltrados = eventosFiltrados.filter(e => e.id !== id);
+        setTodosLosEventos(nuevosEventos);
+        setEventosFiltrados(nuevosFiltrados);
+      } catch (error) {
+        console.error("Error eliminando evento:", error);
+        toast.error("Error al eliminar el evento.");
+      }
     }
   };
 
   if (loading) {
-    return <p className="text-lg p-6 font-semibold text-gray-700 text-center">Cargando...</p>;
+    return <p className="text-lg p-6 font-semibold text-gray-700">Cargando...</p>;
   }
 
   return (
@@ -109,6 +103,7 @@ export default function EventosPage() {
         )}
       </div>
 
+      {/* Selector de Vistas para Socios */}
       {esSocio && (
         <div className="mb-6 flex border border-gray-200 rounded-lg p-1 w-fit bg-gray-50">
             <button onClick={() => setVistaActual('todos')} className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${vistaActual === 'todos' ? 'bg-red-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100'}`}>
@@ -120,18 +115,20 @@ export default function EventosPage() {
         </div>
       )}
 
+      {/* Filtros */}
       <div className="my-4 flex flex-wrap gap-2 items-center">
         <p className="font-semibold mr-2 text-gray-600">Filtrar por Deporte:</p>
         <button onClick={() => filtrarPorDisciplina(null)} className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filtroActivo === null ? 'bg-red-600 text-white shadow' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
             Todos
         </button>
-        {disciplinas?.map(d => (
+        {disciplinas.map(d => (
             <button key={d.id} onClick={() => filtrarPorDisciplina(d.id)} className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filtroActivo === d.id ? 'bg-red-600 text-white shadow' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
                 {d.nombre}
             </button>
         ))}
       </div>
 
+      {/* Lista de Eventos */}
       {eventosFiltrados.length === 0 ? (
         <p className="text-center text-gray-500 italic p-10">
           {vistaActual === 'mis_viajes' 
@@ -139,33 +136,12 @@ export default function EventosPage() {
             : 'No hay eventos que coincidan con el filtro.'}
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {eventosFiltrados.map((evento) => (
-                <Link to={`/eventos/${evento.id}`} key={evento.id} className="group block bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden relative">
-                    <div className="h-48 overflow-hidden">
-                        <img
-                        src={evento.imagen_url || 'https://placehold.co/400x200/ef4444/white?text=Evento'}
-                        alt={`Imagen de ${evento.titulo}`}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                    </div>
-                    <div className="p-4">
-                        <h2 className="text-xl font-bold text-gray-800 truncate">{evento.titulo}</h2>
-                        <p className="text-sm text-gray-500 mt-1">{new Date(evento.fecha_inicio).toLocaleDateString()}</p>
-                    </div>
-                    {puedeGestionarEventos && (
-                        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={(e) => handleEdit(e, evento.id)} className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors shadow-lg">
-                            <FaEdit/>
-                        </button>
-                        <button onClick={(e) => handleDelete(e, evento.id)} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg">
-                            <FaTrash/>
-                        </button>
-                        </div>
-                    )}
-                </Link>
-            ))}
-        </div>
+        <ListaEventos
+          eventos={eventosFiltrados}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          puedeGestionar={puedeGestionarEventos}
+        />
       )}
     </div>
   );

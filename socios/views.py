@@ -68,7 +68,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     serializer_class = UsuarioSerializer
     
     def get_permissions(self):
-        if self.action in ['list', 'actualizar_perfil_deportivo']:
+        if self.action in ['list', 'actualizar_perfil_deportivo', 'hacerse_socio']:
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [RolePermission]

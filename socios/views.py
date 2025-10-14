@@ -6,7 +6,7 @@ from .models import (
 )
 from .serializer import (
     UsuarioSerializer, EventoSerializer, RolSerializer, RegisterSerializer, 
-    SocioInfoSerializer, NivelSocioSerializer, DisciplinaSerializer, CategoriaSerializer
+    SocioInfoSerializer, NivelSocioSerializer, DisciplinaSerializer, CategoriaSerializer, CuotaSerializer
 )
 import jwt
 from datetime import datetime, timedelta
@@ -190,4 +190,23 @@ class CategoriaViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = [RolePermission]
             self.required_roles = ['admin', 'dirigente', 'profesor']
+        return [permission() for permission in permission_classes]
+    
+class CuotaViewSet(viewsets.ModelViewSet):
+    queryset = Cuota.objects.all()
+    serializer_class = CuotaSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # SIEMPRE filtrar por usuario, no solo en list
+        return Cuota.objects.filter(usuario=self.request.user).order_by('-periodo')
+    
+    def get_permissions(self):
+        # Solo permitir lectura (GET) a usuarios normales
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            # Solo admins pueden crear/modificar/eliminar cuotas
+            permission_classes = [RolePermission]
+            self.required_roles = ['admin']
+        else:
+            permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]

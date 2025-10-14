@@ -18,6 +18,7 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import HacerseSocioPage from "./pages/sociosP/HacerseSocioPage.jsx";
 import DeportesPage from "./pages/deportesP/DeportesPage.jsx";
 import MiPerfilPage from './pages/MiPerfilPage';
+import MisCuotasPage from "./pages/cuotasP/misCuotasPage.jsx";
 
 
 
@@ -50,6 +51,7 @@ function App() {
           <Route path="/eventos/editar/:id" element={<ProtectedRoute element={<EventosEditarPage />} />} />
           <Route path="/eventos/:id" element={<ProtectedRoute element={<EventosIdPage />} />} />
           <Route path="/hacerse-socio" element={<ProtectedRoute element={<HacerseSocioPage />} />} />
+          <Route path="/mis-cuotas" element={<ProtectedRoute element={<MisCuotasPage />} rolesRequeridos={['socio']} />} />
 <Route 
             path="/deportes" 
             element={

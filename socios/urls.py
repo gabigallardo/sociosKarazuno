@@ -17,6 +17,7 @@ router.register(r'niveles-socio', views.NivelSocioViewSet, 'niveles-socio')
 router.register(r'socios-info', views.SocioInfoViewSet, 'socios-info')
 router.register(r'disciplinas', views.DisciplinaViewSet, 'disciplinas')
 router.register(r'categorias', views.CategoriaViewSet, 'categorias')
+router.register(r'cuotas', views.CuotaViewSet, 'cuotas')
 
 
 urlpatterns = [

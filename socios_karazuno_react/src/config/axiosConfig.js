@@ -29,6 +29,7 @@ api.interceptors.request.use(
 );
 
 // Interceptor para manejar errores de autenticación
+
 api.interceptors.response.use(
   (response) => {
     console.log('✅ Respuesta exitosa:', response.config.url);
@@ -37,9 +38,11 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
       console.error('❌ Error de autenticación:', error.response?.status, error.config?.url);
+
+      localStorage.removeItem('authToken');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
-
 export default api;

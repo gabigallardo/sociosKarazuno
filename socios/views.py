@@ -19,6 +19,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from django.utils import timezone
 from django.db import models
+from django.contrib.auth.hashers import make_password, check_password
 
 # --- Vistas de Autenticación ---
 
@@ -33,7 +34,7 @@ class LoginView(APIView):
             usuario = Usuario.objects.get(email=email)
         except Usuario.DoesNotExist:
             return Response({"error": "Email no registrado"}, status=status.HTTP_400_BAD_REQUEST)
-        if usuario.contrasena != contrasena:
+        if not check_password(contrasena, usuario.contrasena):
             return Response({"error": "Contraseña incorrecta"}, status=status.HTTP_400_BAD_REQUEST)
         roles = list(usuario.roles.values_list('nombre', flat=True))
         payload = {

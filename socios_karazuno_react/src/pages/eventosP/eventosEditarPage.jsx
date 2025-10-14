@@ -1,64 +1,80 @@
-import {useEffect, useState } from "react";
-import { getEventoById, updateEvento } from "../../api/eventos.api";
-import EventosForm from "../../features/eventos/eventosForm";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getAllUsuarios } from "../../api/usuarios.api";
+import EventosForm from "../../features/eventos/eventosForm";
+import { getEventoById, updateEvento } from "../../api/eventos.api";
+import { getAllDisciplinas } from "../../api/disciplinas.api";
+import { getAllCategorias } from "../../api/categorias.api";
+import { getAllUsuarios } from "../../api/usuarios.api"; 
+import { toast } from "react-hot-toast";
 
 export default function EventosEditarPage() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [evento, setEvento] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [initialData, setInitialData] = useState(null);
+  const [disciplinas, setDisciplinas] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const params = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchEvento = async () => {
+    async function loadAllDataForEdit() {
       try {
-        const data = await getEventoById(id);
-        setEvento({
-          ...data,
-          organizador: data.organizador.id, // Asegura que organizador sea solo el ID
-        });
+        setIsLoading(true);
+        const [eventoRes, disciplinasRes, categoriasRes, usuariosRes] = await Promise.all([
+          getEventoById(params.id),
+          getAllDisciplinas(),
+          getAllCategorias(),
+          getAllUsuarios(),
+        ]);
+
+        if (!eventoRes) {
+          toast.error("El evento que intentas editar no fue encontrado.");
+          navigate("/eventos");
+          return;
+        }
+
+        setInitialData(eventoRes);
+        setDisciplinas(disciplinasRes);
+        setCategorias(categoriasRes);
+        setUsuarios(usuariosRes);
+        
       } catch (error) {
-        console.error("Error cargando evento:", error);
+        console.error("Error al cargar los datos para editar:", error);
+        toast.error("No se pudieron cargar los datos necesarios para la edición.");
       } finally {
-        setLoading(false);
-      }
-    };
-    fetchEvento();
-  }, [id]);
-
-  useEffect(() => {
-    async function fetchUsuarios() {
-      try {
-        const data = await getAllUsuarios();
-        setUsuarios(data);
-      } catch (error) {
-        console.error("Error fetching usuarios en eventosEditarPage:", error);
+        setIsLoading(false);
       }
     }
-    fetchUsuarios();
-  }, []);
+    loadAllDataForEdit();
+  }, [params.id, navigate]);
 
-  const handleUpdate = async (eventoData) => {
+  const handleUpdate = async (data) => {
     try {
-      const payload = {...eventoData, organizador_id: eventoData.organizador};
-      delete payload.organizador; // Elimina el campo organizador que no es necesario
-      await updateEvento(id, payload);
+      await updateEvento(params.id, data);
+      toast.success("Evento actualizado con éxito");
       navigate("/eventos");
     } catch (error) {
-      console.error("Error actualizando evento:", error);
+      console.error("Error al actualizar el evento:", error);
+      toast.error("No se pudo actualizar el evento.");
     }
   };
 
-  if (loading) {
-    return <p>Cargando Evento...</p>;
+  if (isLoading) {
+    return <div className="text-center mt-8">Cargando formulario de edición...</div>;
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl mb-4">Editar Evento</h1>
-      {<EventosForm initialValues={evento} onSubmit={handleUpdate} usuarios={usuarios} />}
+    <div className="max-w-4xl mx-auto p-4">
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Editar Evento</h1>
+      <EventosForm 
+        onSubmit={handleUpdate} 
+        initialValues={initialData}
+        disciplinas={disciplinas}
+        categorias={categorias}
+        usuarios={usuarios}
+        isLoading={false} 
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { FaArrowLeft, FaArrowRight, FaCheck, FaCalendar, FaClock, FaTag } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaCheck, FaCalendar, FaClock, FaTag, FaUsers, FaMoneyBillWave } from "react-icons/fa";
+import { toast } from "react-hot-toast";
 
 const stepsConfig = [
   {
@@ -66,7 +67,7 @@ const stepsConfig = [
   },
   {
     id: "requisito_pago",
-    label: "¿El evento requiere el pago de una cuota?",
+    label: "¿El evento requiere el pago de una cuota de inscripción?",
     type: "toggle",
     validation: () => null,
   },
@@ -84,26 +85,9 @@ const stepsConfig = [
     }
   },
   {
-    id: "costo_viaje",
-    label: "Costo del viaje/transporte (ARS, opcional)",
-    type: "number",
-    placeholder: "0.00",
-    condition: (formData) => formData.tipo === 'viaje',
-    validation: () => null,
-  },
-  {
-    id: "costo_hospedaje",
-    label: "Costo del hospedaje (ARS, opcional)",
-    type: "number",
-    placeholder: "0.00",
-    condition: (formData) => formData.tipo === 'viaje',
-    validation: () => null,
-  },
-  {
-    id: "costo_comida",
-    label: "Costo estimado de comida (ARS, opcional)",
-    type: "number",
-    placeholder: "0.00",
+    id: "gestion_viaje",
+    label: "Gestiona los costos y responsables del viaje",
+    type: "gestion-viaje",
     condition: (formData) => formData.tipo === 'viaje',
     validation: () => null,
   },
@@ -111,6 +95,8 @@ const stepsConfig = [
 
 export default function EventosForm({ onSubmit, initialValues, usuarios, disciplinas, categorias, isLoading = false }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const profesores = usuarios?.filter(u => Array.isArray(u.roles) && u.roles.includes('profesor')) || [];
+  
   const [formData, setFormData] = useState({
     tipo: "torneo",
     titulo: "",
@@ -128,6 +114,11 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
     costo_viaje: "",
     costo_hospedaje: "",
     costo_comida: "",
+    pago_inscripcion_a: "",
+    pago_transporte_a: "",
+    pago_hospedaje_a: "",
+    pago_comida_a: "",
+    profesores_a_cargo: [],
   });
   const [error, setError] = useState(null);
   
@@ -140,6 +131,11 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
       setFormData(prev => ({
         ...prev,
         ...rest,
+        profesores_a_cargo: initialValues.profesores_a_cargo || [],
+        pago_inscripcion_a: initialValues.pago_inscripcion_a || "",
+        pago_transporte_a: initialValues.pago_transporte_a || "",
+        pago_hospedaje_a: initialValues.pago_hospedaje_a || "",
+        pago_comida_a: initialValues.pago_comida_a || "",
         fecha_inicio_date: startDate ? startDate.toISOString().split('T')[0] : "",
         fecha_inicio_time: startDate ? startDate.toTimeString().slice(0, 5) : "",
         fecha_fin_date: endDate ? endDate.toISOString().split('T')[0] : "",
@@ -174,7 +170,21 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type, checked, options } = e.target;
+    
+    if (name === "profesores_a_cargo") {
+      const selectedIds = Array.from(options)
+        .filter(option => option.selected)
+        .map(option => option.value);
+      
+      if (selectedIds.length > 4) {
+        toast.error("Puedes seleccionar un máximo de 4 profesores.");
+        return;
+      }
+      setFormData(prev => ({ ...prev, [name]: selectedIds }));
+      return;
+    }
+
     setFormData((prev) => {
         const newState = { ...prev, [name]: type === "checkbox" ? checked : value };
         if (name === 'disciplina_id') { newState.categoria_id = ""; }
@@ -185,24 +195,27 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
   const handleSubmit = () => {
     const payload = {
       ...formData,
-      organizador_id: Number(formData.organizador) || null,
-      disciplina_id: formData.disciplina_id ? Number(formData.disciplina_id) : null,
-      categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
-      
+      disciplina: formData.disciplina_id ? Number(formData.disciplina_id) : null,
+      categoria: formData.categoria_id ? Number(formData.categoria_id) : null,
       fecha_inicio: formData.fecha_inicio_date && formData.fecha_inicio_time ? new Date(`${formData.fecha_inicio_date}T${formData.fecha_inicio_time}`).toISOString() : null,
       fecha_fin: formData.fecha_fin_date && formData.fecha_fin_time ? new Date(`${formData.fecha_fin_date}T${formData.fecha_fin_time}`).toISOString() : null,
-      
       costo: formData.costo === "" || formData.costo === null ? null : Number(formData.costo),
       costo_viaje: formData.costo_viaje === "" || formData.costo_viaje === null ? null : Number(formData.costo_viaje),
       costo_hospedaje: formData.costo_hospedaje === "" || formData.costo_hospedaje === null ? null : Number(formData.costo_hospedaje),
       costo_comida: formData.costo_comida === "" || formData.costo_comida === null ? null : Number(formData.costo_comida),
+      pago_inscripcion_a: formData.pago_inscripcion_a ? Number(formData.pago_inscripcion_a) : null,
+      pago_transporte_a: formData.pago_transporte_a ? Number(formData.pago_transporte_a) : null,
+      pago_hospedaje_a: formData.pago_hospedaje_a ? Number(formData.pago_hospedaje_a) : null,
+      pago_comida_a: formData.pago_comida_a ? Number(formData.pago_comida_a) : null,
+      profesores_a_cargo: formData.profesores_a_cargo.map(id => Number(id)),
     };
 
-    delete payload.organizador; 
     delete payload.fecha_inicio_date;
     delete payload.fecha_inicio_time;
     delete payload.fecha_fin_date;
     delete payload.fecha_fin_time;
+    delete payload.disciplina_id;
+    delete payload.categoria_id;
 
     onSubmit(payload);
   };
@@ -216,8 +229,71 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
         <div className="bg-gray-200 rounded-full h-2"><div className="bg-red-600 h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div></div>
       </div>
 
-      <div className="min-h-[220px]">
+      <div className="min-h-[350px]">
         <label className="text-xl font-bold text-gray-800 mb-4 block">{currentStep.label}</label>
+
+        {currentStep.type === "gestion-viaje" && (
+            <div className="space-y-4 animate-fade-in">
+                <fieldset className="p-4 border rounded-lg">
+                    <legend className="px-2 text-sm font-medium text-gray-600 flex items-center gap-2"><FaUsers/> Profesores a Cargo (hasta 4)</legend>
+                    <select 
+                        name="profesores_a_cargo" 
+                        multiple={true} 
+                        value={formData.profesores_a_cargo} 
+                        onChange={handleChange}
+                        className="w-full p-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-red-500 focus:outline-none h-40"
+                    >
+                        {profesores.map(p => <option key={p.id} value={p.id}>{`${p.nombre} ${p.apellido}`}</option>)}
+                    </select>
+                </fieldset>
+                
+                <fieldset className="p-4 border rounded-lg space-y-3">
+                    <legend className="px-2 text-sm font-medium text-gray-600 flex items-center gap-2"><FaMoneyBillWave/> Asignación de Pagos (opcional)</legend>
+                    {formData.requisito_pago && (
+                    <div className="grid grid-cols-2 gap-4 items-end">
+                        <input type="hidden" name="costo" value={formData.costo} />
+                        <div>
+                            <label className="text-sm font-medium text-gray-600 block mb-1">Inscripción (${formData.costo})</label>
+                            <select name="pago_inscripcion_a" value={formData.pago_inscripcion_a} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-lg text-base">
+                                <option value="">Pagar a...</option>
+                                {profesores.map(p => <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>)}
+                            </select>
+                        </div>
+                    </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4 items-end">
+                        <div>
+                            <label className="text-sm font-medium text-gray-600 block mb-1">Transporte</label>
+                            <input type="number" name="costo_viaje" value={formData.costo_viaje} placeholder="0.00" onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-lg"/>
+                        </div>
+                        <select name="pago_transporte_a" value={formData.pago_transporte_a} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-lg text-base">
+                            <option value="">Pagar a...</option>
+                            {profesores.map(p => <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>)}
+                        </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 items-end">
+                        <div>
+                            <label className="text-sm font-medium text-gray-600 block mb-1">Hospedaje</label>
+                            <input type="number" name="costo_hospedaje" value={formData.costo_hospedaje} placeholder="0.00" onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-lg"/>
+                        </div>
+                        <select name="pago_hospedaje_a" value={formData.pago_hospedaje_a} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-lg text-base">
+                            <option value="">Pagar a...</option>
+                            {profesores.map(p => <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>)}
+                        </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 items-end">
+                        <div>
+                            <label className="text-sm font-medium text-gray-600 block mb-1">Comida</label>
+                            <input type="number" name="costo_comida" value={formData.costo_comida} placeholder="0.00" onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-lg"/>
+                        </div>
+                        <select name="pago_comida_a" value={formData.pago_comida_a} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-lg text-base">
+                            <option value="">Pagar a...</option>
+                            {profesores.map(p => <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>)}
+                        </select>
+                    </div>
+                </fieldset>
+            </div>
+        )}
 
         {currentStep.type === "datetime-split" && (
           <div className="space-y-4">
@@ -239,24 +315,24 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
         )}
 
         {currentStep.type === "disciplina-categoria" && (
-            <div className="space-y-4">
-                <div>
-                    <label className="text-sm font-medium text-gray-600 block mb-1">Disciplina</label>
-                    <select name="disciplina_id" value={formData.disciplina_id} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none">
-                        <option value="">-- Ninguna --</option>
-                        {disciplinas?.map(d => <option key={d.id} value={d.id}>{d.nombre}</option>)}
-                    </select>
-                </div>
-                {formData.disciplina_id && (
-                    <div>
-                        <label className="text-sm font-medium text-gray-600 block mb-1">Categoría</label>
-                        <select name="categoria_id" value={formData.categoria_id} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none">
-                            <option value="">-- Todas las del deporte --</option>
-                            {categorias?.filter(c => c.disciplina == formData.disciplina_id).map(c => <option key={c.id} value={c.id}>{c.nombre_categoria}</option>)}
-                        </select>
-                    </div>
-                )}
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-600 block mb-1">Disciplina</label>
+              <select name="disciplina_id" value={formData.disciplina_id} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none">
+                <option value="">-- Ninguna --</option>
+                {disciplinas?.map(d => <option key={d.id} value={d.id}>{d.nombre}</option>)}
+              </select>
             </div>
+            {formData.disciplina_id && (
+              <div>
+                <label className="text-sm font-medium text-gray-600 block mb-1">Categoría</label>
+                <select name="categoria_id" value={formData.categoria_id} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none">
+                  <option value="">-- Todas las del deporte --</option>
+                  {categorias?.filter(c => c.disciplina == formData.disciplina_id).map(c => <option key={c.id} value={c.id}>{c.nombre_categoria}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
         )}
 
         {currentStep.type === "select" && (
@@ -291,7 +367,7 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
           <FaArrowLeft className="inline mr-2" /> Atrás
         </button>
         <button type="button" onClick={handleNext} disabled={isLoading} className="py-2 px-6 rounded-lg font-semibold text-white bg-red-600 hover:bg-red-700 disabled:bg-gray-400">
-          {currentStepIndex === visibleSteps.length - 1 ? ( <> {isLoading ? 'Creando...' : 'Crear Evento'} <FaCheck className="inline ml-2" /> </> ) : ( <> Siguiente <FaArrowRight className="inline ml-2" /> </> )}
+          {currentStepIndex === visibleSteps.length - 1 ? ( <> {isLoading ? 'Guardando...' : 'Finalizar'} <FaCheck className="inline ml-2" /> </> ) : ( <> Siguiente <FaArrowRight className="inline ml-2" /> </> )}
         </button>
       </div>
     </div>

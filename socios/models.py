@@ -1,6 +1,8 @@
+
 from django.db import models
 import uuid
 from django.utils import timezone
+from django.conf import settings
 
 
 class Rol(models.Model):
@@ -21,7 +23,6 @@ class NivelSocio(models.Model):
     def __str__(self):
         return f"Nivel {self.nivel}"
 
-# --- Modelos de Deportes y Categorías (MOVIDOS ARRIBA) ---
 
 class Disciplina(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
@@ -168,7 +169,42 @@ class Evento(models.Model):
     costo_hospedaje = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Costo del hospedaje (si aplica)")
     costo_viaje = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Costo del viaje/transporte (si aplica)")
     costo_comida = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Costo estimado de comida (si aplica)")
+    pago_inscripcion_a = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='pagos_inscripcion_recibidos'
+    )
+    pago_transporte_a = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='pagos_transporte_recibidos'
+    )
+    pago_hospedaje_a = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='pagos_hospedaje_recibidos'
+    )
+    pago_comida_a = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='pagos_comida_recibidos'
+    )
+
+    profesores_a_cargo = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, 
+        related_name='viajes_a_cargo', 
+        blank=True
+    )
     disciplina = models.ForeignKey(Disciplina, on_delete=models.SET_NULL, null=True, blank=True)
+
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
     visibilidad = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='ALL')
 

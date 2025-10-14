@@ -169,40 +169,12 @@ class Evento(models.Model):
     costo_hospedaje = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Costo del hospedaje (si aplica)")
     costo_viaje = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Costo del viaje/transporte (si aplica)")
     costo_comida = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Costo estimado de comida (si aplica)")
-    pago_inscripcion_a = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='pagos_inscripcion_recibidos'
-    )
-    pago_transporte_a = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='pagos_transporte_recibidos'
-    )
-    pago_hospedaje_a = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='pagos_hospedaje_recibidos'
-    )
-    pago_comida_a = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='pagos_comida_recibidos'
-    )
+    pago_inscripcion_a = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='pagos_inscripcion_eventos')
+    pago_transporte_a = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='pagos_transporte_eventos')
+    pago_hospedaje_a = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='pagos_hospedaje_eventos')
+    pago_comida_a = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='pagos_comida_eventos')
+    profesores_a_cargo = models.ManyToManyField(Usuario, blank=True, related_name='eventos_profesor_cargo')
 
-    profesores_a_cargo = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, 
-        related_name='viajes_a_cargo', 
-        blank=True
-    )
     disciplina = models.ForeignKey(Disciplina, on_delete=models.SET_NULL, null=True, blank=True)
 
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)

@@ -213,39 +213,48 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
     });
   };
   
-  const handleSubmit = () => {
-    const payload = {
-      ...formData,
-      organizador_id: formData.organizador ? Number(formData.organizador) : null,
-      
-      disciplina: formData.disciplina_id ? Number(formData.disciplina_id) : null,
-      categoria: formData.categoria_id ? Number(formData.categoria_id) : null,
-      
-      fecha_inicio: formData.fecha_inicio_date && formData.fecha_inicio_time ? new Date(`${formData.fecha_inicio_date}T${formData.fecha_inicio_time}`).toISOString() : null,
-      fecha_fin: formData.fecha_fin_date && formData.fecha_fin_time ? new Date(`${formData.fecha_fin_date}T${formData.fecha_fin_time}`).toISOString() : null,
-      
-      costo: formData.costo === "" || formData.costo === null ? null : Number(formData.costo),
-      costo_viaje: formData.costo_viaje === "" || formData.costo_viaje === null ? null : Number(formData.costo_viaje),
-      costo_hospedaje: formData.costo_hospedaje === "" || formData.costo_hospedaje === null ? null : Number(formData.costo_hospedaje),
-      costo_comida: formData.costo_comida === "" || formData.costo_comida === null ? null : Number(formData.costo_comida),
-      pago_inscripcion_a: formData.pago_inscripcion_a ? Number(formData.pago_inscripcion_a) : null,
-      pago_transporte_a: formData.pago_transporte_a ? Number(formData.pago_transporte_a) : null,
-      pago_hospedaje_a: formData.pago_hospedaje_a ? Number(formData.pago_hospedaje_a) : null,
-      pago_comida_a: formData.pago_comida_a ? Number(formData.pago_comida_a) : null,
-      profesores_a_cargo: formData.profesores_a_cargo.map(id => Number(id)),
-    };
-
-    delete payload.fecha_inicio_date;
-    delete payload.fecha_inicio_time;
-    delete payload.fecha_fin_date;
-    delete payload.fecha_fin_time;
-    delete payload.disciplina_id;
-    delete payload.categoria_id;
+const handleSubmit = () => {
+  const payload = {
+    ...formData,
+    organizador_id: formData.organizador ? Number(formData.organizador) : null,
     
-    delete payload.organizador; 
+    disciplina_id: formData.disciplina_id ? Number(formData.disciplina_id) : null,
+    categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
+    
+    fecha_inicio: formData.fecha_inicio_date && formData.fecha_inicio_time ? new Date(`${formData.fecha_inicio_date}T${formData.fecha_inicio_time}`).toISOString() : null,
+    fecha_fin: formData.fecha_fin_date && formData.fecha_fin_time ? new Date(`${formData.fecha_fin_date}T${formData.fecha_fin_time}`).toISOString() : null,
+    
+    costo: formData.costo === "" || formData.costo === null ? null : Number(formData.costo),
+    costo_viaje: formData.costo_viaje === "" || formData.costo_viaje === null ? null : Number(formData.costo_viaje),
+    costo_hospedaje: formData.costo_hospedaje === "" || formData.costo_hospedaje === null ? null : Number(formData.costo_hospedaje),
+    costo_comida: formData.costo_comida === "" || formData.costo_comida === null ? null : Number(formData.costo_comida),
+    
+    // Agregar estos campos con el sufijo _id:
+    pago_inscripcion_a_id: formData.pago_inscripcion_a ? Number(formData.pago_inscripcion_a) : null,
+    pago_transporte_a_id: formData.pago_transporte_a ? Number(formData.pago_transporte_a) : null,
+    pago_hospedaje_a_id: formData.pago_hospedaje_a ? Number(formData.pago_hospedaje_a) : null,
+    pago_comida_a_id: formData.pago_comida_a ? Number(formData.pago_comida_a) : null,
+    profesores_a_cargo_ids: formData.profesores_a_cargo.map(id => Number(id)),
+  };
 
-    onSubmit(payload);
-  };
+  delete payload.fecha_inicio_date;
+  delete payload.fecha_inicio_time;
+  delete payload.fecha_fin_date;
+  delete payload.fecha_fin_time;
+  delete payload.disciplina_id;
+  delete payload.categoria_id;
+  delete payload.organizador;
+  
+  // Eliminar los campos sin _id:
+  delete payload.pago_inscripcion_a;
+  delete payload.pago_transporte_a;
+  delete payload.pago_hospedaje_a;
+  delete payload.pago_comida_a;
+  delete payload.profesores_a_cargo;
+
+  onSubmit(payload);
+};
+
   
   const progress = ((currentStepIndex + 1) / visibleSteps.length) * 100;
 

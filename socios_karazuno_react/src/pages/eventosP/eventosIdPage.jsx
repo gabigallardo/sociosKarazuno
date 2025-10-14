@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { getEventoById } from "../../api/eventos.api";
 import { getAllUsuarios } from "../../api/usuarios.api";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import { UserContext } from "../../contexts/User.Context";
 
 export default function EventosIdPage() {
   const { id } = useParams();
@@ -12,6 +13,8 @@ export default function EventosIdPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
+  const userRoles = user?.roles || [];
 
   useEffect(() => {
     async function loadData() {
@@ -39,6 +42,10 @@ export default function EventosIdPage() {
     }
     loadData();
   }, [id, navigate]);
+
+const puedeEditar = userRoles.includes("admin") || 
+                      userRoles.includes("profesor") || 
+                      userRoles.includes("dirigente");
   
   const findUserName = (userId) => {
     if (!userId || !usuarios.length) return <span className="text-gray-500">No asignado</span>;
@@ -121,19 +128,21 @@ export default function EventosIdPage() {
       )}
 
       <div className="mt-6 flex gap-4 border-t pt-4">
-        <button
-          onClick={() => navigate(`/eventos/editar/${evento.id}`)}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md font-semibold shadow-sm"
-        >
-          Editar
-        </button>
-        <button
-          onClick={() => navigate(-1)}
-          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md font-semibold shadow-sm"
-        >
-          Volver
-        </button>
-      </div>
+    {puedeEditar && (
+      <button
+        onClick={() => navigate(`/eventos/editar/${evento.id}`)}
+        className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md font-semibold shadow-sm"
+      >
+        Editar
+      </button>
+    )}
+    <button
+      onClick={() => navigate(-1)}
+      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md font-semibold shadow-sm"
+    >
+      Volver
+    </button>
+  </div>
     </div>
   );
 }

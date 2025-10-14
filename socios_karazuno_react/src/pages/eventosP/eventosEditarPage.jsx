@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import EventosForm from "../../features/eventos/eventosForm";
 import { getEventoById, updateEvento } from "../../api/eventos.api";
@@ -6,6 +6,7 @@ import { getAllDisciplinas } from "../../api/disciplinas.api";
 import { getAllCategorias } from "../../api/categorias.api";
 import { getAllUsuarios } from "../../api/usuarios.api"; 
 import { toast } from "react-hot-toast";
+import { UserContext } from "../../contexts/User.Context";
 
 export default function EventosEditarPage() {
   const [initialData, setInitialData] = useState(null);
@@ -13,9 +14,25 @@ export default function EventosEditarPage() {
   const [categorias, setCategorias] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useContext(UserContext);
+  const userRoles = user?.roles || [];
+
   
   const params = useParams();
   const navigate = useNavigate();
+
+  // Verificar permisos antes de cargar datos
+  useEffect(() => {
+    const puedeEditar = userRoles.includes("admin") || 
+                        userRoles.includes("profesor") || 
+                        userRoles.includes("dirigente");
+    
+    if (!puedeEditar) {
+      toast.error("No tienes permisos para editar eventos.");
+      navigate("/eventos");
+      return;
+    }
+  }, [userRoles, navigate]);
 
   useEffect(() => {
     async function loadAllDataForEdit() {

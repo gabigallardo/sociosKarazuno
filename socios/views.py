@@ -78,15 +78,31 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def hacerse_socio(self, request, pk=None):
         usuario = self.get_object()
-        if SocioInfo.objects.filter(usuario=usuario).exists():
+        
+        # Verificar si ya tiene el rol socio (en lugar de solo SocioInfo)
+        if UsuarioRol.objects.filter(usuario=usuario, rol__nombre='socio').exists():
             return Response({"error": "El usuario ya es socio."}, status=status.HTTP_400_BAD_REQUEST)
+        
         try:
             rol_socio = Rol.objects.get(nombre='socio')
             nivel_inicial = NivelSocio.objects.get(nivel=1)
         except (Rol.DoesNotExist, NivelSocio.DoesNotExist):
             return Response({"error": "Configuración inicial de roles o niveles no encontrada."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        socio_info = SocioInfo.objects.create(usuario=usuario, cuota_al_dia=False, nivel_socio=nivel_inicial)
+        # Obtener o crear SocioInfo (en caso de que exista de antes)
+        socio_info, created = SocioInfo.objects.get_or_create(
+            usuario=usuario,
+            defaults={'cuota_al_dia': False, 'nivel_socio': nivel_inicial}
+        )
+        
+        # Si no fue creado, actualizar los valores
+        if not created:
+            socio_info.cuota_al_dia = False
+            socio_info.nivel_socio = nivel_inicial
+            socio_info.disciplina = None
+            socio_info.categoria = None
+            socio_info.save()
+        
         UsuarioRol.objects.create(usuario=usuario, rol=rol_socio)
         
         monto_base = 15000.00

@@ -218,36 +218,40 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
     });
   };
   
-  const handleSubmit = () => {
-    const payload = {
-      ...formData,
-      organizador: formData.organizador ? Number(formData.organizador) : null,
-      disciplina: formData.disciplina ? Number(formData.disciplina) : null,
-      categoria: formData.categoria ? Number(formData.categoria) : null,
-      
-      fecha_inicio: formData.fecha_inicio_date && formData.fecha_inicio_time ? new Date(`${formData.fecha_inicio_date}T${formData.fecha_inicio_time}`).toISOString() : null,
-      fecha_fin: formData.fecha_fin_date && formData.fecha_fin_time ? new Date(`${formData.fecha_fin_date}T${formData.fecha_fin_time}`).toISOString() : null,
-      
-      costo: formData.costo ? Number(formData.costo) : null,
-      costo_viaje: formData.costo_viaje ? Number(formData.costo_viaje) : null,
-      costo_hospedaje: formData.costo_hospedaje ? Number(formData.costo_hospedaje) : null,
-      costo_comida: formData.costo_comida ? Number(formData.costo_comida) : null,
-      
-      pago_inscripcion_a: formData.pago_inscripcion_a ? Number(formData.pago_inscripcion_a) : null,
-      pago_transporte_a: formData.pago_transporte_a ? Number(formData.pago_transporte_a) : null,
-      pago_hospedaje_a: formData.pago_hospedaje_a ? Number(formData.pago_hospedaje_a) : null,
-      pago_comida_a: formData.pago_comida_a ? Number(formData.pago_comida_a) : null,
-      profesores_a_cargo: formData.profesores_a_cargo.map(id => Number(id)),
-    };
+const handleSubmit = () => {
+  const payload = {
+    ...formData,
+    organizador_id: formData.organizador ? Number(formData.organizador) : null, // ✅ CORRECTO
+    disciplina_id: formData.disciplina ? Number(formData.disciplina) : null,
+    categoria_id: formData.categoria ? Number(formData.categoria) : null,
     
-    delete payload.fecha_inicio_date;
-    delete payload.fecha_inicio_time;
-    delete payload.fecha_fin_date;
-    delete payload.fecha_fin_time;
-    delete payload.requisito_pago; 
-
-    onSubmit(payload);
+    fecha_inicio: formData.fecha_inicio_date && formData.fecha_inicio_time ? new Date(`${formData.fecha_inicio_date}T${formData.fecha_inicio_time}`).toISOString() : null,
+    fecha_fin: formData.fecha_fin_date && formData.fecha_fin_time ? new Date(`${formData.fecha_fin_date}T${formData.fecha_fin_time}`).toISOString() : null,
+    
+    costo: formData.costo ? Number(formData.costo) : null,
+    costo_viaje: formData.costo_viaje ? Number(formData.costo_viaje) : null,
+    costo_hospedaje: formData.costo_hospedaje ? Number(formData.costo_hospedaje) : null,
+    costo_comida: formData.costo_comida ? Number(formData.costo_comida) : null,
+    
+    pago_inscripcion_a: formData.pago_inscripcion_a ? Number(formData.pago_inscripcion_a) : null,
+    pago_transporte_a: formData.pago_transporte_a ? Number(formData.pago_transporte_a) : null,
+    pago_hospedaje_a: formData.pago_hospedaje_a ? Number(formData.pago_hospedaje_a) : null,
+    pago_comida_a: formData.pago_comida_a ? Number(formData.pago_comida_a) : null,
+    profesores_a_cargo: formData.profesores_a_cargo.map(id => Number(id)),
   };
+  
+  delete payload.fecha_inicio_date;
+  delete payload.fecha_inicio_time;
+  delete payload.fecha_fin_date;
+  delete payload.fecha_fin_time;
+  delete payload.disciplina;
+  delete payload.categoria;
+  delete payload.organizador; // ✅ Ahora eliminar el campo organizador
+  delete payload.requisito_pago;
+
+  onSubmit(payload);
+};
+
   
   const progress = ((currentStepIndex + 1) / visibleSteps.length) * 100;
 
@@ -383,8 +387,8 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
         {currentStep.type === "textarea" && ( <textarea id={currentStep.id} name={currentStep.id} value={formData[currentStep.id]} onChange={handleChange} placeholder={currentStep.placeholder} rows="4" className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"></textarea> )}
         {currentStep.type === "toggle" && (
           <div className="flex items-center space-x-4">
-            <button type="button" onClick={() => handleChange({ target: { name: currentStep.id, value: true, type: 'toggle' } })} className={`w-full p-3 rounded-lg text-center font-bold ${formData[currentStep.id] ? 'bg-red-600 text-white ring-2 ring-red-700' : 'bg-gray-200'}`}>Sí</button>
-            <button type="button" onClick={() => handleChange({ target: { name: currentStep.id, value: false, type: 'toggle' } })} className={`w-full p-3 rounded-lg text-center font-bold ${!formData[currentStep.id] ? 'bg-red-600 text-white ring-2 ring-red-700' : 'bg-gray-200'}`}>No</button>
+            <button type="button" onClick={() => handleChange({ target: { name: currentStep.id, checked: true, type: 'toggle' } })} className={`w-full p-3 rounded-lg text-center font-bold ${formData[currentStep.id] ? 'bg-red-600 text-white ring-2 ring-red-700' : 'bg-gray-200'}`}>Sí</button>
+            <button type="button" onClick={() => handleChange({ target: { name: currentStep.id, checked: false, type: 'toggle' } })} className={`w-full p-3 rounded-lg text-center font-bold ${!formData[currentStep.id] ? 'bg-red-600 text-white ring-2 ring-red-700' : 'bg-gray-200'}`}>No</button>
           </div>
         )}
         {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}

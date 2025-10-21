@@ -4,18 +4,21 @@ import { getAllDisciplinas } from '../api/disciplinas.api';
 import { getAllCategorias } from '../api/categorias.api';
 import { actualizarPerfilDeportivo } from '../api/usuarios.api';
 import { toast } from 'react-hot-toast';
-import { FaUser, FaSave } from 'react-icons/fa';
+import { FaUser } from 'react-icons/fa';
+
+// 1. Importa el nuevo componente de formulario
+import PerfilDeportivoForm from '../components/PerfilDeportivoForm/PerfilDeportivoForm.jsx';
 
 export default function MiPerfilPage() {
   const { user, refreshUser } = useContext(UserContext);
   const [disciplinas, setDisciplinas] = useState([]);
   const [categorias, setCategorias] = useState([]);
-  const [selectedDisciplina, setSelectedDisciplina] = useState('');
-  const [selectedCategoria, setSelectedCategoria] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
+      setIsDataLoading(true);
       try {
         const [disciplinasData, categoriasData] = await Promise.all([
           getAllDisciplinas(),
@@ -23,27 +26,22 @@ export default function MiPerfilPage() {
         ]);
         setDisciplinas(disciplinasData);
         setCategorias(categoriasData);
-
-        // Pre-seleccionar valores del usuario
-        if (user?.socio_info) {
-          setSelectedDisciplina(user.socio_info.disciplina || '');
-          setSelectedCategoria(user.socio_info.categoria || '');
-        }
       } catch (error) {
         console.error('Error cargando datos para el perfil', error);
+        toast.error('No se pudieron cargar los datos necesarios.');
+      } finally {
+        setIsDataLoading(false);
       }
     }
     loadData();
-  }, [user]);
+  }, []); // El array de dependencias está vacío para que se ejecute solo una vez
 
-  const handleSave = async () => {
+  // 2. Define la función de guardado que pasarás como prop
+  const handleSave = async (data) => {
     setIsLoading(true);
     try {
-      await actualizarPerfilDeportivo({
-        disciplina_id: selectedDisciplina || null,
-        categoria_id: selectedCategoria || null,
-      });
-      await refreshUser();
+      await actualizarPerfilDeportivo(data);
+      await refreshUser(); // Actualiza los datos del usuario en el contexto
       toast.success('¡Perfil actualizado con éxito!');
     } catch (error) {
       toast.error('Hubo un error al guardar tu perfil.');
@@ -52,9 +50,9 @@ export default function MiPerfilPage() {
     }
   };
 
-  const categoriasFiltradas = selectedDisciplina
-    ? categorias.filter((c) => c.disciplina == selectedDisciplina)
-    : [];
+  if (isDataLoading) {
+    return <div className="text-center p-8">Cargando datos del perfil...</div>;
+  }
 
   return (
     <div className="p-6 bg-white rounded-xl shadow-lg border max-w-2xl mx-auto">
@@ -62,60 +60,16 @@ export default function MiPerfilPage() {
         <FaUser />
         Mi Perfil Deportivo
       </h1>
-      <div className="space-y-6">
-        <div>
-          <label htmlFor="disciplina" className="block text-sm font-medium text-gray-700 mb-1">
-            Mi Disciplina Principal
-          </label>
-          <select
-            id="disciplina"
-            value={selectedDisciplina}
-            onChange={(e) => {
-              setSelectedDisciplina(e.target.value);
-              setSelectedCategoria(''); 
-            }}
-            className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500"
-          >
-            <option value="">-- Selecciona tu deporte --</option>
-            {disciplinas.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
-        {selectedDisciplina && (
-          <div>
-            <label htmlFor="categoria" className="block text-sm font-medium text-gray-700 mb-1">
-              Mi Categoría
-            </label>
-            <select
-              id="categoria"
-              value={selectedCategoria}
-              onChange={(e) => setSelectedCategoria(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-red-500"
-              disabled={categoriasFiltradas.length === 0}
-            >
-              <option value="">-- Selecciona tu categoría --</option>
-              {categoriasFiltradas.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nombre_categoria}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-        <div className="pt-4">
-          <button
-            onClick={handleSave}
-            disabled={isLoading}
-            className="w-full bg-red-700 hover:bg-red-800 text-white px-5 py-3 rounded-lg font-semibold shadow-md flex items-center justify-center gap-2"
-          >
-            <FaSave />
-            {isLoading ? 'Guardando...' : 'Guardar Cambios'}
-          </button>
-        </div>
-      </div>
+      
+      {/* 3. Renderiza el componente de formulario pasando los datos y funciones */}
+      <PerfilDeportivoForm
+        disciplinas={disciplinas}
+        categorias={categorias}
+        initialDisciplina={user?.socio_info?.disciplina}
+        initialCategoria={user?.socio_info?.categoria}
+        onSave={handleSave}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

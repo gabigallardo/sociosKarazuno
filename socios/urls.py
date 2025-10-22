@@ -6,18 +6,22 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
-from socios import views
-from socios.views import LoginView, RegisterView
+
+from socios.views import (
+    LoginView, RegisterView, UsuarioViewSet, RolesViewSet,
+    EventoViewSet, NivelSocioViewSet, SocioInfoViewSet,
+    DisciplinaViewSet, CategoriaViewSet, CuotaViewSet
+)
 
 router = routers.DefaultRouter()
-router.register(r'usuarios', views.UsuarioViewSet, 'usuarios')
-router.register(r'roles', views.RolesViewSet, 'roles')
-router.register(r'eventos', views.EventoViewSet, 'eventos')
-router.register(r'niveles-socio', views.NivelSocioViewSet, 'niveles-socio')
-router.register(r'socios-info', views.SocioInfoViewSet, 'socios-info')
-router.register(r'disciplinas', views.DisciplinaViewSet, 'disciplinas')
-router.register(r'categorias', views.CategoriaViewSet, 'categorias')
-router.register(r'cuotas', views.CuotaViewSet, 'cuotas')
+router.register(r'usuarios', UsuarioViewSet, 'usuarios')
+router.register(r'roles', RolesViewSet, 'roles')
+router.register(r'eventos', EventoViewSet, 'eventos')
+router.register(r'niveles-socio', NivelSocioViewSet, 'niveles-socio')
+router.register(r'socios-info', SocioInfoViewSet, 'socios-info')
+router.register(r'disciplinas', DisciplinaViewSet, 'disciplinas')
+router.register(r'categorias', CategoriaViewSet, 'categorias')
+router.register(r'cuotas', CuotaViewSet, 'cuotas')
 
 
 urlpatterns = [

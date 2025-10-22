@@ -4,7 +4,7 @@ from .models import (
     Usuario, Rol, SocioInfo, NivelSocio, UsuarioRol, Cuota, Evento, 
     Disciplina, Categoria
 )
-from .serializer import (
+from socios.serializers import (
     UsuarioSerializer, EventoSerializer, RolSerializer, RegisterSerializer, 
     SocioInfoSerializer, NivelSocioSerializer, DisciplinaSerializer, CategoriaSerializer, CuotaSerializer
 )

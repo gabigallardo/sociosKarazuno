@@ -1,0 +1,58 @@
+from django.db import models
+import uuid
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from socios.models.rol import Rol
+
+class Usuario(models.Model):
+    SEXO_CHOICES = [
+        ("masculino", "Masculino"),
+        ("femenino", "Femenino"),
+        ("otro", "Otro"),
+    ]
+
+    tipo_documento = models.CharField(max_length=50)
+    nro_documento = models.CharField(max_length=50, unique=True)
+    nombre = models.CharField(max_length=100)
+    apellido = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    contrasena = models.CharField(max_length=255)
+    telefono = models.CharField(max_length=50, blank=True, null=True)
+    fecha_nacimiento = models.DateField(blank=True, null=True)
+    direccion = models.TextField(blank=True, null=True)
+    sexo = models.CharField(max_length=20, choices=SEXO_CHOICES, blank=True, null=True)
+    foto_url = models.CharField(max_length=255, blank=True, null=True)
+    qr_token = models.UUIDField(default=uuid.uuid4, unique=True)
+    fecha_alta = models.DateTimeField(auto_now_add=True)
+    activo = models.BooleanField(default=True)
+    roles = models.ManyToManyField("Rol", through="UsuarioRol", related_name="usuarios")
+
+    @property
+    def is_authenticated(self):
+        return True
+    
+    @property
+    def is_anonymous(self):
+        return False
+
+    def __str__(self):
+        return f"{self.nombre} {self.apellido}"
+    
+    class Meta:
+        verbose_name = "Usuario"
+        verbose_name_plural = "Usuarios"
+        ordering = ["apellido", "nombre"]
+
+
+class UsuarioRol(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    rol = models.ForeignKey("Rol", on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ("usuario", "rol")
+        verbose_name = "Usuario Rol"
+        verbose_name_plural = "Usuarios Roles"
+    
+    def __str__(self):
+        return f"{self.usuario} - {self.rol}"

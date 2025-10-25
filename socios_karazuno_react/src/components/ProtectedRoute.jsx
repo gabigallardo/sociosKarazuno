@@ -1,26 +1,31 @@
-import React, { useContext } from "react";
-import { Navigate } from "react-router-dom";
-import { UserContext } from "../contexts/User.Context.jsx";
-import Layout from "../Layouts/Layout.jsx";
-// Componente clave para la navegación segura
-export default function ProtectedRoute({ element, allowedRoles = [] }) {
-  // Obtiene el estado del usuario desde el contexto
-  const { user } = useContext(UserContext);
+// src/components/ProtectedRoute.jsx
+import React, { useContext } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { UserContext } from '../contexts/User.Context'; 
 
-  // Si NO hay usuario (user es null), redirige a login
+function ProtectedRoute({ children, allowedRoles }) {
+  const { user, isLoading } = useContext(UserContext);
+  const location = useLocation();
+
+  if (isLoading) {
+    return null;
+  }
+
   if (!user) {
-    return <Navigate to="/login" replace={true} />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Si hay roles permitidos y el usuario no tiene ninguno
-  const userRoles = user.roles || [];
-  const hasPermission = allowedRoles.length === 0 || allowedRoles.some(role => userRoles.includes(role));
+  if (allowedRoles) {
+    const userRoles = user?.roles || []; // Obtener roles del usuario (asegurándose de que exista)
+    const hasRequiredRole = allowedRoles.some(role => userRoles.includes(role));
 
-  if (!hasPermission) {
-    // Redirige a una página de acceso denegado o a inicio
-    return <Navigate to="/" replace={true} />;
+    if (!hasRequiredRole) {
+      console.warn(`Acceso denegado a ${location.pathname}. Roles requeridos: ${allowedRoles.join(', ')}. Roles del usuario: ${userRoles.join(', ')}. Redirigiendo a /dashboard.`);
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
-  // Si SÍ hay usuario, renderiza el contenido dentro del Layout
-  return <Layout>{element}</Layout>;
+  return children;
 }
+
+export default ProtectedRoute;

@@ -1,9 +1,9 @@
 from django.db import models
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from socios.models.usuario import Usuario
-    from socios.models.disciplina import Disciplina, Categoria
+from .usuario import Usuario
+from .disciplina import Disciplina, Categoria
+
 
 
 class Evento(models.Model):
@@ -13,7 +13,7 @@ class Evento(models.Model):
         ("viaje", "Viaje"),
         ("otro", "Otro"),
     ]
-    
+
     VISIBILITY_CHOICES = [
         ('ALL', 'Todos los socios'),
         ('DISCIPLINE', 'Solo socios del mismo deporte'),
@@ -26,87 +26,56 @@ class Evento(models.Model):
     fecha_inicio = models.DateTimeField()
     fecha_fin = models.DateTimeField()
     lugar = models.CharField(max_length=255)
-    organizador = models.ForeignKey('Usuario', on_delete=models.CASCADE)
+    organizador = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='eventos_organizados')
     requisito_pago = models.BooleanField(default=False)
     costo = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     creado = models.DateTimeField(auto_now_add=True)
     publicado = models.BooleanField(default=True)
-    
+
     # Costos adicionales
     costo_hospedaje = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        null=True, 
-        blank=True, 
+        max_digits=10, decimal_places=2, null=True, blank=True,
         help_text="Costo del hospedaje (si aplica)"
     )
     costo_viaje = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        null=True, 
-        blank=True, 
+        max_digits=10, decimal_places=2, null=True, blank=True,
         help_text="Costo del viaje/transporte (si aplica)"
     )
     costo_comida = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        null=True, 
-        blank=True, 
+        max_digits=10, decimal_places=2, null=True, blank=True,
         help_text="Costo estimado de comida (si aplica)"
     )
-    
-    # Referencias de pago
+
     pago_inscripcion_a = models.ForeignKey(
-        'Usuario', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='pagos_inscripcion_eventos'
+        Usuario, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='eventos_pago_inscripcion' 
     )
     pago_transporte_a = models.ForeignKey(
-        'Usuario', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='pagos_transporte_eventos'
+        Usuario, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='eventos_pago_transporte' 
     )
     pago_hospedaje_a = models.ForeignKey(
-        'Usuario', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='pagos_hospedaje_eventos'
+        Usuario, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='eventos_pago_hospedaje' 
     )
     pago_comida_a = models.ForeignKey(
-        'Usuario', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='pagos_comida_eventos'
-    )
-    profesores_a_cargo = models.ManyToManyField(
-        'Usuario', 
-        blank=True, 
-        related_name='eventos_profesor_cargo'
+        Usuario, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='eventos_pago_comida' 
     )
 
-    # Relaciones con disciplina y categoría
+    profesores_a_cargo = models.ManyToManyField(
+        Usuario, blank=True,
+        related_name='eventos_a_cargo' 
+    )
+
     disciplina = models.ForeignKey(
-        'Disciplina', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True
+        Disciplina, on_delete=models.SET_NULL, null=True, blank=True
     )
     categoria = models.ForeignKey(
-        'Categoria', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True
+        Categoria, on_delete=models.SET_NULL, null=True, blank=True
     )
     visibilidad = models.CharField(
-        max_length=20, 
-        choices=VISIBILITY_CHOICES, 
-        default='ALL'
+        max_length=20, choices=VISIBILITY_CHOICES, default='ALL'
     )
 
     def __str__(self):
@@ -120,10 +89,7 @@ class Evento(models.Model):
 
 class CalendarItem(models.Model):
     usuario = models.ForeignKey(
-        'Usuario', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True
+        Usuario, on_delete=models.SET_NULL, null=True, blank=True
     )
     evento = models.ForeignKey(Evento, on_delete=models.CASCADE)
     titulo = models.CharField(max_length=255)
@@ -135,7 +101,7 @@ class CalendarItem(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=models.Q(recordatorio_min__gte=0),
+                check=models.Q(recordatorio_min__gte=0) | models.Q(recordatorio_min__isnull=True), # Allow null
                 name="recordatorio_no_negativo"
             )
         ]
@@ -148,17 +114,12 @@ class CalendarItem(models.Model):
 
 class AsistenciaEntrenamiento(models.Model):
     usuario = models.ForeignKey(
-        'Usuario', 
-        on_delete=models.CASCADE, 
-        related_name="asistencias"
+        Usuario, on_delete=models.CASCADE, related_name="asistencias"
     )
     fecha = models.DateField()
     presente = models.BooleanField()
     registrado_por = models.ForeignKey(
-        'Usuario', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
+        Usuario, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="asistencias_registradas"
     )
     nota = models.TextField(blank=True, null=True)
@@ -170,4 +131,5 @@ class AsistenciaEntrenamiento(models.Model):
 
     def __str__(self):
         estado = "Presente" if self.presente else "Ausente"
-        return f"{self.usuario} - {self.fecha} ({estado})"
+        user_display = str(self.usuario) if self.usuario else 'Usuario desconocido'
+        return f"{user_display} - {self.fecha} ({estado})"

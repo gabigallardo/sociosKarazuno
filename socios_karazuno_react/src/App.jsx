@@ -1,6 +1,9 @@
+// src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import SociosPage from "./pages/sociosPage.jsx";
-import SociosForm from "./pages/SociosForm.jsx";
+
+// Importaciones de Páginas (Asegúrate que las rutas sean correctas)
+import SociosPage from "./pages/sociosPage.jsx"; 
+import SociosForm from "./pages/SociosForm.jsx"; 
 import UsuariosPage from "./pages/usuariosP/usuariosPage.jsx";
 import UsuariosCreatePage from "./pages/usuariosP/UsuariosCreatePage.jsx";
 import UsuariosEditarPage from "./pages/usuariosP/UsuariosEditarPage.jsx";
@@ -10,66 +13,84 @@ import EventosCreatePage from "./pages/eventosP/eventosCreatePage.jsx";
 import EventosEditarPage from "./pages/eventosP/eventosEditarPage.jsx";
 import EventosIdPage from "./pages/eventosP/eventosIdPage.jsx";
 import RolesPage from "./pages/rolesPage.jsx";
-import "./index.css";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import { UserProviderWrapper } from "./contexts/User.Context.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import HacerseSocioPage from "./pages/sociosP/HacerseSocioPage.jsx";
+import HacerseSocioPage from "./pages/sociosP/hacerseSocioPage.jsx"; 
 import DeportesPage from "./pages/deportesP/DeportesPage.jsx";
 import MiPerfilPage from './pages/MiPerfilPage';
 import MisCuotasPage from "./pages/cuotasP/misCuotasPage.jsx";
 import PagarCuotaPage from "./pages/cuotasP/pagarCuotaPage.jsx";
 
+import EntrenadoresPage from "./pages/entrenadoresP/EntrenadoresPage.jsx";
 
+// Importaciones de Componentes y Contexto
+import { UserProviderWrapper } from "./contexts/User.Context.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import Layout from "./Layouts/Layout.jsx"; 
 
+import "./index.css";
 
 function App() {
-  return (
-    <UserProviderWrapper>
-      <BrowserRouter>
-        <Routes>
-          {/* ----------------------------------------------------- */}
-          {/* RUTAS PÚBLICAS (Accesibles sin estar logueado) */}
-          {/* ----------------------------------------------------- */}
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+    const rolesSocio = ['socio']; // Ajusta si el nombre del rol es diferente
+    const rolesGestionDeportes = ['admin', 'profesor', 'dirigente', 'empleado'];
+    const rolesGestionAdmin = ['admin', 'dirigente', 'empleado']; // Para usuarios, eventos, entrenadores
+    const rolesSuperAdmin = ['admin', 'dirigente']; // Para roles, por ejemplo
 
-          {/* ----------------------------------------------------- */}
-          {/* RUTAS PROTEGIDAS*/}
-          {/* ----------------------------------------------------- */}
-          {/* Usa <ProtectedRoute> para todas las demás rutas */}
-          <Route path="/socios" element={<ProtectedRoute element={<SociosPage />} />} />
-          <Route path="/form" element={<ProtectedRoute element={<SociosForm />} />} />
-          <Route path="/usuarios" element={<ProtectedRoute element={<UsuariosPage />} allowedRoles={['admin']} />} />
-          <Route path="/usuarios/crear" element={<ProtectedRoute element={<UsuariosCreatePage />} />} />
-          <Route path="/usuarios/editar/:id" element={<ProtectedRoute element={<UsuariosEditarPage />} />} />
-          <Route path="/usuarios/:id" element={<ProtectedRoute element={<UsuarioIdPage />} />} />
-          <Route path="/roles" element={<ProtectedRoute element={<RolesPage />} />} />
-          <Route path="/eventos" element={<ProtectedRoute element={<EventosPage />} />} />
-          <Route path="/eventos/crear" element={<ProtectedRoute element={<EventosCreatePage />} />} />
-          <Route path="/eventos/editar/:id" element={<ProtectedRoute element={<EventosEditarPage />} />} />
-          <Route path="/eventos/:id" element={<ProtectedRoute element={<EventosIdPage />} />} />
-          <Route path="/hacerse-socio" element={<ProtectedRoute element={<HacerseSocioPage />} />} />
-          <Route path="/mis-cuotas" element={<ProtectedRoute element={<MisCuotasPage />} rolesRequeridos={['socio']} />} />
-          <Route path="/cuotas/pagar/:id" element={<ProtectedRoute element={<PagarCuotaPage />} rolesRequeridos={['socio']} />} />
-<Route 
-            path="/deportes" 
-            element={
-              <ProtectedRoute 
-                element={<DeportesPage />} 
-                allowedRoles={['admin', 'profesor', 'dirigente']} 
-              />
-            } 
-          />
-                    <Route path="/mi-perfil" element={<ProtectedRoute element={<MiPerfilPage />} rolesRequeridos={['socio']} />} />
+    return (
+        <UserProviderWrapper>
+            <BrowserRouter>
+                <Routes>
+                    {/* ----------------------------------------------------- */}
+                    {/* RUTAS PÚBLICAS (Sin Layout/Navigation) */}
+                    {/* ----------------------------------------------------- */}
+                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
 
-        </Routes>
-      </BrowserRouter>
-    </UserProviderWrapper>
-  );
+                    {/* ----------------------------------------------------- */}
+                    {/* RUTAS PROTEGIDAS (Usan Layout con Navigation) */}
+                    {/* ----------------------------------------------------- */}
+                    <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}> {/* Protege el Layout */}
+
+                        {/* Rutas Comunes para usuarios logueados */}
+                        <Route path="/dashboard" element={<SociosPage />} /> 
+                        <Route path="/mi-perfil" element={<MiPerfilPage />} />
+                        <Route path="/eventos" element={<EventosPage />} />
+                        <Route path="/eventos/:id" element={<EventosIdPage />} />
+                        <Route path="/hacerse-socio" element={<HacerseSocioPage />} />
+
+                        {/* Rutas solo para Socios */}
+                        <Route path="/mis-cuotas" element={<ProtectedRoute allowedRoles={rolesSocio}><MisCuotasPage /></ProtectedRoute>} />
+                        <Route path="/cuotas/pagar/:id" element={<ProtectedRoute allowedRoles={rolesSocio}><PagarCuotaPage /></ProtectedRoute>} />
+
+                        {/* Rutas para Gestión de Deportes */}
+                        <Route path="/deportes" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><DeportesPage /></ProtectedRoute>} />
+
+                        {/* Rutas para Admin, Dirigente, Empleado */}
+                        <Route path="/form" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SociosForm /></ProtectedRoute>} />
+                        <Route path="/usuarios" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuariosPage /></ProtectedRoute>} />
+                        <Route path="/usuarios/crear" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuariosCreatePage /></ProtectedRoute>} />
+                        <Route path="/usuarios/editar/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuariosEditarPage /></ProtectedRoute>} />
+                        <Route path="/usuarios/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuarioIdPage /></ProtectedRoute>} />
+                        <Route path="/eventos/crear" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EventosCreatePage /></ProtectedRoute>} />
+                        <Route path="/eventos/editar/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EventosEditarPage /></ProtectedRoute>} />
+
+                        {/* RUTA PARA ENTRENADORES */}
+                        <Route path="/entrenadores" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EntrenadoresPage /></ProtectedRoute>} />
+
+                        {/* Rutas solo para Admin, Dirigente */}
+                        <Route path="/roles" element={<ProtectedRoute allowedRoles={rolesSuperAdmin}><RolesPage /></ProtectedRoute>} />
+
+                        {/* Ruta Catch-all para usuarios logueados: redirige a su dashboard o perfil */}
+                        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
+                    </Route>
+
+                  
+                </Routes>
+            </BrowserRouter>
+        </UserProviderWrapper>
+    );
 }
-
 
 export default App;

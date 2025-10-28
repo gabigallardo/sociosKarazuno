@@ -48,9 +48,28 @@ class SocioInfo(models.Model):
         blank=True, 
         related_name='socios'
     )
+    estado = models.CharField(
+        max_length=20, 
+        choices=[
+            ('activo', 'Activo'),
+            ('inactivo', 'Inactivo'),
+        ], 
+        default='activo',
+        help_text='Estado de la membresía del socio'
+    )
+    fecha_inactivacion = models.DateTimeField(
+        null=True, 
+        blank=True,
+        help_text='Fecha en que el socio pasó a estado inactivo'
+    )
+    razon_inactivacion = models.TextField(
+        blank=True, 
+        null=True,
+        help_text='Motivo de la inactivación (ej: falta de pago, baja voluntaria)'
+    )
 
     def __str__(self):
-        return f"Socio: {self.usuario}"
+        return f"Socio: {self.usuario} ({self.estado})"
 
     class Meta:
         verbose_name = "Información de Socio"

@@ -20,6 +20,7 @@ import DeportesPage from "./pages/deportesP/DeportesPage.jsx";
 import MiPerfilPage from './pages/MiPerfilPage';
 import MisCuotasPage from "./pages/cuotasP/misCuotasPage.jsx";
 import PagarCuotaPage from "./pages/cuotasP/pagarCuotaPage.jsx";
+import SociosPagesP from "./pages/sociosP/sociosPage.jsx";
 
 import EntrenadoresPage from "./pages/entrenadoresP/EntrenadoresPage.jsx";
 
@@ -74,6 +75,7 @@ function App() {
                         <Route path="/usuarios/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuarioIdPage /></ProtectedRoute>} />
                         <Route path="/eventos/crear" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EventosCreatePage /></ProtectedRoute>} />
                         <Route path="/eventos/editar/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EventosEditarPage /></ProtectedRoute>} />
+                        <Route path="/socios" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SociosPagesP /></ProtectedRoute>} />
 
                         {/* RUTA PARA ENTRENADORES */}
                         <Route path="/entrenadores" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EntrenadoresPage /></ProtectedRoute>} />

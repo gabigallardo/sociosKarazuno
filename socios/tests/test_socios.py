@@ -10,7 +10,7 @@ from django.contrib.auth.hashers import make_password
 
 from socios.models import (
     Usuario, Rol, UsuarioRol, NivelSocio, SocioInfo, 
-    Cuota, Pago
+    Cuota, Pago, Disciplina, Categoria
 )
 
 
@@ -461,6 +461,68 @@ class SocioSistemaTestCase(APITestCase):
         socio_info.refresh_from_db()
         self.assertEqual(socio_info.estado, 'activo')
         self.assertIsNone(socio_info.fecha_inactivacion)
+
+
+    def test_listar_socios_devuelve_datos_completos(self):
+        """Test: El endpoint de lista devuelve información completa de socios CON disciplina"""
+        # Crear disciplina y categoría
+        disciplina = Disciplina.objects.create(nombre='Fútbol', descripcion='Fútbol 11')
+        categoria = Categoria.objects.create(nombre_categoria='Primera', disciplina=disciplina, edad_minima=18, edad_maxima=35, sexo='masculino')
+        
+        # Crear socio
+        UsuarioRol.objects.create(usuario=self.usuario, rol=self.rol_socio)
+        SocioInfo.objects.create(
+            usuario=self.usuario,
+            nivel_socio=self.nivel_1,
+            disciplina=disciplina,
+            categoria=categoria,
+            estado='activo'
+        )
+        
+        # Autenticar como admin
+        self._autenticar_cliente(self.admin)
+        
+        response = self.client.get('/socios/api/v1/socios-info/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreater(len(response.data), 0)
+        
+        # Verificar que la respuesta contiene los campos necesarios
+        socio_data = response.data[0]
+        self.assertIn('nombre_completo', socio_data)
+        self.assertIn('email', socio_data)
+        self.assertIn('nro_documento', socio_data)
+        self.assertIn('telefono', socio_data)
+        self.assertIn('disciplina_nombre', socio_data)
+        self.assertIn('categoria_nombre', socio_data)
+        self.assertIn('nivel_socio_info', socio_data)
+        
+        # Verificar formato y valores
+        self.assertEqual(socio_data['nombre_completo'], 'Juan Pérez')
+        self.assertEqual(socio_data['email'], 'socio@test.com')
+        self.assertEqual(socio_data['disciplina_nombre'], 'Fútbol')
+        self.assertEqual(socio_data['categoria_nombre'], 'Primera')
+        self.assertIsNotNone(socio_data['nivel_socio_info'])
+
+    def test_socio_normal_no_puede_listar_toda_la_info_de_socios(self):
+        """Test: Un usuario con solo rol 'socio' no puede acceder a la lista de SocioInfo."""
+        # Hacer que el usuario sea socio
+        UsuarioRol.objects.create(usuario=self.usuario, rol=self.rol_socio)
+        SocioInfo.objects.create(
+            usuario=self.usuario,
+            nivel_socio=self.nivel_1,
+            estado='activo'
+        )
+
+        # Autenticar como el socio
+        self._autenticar_cliente(self.usuario)
+
+        # Intentar acceder a la lista de todos los socios
+        response = self.client.get('/socios/api/v1/socios-info/')
+        
+        # El resultado esperado es un 403 Forbidden, ya que no tiene permisos
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
 
 
 # Para ejecutar los tests:

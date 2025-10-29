@@ -38,7 +38,7 @@ function Navigation() {
     // --- Items para roles de Gestión ---
     if (puedeGestionarUsuarios) {
         navItems.push({ to: "/usuarios", icon: FaUsers, label: "Usuarios" });
-
+        navItems.push({ to: "/socios", icon: FaUsers, label: "Gestión de Socios" });
     }
 
     if (puedeGestionarDeportes) {

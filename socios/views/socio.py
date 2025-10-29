@@ -11,6 +11,14 @@ class SocioInfoViewSet(viewsets.ModelViewSet):
     serializer_class = SocioInfoSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        """Optimizar queries con select_related"""
+        return SocioInfo.objects.select_related(
+            'usuario',
+            'nivel_socio',
+            'disciplina',
+            'categoria'
+        ).all()
 
 class NivelSocioViewSet(viewsets.ModelViewSet):
     """ViewSet para niveles de socio"""

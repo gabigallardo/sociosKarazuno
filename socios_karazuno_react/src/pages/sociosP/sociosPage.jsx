@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllSocios } from "../../api/socios.api";
+import { getAllSocios, inactivarSocio } from "../../api/socios.api";
 import ListaSocios from "../../features/socios/listaSocios";
 import { FaUsers, FaUserPlus } from "react-icons/fa";
+import ModalInactivarSocio from "../../features/socios/modalInactivarSocio";
+import { toast } from "react-hot-toast";
 
 export default function SociosPage() {
   const [socios, setSocios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showModalInactivar, setShowModalInactivar] = useState(false);
+  const [socioSeleccionado, setSocioSeleccionado] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const fetchSocios = async () => {
@@ -30,6 +35,31 @@ export default function SociosPage() {
 
   const handleViewDetail = (usuarioId) => {
     navigate(`/socios/${usuarioId}`);
+  };
+
+  const handleInactivar = (socio) => {
+    setSocioSeleccionado(socio);
+    setShowModalInactivar(true);
+  };
+
+  const handleConfirmarInactivacion = async (razon) => {
+    setIsSubmitting(true);
+    try {
+      await inactivarSocio(socioSeleccionado.usuario, { razon });
+      
+      toast.success(`Socio "${socioSeleccionado.nombre_completo}" inactivado.`);
+      
+      setShowModalInactivar(false);
+      setSocioSeleccionado(null);
+      await fetchSocios(); // Actualizar después de cerrar el modal se siente más fluido
+
+    } catch (error) {
+      console.error("Error inactivando socio:", error);
+      const errorMsg = error.response?.data?.error || "Error al inactivar el socio";
+      toast.error(errorMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -113,7 +143,22 @@ export default function SociosPage() {
       </div>
 
       {/* Tabla de socios */}
-      <ListaSocios socios={socios} onViewDetail={handleViewDetail} />
+      <ListaSocios 
+        socios={socios} 
+        onViewDetail={handleViewDetail}
+        onInactivar={handleInactivar}
+      />
+      {/* Modal de inactivación */}
+      <ModalInactivarSocio
+        socio={socioSeleccionado}
+        isOpen={showModalInactivar}
+        onClose={() => {
+          setShowModalInactivar(false);
+          setSocioSeleccionado(null);
+        }}
+        onConfirm={handleConfirmarInactivacion}
+        loading={isSubmitting}
+      />
     </div>
   );
 }

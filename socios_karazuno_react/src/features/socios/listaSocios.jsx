@@ -1,6 +1,6 @@
-import { FaCheckCircle, FaTimesCircle, FaEye } from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle, FaEye, FaUserSlash } from "react-icons/fa";
 
-export default function ListaSocios({ socios, onViewDetail }) {
+export default function ListaSocios({ socios, onViewDetail, onInactivar  }) {
   return (
     <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
       <table className="min-w-full divide-y divide-gray-200">
@@ -85,16 +85,27 @@ export default function ListaSocios({ socios, onViewDetail }) {
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {socio.disciplina || <span className="text-gray-400 italic">Sin asignar</span>}
+                  {socio.disciplina_nombre || <span className="text-gray-400 italic">Sin asignar</span>}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                   <button
-                    onClick={() => onViewDetail(socio.usuario)}
+                    onClick={() => onViewDetail(socio)} // Pasar el objeto socio completo es más flexible
                     className="inline-flex items-center bg-blue-600 text-white px-3 py-1 rounded-md shadow-sm hover:bg-blue-700 transition"
                   >
                     <FaEye className="mr-1" />
                     Ver Detalle
                   </button>
+                  
+                  {/* Botón de inactivar condicional */}
+                  {socio.estado === "activo" && (
+                    <button
+                      onClick={() => onInactivar(socio)} // Pasar el objeto socio completo
+                      className="inline-flex items-center bg-yellow-500 text-white px-3 py-1 rounded-md shadow-sm hover:bg-yellow-600 transition"
+                    >
+                      <FaUserSlash className="mr-1" />
+                      Inactivar
+                    </button>
+                  )}
                 </td>
               </tr>
             ))

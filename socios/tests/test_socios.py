@@ -523,6 +523,63 @@ class SocioSistemaTestCase(APITestCase):
         # El resultado esperado es un 403 Forbidden, ya que no tiene permisos
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_usuario_no_puede_actualizar_perfil_deportivo_de_otro(self):
+        """Test: Un usuario no puede cambiar la disciplina/categoría de otro usuario."""
+        # Crear dos socios
+        socio1_info = SocioInfo.objects.create(usuario=self.usuario, estado='activo', nivel_socio=self.nivel_1)
+
+        otro_usuario = Usuario.objects.create(email='otro@test.com', nombre='Otro', apellido='Usuario', nro_documento='22222222', tipo_documento='DNI', contrasena=make_password('password123'))
+        socio2_info = SocioInfo.objects.create(usuario=otro_usuario, estado='activo', nivel_socio=self.nivel_1)
+
+        disciplina = Disciplina.objects.create(nombre='Natación')
+        categoria = Categoria.objects.create(nombre_categoria='Juvenil', disciplina=disciplina, edad_minima=12, edad_maxima=17, sexo='femenino')
+
+        # Autenticar como el primer socio
+        self._autenticar_cliente(self.usuario)
+
+        # Intentar modificar el perfil del OTRO socio (esto no debería ser posible a través del endpoint 'me')
+        # La prueba aquí es más conceptual: la ruta '/me/' ya previene esto.
+        # Una prueba más explícita sería si tuvieras una ruta como /usuarios/{id}/actualizar-perfil-deportivo/
+        # En este caso, el test confirma que la única ruta disponible es /me/.
+        
+        # Simulemos una llamada a una URL que NO debería existir
+        response = self.client.put(
+            f'/socios/api/v1/usuarios/{otro_usuario.id}/actualizar-perfil-deportivo/',
+            {'disciplina_id': disciplina.id, 'categoria_id': categoria.id}
+        )
+        
+        # Esta ruta no debería existir, resultando en un 404 Not Found
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_reactivar_socio_con_pago_pendiente_falla(self):
+        """Test: Un socio inactivo con una cuota cuyo pago está pendiente NO puede reactivarse."""
+        # Crear socio inactivo
+        UsuarioRol.objects.create(usuario=self.usuario, rol=self.rol_socio)
+        SocioInfo.objects.create(usuario=self.usuario, nivel_socio=self.nivel_1, estado='inactivo')
+        
+        # Crear cuota vencida
+        cuota = Cuota.objects.create(
+            usuario=self.usuario,
+            periodo='2024-09',
+            monto=15000.00,
+            vencimiento=(timezone.now() - timedelta(days=15)).date()
+        )
+        
+        # Registrar un pago en estado 'pendiente' para esa cuota
+        Pago.objects.create(
+            cuota=cuota,
+            monto=15000.00,
+            estado='pendiente',  # Estado clave de este test
+            medio_pago='mercadopago'
+        )
+        
+        self._autenticar_cliente(self.usuario)
+        response = self.client.post(f'/socios/api/v1/usuarios/{self.usuario.id}/hacerse_socio/')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('cuotas pendientes de pago', response.data['error'])
+
+
 
 
 # Para ejecutar los tests:

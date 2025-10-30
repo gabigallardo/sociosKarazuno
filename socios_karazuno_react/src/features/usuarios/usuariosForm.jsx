@@ -41,7 +41,7 @@ export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] })
         activo: initialValues.activo ?? true,
         foto_url: initialValues.foto_url || "",
         qr_token: initialValues.qr_token || "",
-        roles: rolesIds, // 👈 Ahora son IDs
+        roles: rolesIds,
       });
     }
   }, [initialValues, allRoles]);
@@ -167,26 +167,44 @@ export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] })
       <div>
         <label className="font-semibold">Roles:</label>
         <div className="flex flex-col space-y-1 mt-1">
-          {allRoles.map((rol) => (
-            <label key={rol.id} className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                name="roles"
-                value={rol.id}
-                checked={formData.roles?.includes(Number(rol.id))}
-                onChange={(e) => {
-                  const { checked, value } = e.target;
-                  setFormData((prev) => {
-                    const roles = checked
-                      ? [...prev.roles, Number(value)]
-                      : prev.roles.filter((id) => id !== Number(value));
-                    return { ...prev, roles };
-                  });
-                }}
-              />
-              <span>{rol.nombre}</span>
-            </label>
-          ))}
+          {allRoles.map((rol) => {
+            const esSocio = rol.nombre.toLowerCase() === 'socio';
+            const isChecked = formData.roles?.includes(Number(rol.id));
+            
+            return (
+              <label 
+                key={rol.id} 
+                className={`flex items-center space-x-2 ${esSocio ? 'opacity-60' : ''}`}
+              >
+                <input
+                  type="checkbox"
+                  name="roles"
+                  value={rol.id}
+                  checked={isChecked}
+                  disabled={esSocio} // ✨ DESHABILITAR si es rol 'socio'
+                  onChange={(e) => {
+                    const { checked, value } = e.target;
+                    setFormData((prev) => {
+                      const roles = checked
+                        ? [...prev.roles, Number(value)]
+                        : prev.roles.filter((id) => id !== Number(value));
+                      return { ...prev, roles };
+                    });
+                  }}
+                  className={esSocio ? 'cursor-not-allowed' : ''}
+                />
+                <span className={esSocio ? 'text-gray-500' : ''}>
+                  {rol.nombre}
+                </span>
+                {/* ✨ AGREGAR tooltip explicativo */}
+                {esSocio && (
+                  <span className="text-xs text-gray-500 italic ml-2">
+                    (Gestiona desde 'Gestión de Socios')
+                  </span>
+                )}
+              </label>
+            );
+          })}
         </div>
       </div>
 

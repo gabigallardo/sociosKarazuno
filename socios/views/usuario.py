@@ -5,6 +5,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django_crud_api.settings import VALOR_CUOTA_BASE
 
 from socios.models import Usuario, UsuarioRol, Rol, NivelSocio, SocioInfo, Cuota, Pago
 from socios.serializers import UsuarioSerializer, SocioInfoSerializer
@@ -65,7 +66,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                     socio_info.save()
                     
                     # Generar nueva cuota del mes actual
-                    monto_base = 15000.00
+                    monto_base = VALOR_CUOTA_BASE
                     descuento = socio_info.nivel_socio.descuento if socio_info.nivel_socio else 0
                     monto_final = monto_base * (1 - descuento / 100)
                     periodo = timezone.now().strftime("%Y-%m")
@@ -125,7 +126,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         UsuarioRol.objects.create(usuario=usuario, rol=rol_socio)
 
         # Generar cuota
-        monto_base = 15000.00
+        monto_base = VALOR_CUOTA_BASE
         descuento = nivel_inicial.descuento
         monto_final = monto_base * (1 - descuento / 100)
         periodo = timezone.now().strftime("%Y-%m")

@@ -7,7 +7,7 @@ from datetime import timedelta, datetime
 import jwt
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
-
+from django_crud_api.settings import VALOR_CUOTA_BASE
 from socios.models import (
     Usuario, Rol, UsuarioRol, NivelSocio, SocioInfo, 
     Cuota, Pago, Disciplina, Categoria
@@ -127,7 +127,7 @@ class SocioSistemaTestCase(APITestCase):
         # Verificar que se generó la cuota
         self.assertTrue(Cuota.objects.filter(usuario=self.usuario).exists())
         cuota = Cuota.objects.get(usuario=self.usuario)
-        self.assertEqual(cuota.monto, 15000.00)
+        self.assertEqual(cuota.monto, VALOR_CUOTA_BASE)
     
     def test_hacerse_socio_duplicado(self):
         """Test: No se puede hacer socio dos veces si ya está activo"""
@@ -289,7 +289,7 @@ class SocioSistemaTestCase(APITestCase):
         Cuota.objects.create(
             usuario=self.usuario,
             periodo='2024-09',
-            monto=15000.00,
+            monto=VALOR_CUOTA_BASE,
             vencimiento=(timezone.now() - timedelta(days=15)).date(),
             descuento_aplicado=0
         )
@@ -300,7 +300,7 @@ class SocioSistemaTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('cuotas pendientes de pago', response.data['error'])
-        self.assertEqual(response.data['deuda_total'], 15000.00)
+        self.assertEqual(response.data['deuda_total'], VALOR_CUOTA_BASE)
         self.assertEqual(len(response.data['cuotas_pendientes']), 1)
         
         # Verificar que sigue inactivo
@@ -321,7 +321,7 @@ class SocioSistemaTestCase(APITestCase):
         cuota = Cuota.objects.create(
             usuario=self.usuario,
             periodo='2024-09',
-            monto=15000.00,
+            monto=VALOR_CUOTA_BASE,
             vencimiento=(timezone.now() - timedelta(days=15)).date(),
             descuento_aplicado=0
         )
@@ -329,7 +329,7 @@ class SocioSistemaTestCase(APITestCase):
         # Registrar pago completado
         Pago.objects.create(
             cuota=cuota,
-            monto=15000.00,
+            monto=VALOR_CUOTA_BASE,
             estado='completado',
             medio_pago='efectivo',
             fecha=timezone.now()
@@ -361,7 +361,7 @@ class SocioSistemaTestCase(APITestCase):
             Cuota.objects.create(
                 usuario=self.usuario,
                 periodo=f'2024-{9-i:02d}',
-                monto=15000.00,
+                monto=VALOR_CUOTA_BASE,
                 vencimiento=(timezone.now() - timedelta(days=30*(i+1))).date(),
                 descuento_aplicado=0
             )
@@ -561,14 +561,14 @@ class SocioSistemaTestCase(APITestCase):
         cuota = Cuota.objects.create(
             usuario=self.usuario,
             periodo='2024-09',
-            monto=15000.00,
+            monto=VALOR_CUOTA_BASE,
             vencimiento=(timezone.now() - timedelta(days=15)).date()
         )
         
         # Registrar un pago en estado 'pendiente' para esa cuota
         Pago.objects.create(
             cuota=cuota,
-            monto=15000.00,
+            monto=VALOR_CUOTA_BASE,
             estado='pendiente',  # Estado clave de este test
             medio_pago='mercadopago'
         )
@@ -590,11 +590,11 @@ class SocioSistemaTestCase(APITestCase):
         SocioInfo.objects.create(usuario=self.usuario, nivel_socio=self.nivel_1, estado='inactivo')
         
         Cuota.objects.create(
-            usuario=self.usuario, periodo='2024-09', monto=15000.00,
+            usuario=self.usuario, periodo='2024-09', monto=VALOR_CUOTA_BASE,
             vencimiento=(timezone.now() - timedelta(days=60)).date()
         )
         Cuota.objects.create(
-            usuario=self.usuario, periodo='2024-10', monto=15000.00,
+            usuario=self.usuario, periodo='2024-10', monto=VALOR_CUOTA_BASE,
             vencimiento=(timezone.now() - timedelta(days=30)).date()
         )
         
@@ -630,7 +630,7 @@ class SocioSistemaTestCase(APITestCase):
         UsuarioRol.objects.create(usuario=self.usuario, rol=self.rol_socio)
         SocioInfo.objects.create(usuario=self.usuario, nivel_socio=self.nivel_1, estado='inactivo')
         Cuota.objects.create(
-            usuario=self.usuario, periodo='2024-09', monto=15000.00,
+            usuario=self.usuario, periodo='2024-09', monto=VALOR_CUOTA_BASE,
             vencimiento=(timezone.now() - timedelta(days=60)).date()
         )
         

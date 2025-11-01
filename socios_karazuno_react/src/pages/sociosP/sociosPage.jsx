@@ -1,20 +1,29 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllSocios, inactivarSocio } from "../../api/socios.api";
+import { getAllSocios, inactivarSocio, activarSocio, getCuotasPendientes } from "../../api/socios.api";
 import ListaSocios from "../../features/socios/listaSocios";
 import { FaUsers, FaUserPlus } from "react-icons/fa";
 import ModalInactivarSocio from "../../features/socios/modalInactivarSocio";
+import ModalActivarSocio from "../../features/socios/modalActivarSocio";
 import { toast } from "react-hot-toast";
 
 export default function SociosPage() {
   const [socios, setSocios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Estados para modal de inactivación
   const [showModalInactivar, setShowModalInactivar] = useState(false);
+  
+  // Estados para modal de activación
+  const [showModalActivar, setShowModalActivar] = useState(false);
   const [socioSeleccionado, setSocioSeleccionado] = useState(null);
+  const [cuotasPendientes, setCuotasPendientes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const navigate = useNavigate();
 
+  // Cargar todos los socios
   const fetchSocios = async () => {
     setLoading(true);
     setError(null);
@@ -33,10 +42,11 @@ export default function SociosPage() {
     fetchSocios();
   }, []);
 
-  const handleViewDetail = (usuarioId) => {
-    navigate(`/socios/${usuarioId}`);
+  const handleViewDetail = (socio) => {
+    navigate(`/socios/${socio.usuario}`);
   };
 
+  // ==================== INACTIVAR SOCIO ====================
   const handleInactivar = (socio) => {
     setSocioSeleccionado(socio);
     setShowModalInactivar(true);
@@ -45,22 +55,72 @@ export default function SociosPage() {
   const handleConfirmarInactivacion = async (razon) => {
     setIsSubmitting(true);
     try {
-      await inactivarSocio(socioSeleccionado.usuario, { razon });
+      await inactivarSocio(socioSeleccionado.usuario, razon);
       
-      toast.success(`Socio "${socioSeleccionado.nombre_completo}" inactivado.`);
+      toast.success(
+        `✅ Socio "${socioSeleccionado.nombre_completo}" ha sido inactivado.`
+      );
       
       setShowModalInactivar(false);
       setSocioSeleccionado(null);
-      await fetchSocios(); // Actualizar después de cerrar el modal se siente más fluido
+      await fetchSocios();
 
     } catch (error) {
       console.error("Error inactivando socio:", error);
       const errorMsg = error.response?.data?.error || "Error al inactivar el socio";
-      toast.error(errorMsg);
+      toast.error(`❌ ${errorMsg}`);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // ==================== ACTIVAR SOCIO ====================
+  const handleActivar = async (socio) => {
+    setSocioSeleccionado(socio);
+    setIsSubmitting(true);
+    
+    try {
+      // Obtener cuotas pendientes
+      const cuotas = await getCuotasPendientes(socio.usuario);
+      setCuotasPendientes(cuotas);
+      setShowModalActivar(true);
+    } catch (error) {
+      console.error("Error al obtener cuotas pendientes:", error);
+      toast.error("❌ Error al obtener cuotas pendientes");
+      setSocioSeleccionado(null);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleConfirmarActivacion = async (datoPago) => {
+    setIsSubmitting(true);
+    try {
+      const resultado = await activarSocio(socioSeleccionado.usuario, datoPago);
+      
+      const pagosMsg = resultado.pagos_registrados > 0 
+        ? ` Se registraron ${resultado.pagos_registrados} pago${resultado.pagos_registrados !== 1 ? 's' : ''}.`
+        : '';
+      
+      toast.success(
+        `✅ Socio "${socioSeleccionado.nombre_completo}" activado exitosamente.${pagosMsg}`
+      );
+      
+      setShowModalActivar(false);
+      setSocioSeleccionado(null);
+      setCuotasPendientes([]);
+      await fetchSocios();
+
+    } catch (error) {
+      console.error("Error activando socio:", error);
+      const errorMsg = error.response?.data?.error || "Error al activar el socio";
+      toast.error(`❌ ${errorMsg}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ==================== RENDER ====================
 
   if (loading) {
     return (
@@ -122,7 +182,7 @@ export default function SociosPage() {
         </div>
       </div>
 
-      {/* Estadísticas rápidas */}
+      {/* Estadísticas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
           <p className="text-sm text-gray-600 font-semibold">Total de Socios</p>
@@ -136,7 +196,7 @@ export default function SociosPage() {
         </div>
         <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
           <p className="text-sm text-gray-600 font-semibold">Socios Inactivos</p>
-          <p className="text-3xl font-extrabold text-red-600">
+          <p className="text-3xl font-extrabold text-orange-600">
             {socios.filter(s => s.estado === "inactivo").length}
           </p>
         </div>
@@ -147,7 +207,9 @@ export default function SociosPage() {
         socios={socios} 
         onViewDetail={handleViewDetail}
         onInactivar={handleInactivar}
+        onActivar={handleActivar}
       />
+
       {/* Modal de inactivación */}
       <ModalInactivarSocio
         socio={socioSeleccionado}
@@ -157,6 +219,20 @@ export default function SociosPage() {
           setSocioSeleccionado(null);
         }}
         onConfirm={handleConfirmarInactivacion}
+        loading={isSubmitting}
+      />
+
+      {/* Modal de activación */}
+      <ModalActivarSocio
+        socio={socioSeleccionado}
+        cuotasPendientes={cuotasPendientes}
+        isOpen={showModalActivar}
+        onClose={() => {
+          setShowModalActivar(false);
+          setSocioSeleccionado(null);
+          setCuotasPendientes([]);
+        }}
+        onConfirm={handleConfirmarActivacion}
         loading={isSubmitting}
       />
     </div>

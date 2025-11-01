@@ -46,3 +46,40 @@ export const inactivarSocio = async (usuarioId, razon) => {
     throw error;
   }
 };
+
+/**
+ * Activar un socio inactivo (registrar pago + reactivar)
+ * @param {number} usuarioId - ID del usuario socio
+ * @param {object} datoPago - { medio_pago: string, comprobante?: string }
+ */
+export const activarSocio = async (usuarioId, datoPago) => {
+  try {
+    const response = await api.post(
+      `${BASE_PATH}/usuarios/${usuarioId}/activar-socio/`,
+      datoPago
+    );
+    console.log("✅ Socio activado:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error activando socio:", error.response?.status, error.response?.data);
+    throw error;
+  }
+};
+
+/**
+ * Obtener cuotas pendientes de un usuario
+ * @param {number} usuarioId - ID del usuario
+ */
+export const getCuotasPendientes = async (usuarioId) => {
+  try {
+    // Endpoint que devuelve cuotas sin pago completado
+    const response = await api.get(
+      `${BASE_PATH}/cuotas/?usuario=${usuarioId}&estado=pendiente`
+    );
+    console.log("✅ Cuotas pendientes obtenidas:", response.data.length);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error fetching cuotas pendientes:", error);
+    throw error;
+  }
+};

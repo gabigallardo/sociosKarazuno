@@ -581,6 +581,78 @@ class SocioSistemaTestCase(APITestCase):
 
 
 
+        # ==================== TESTS DE ACTIVACIÓN POR ADMIN ====================
+    
+    def test_admin_puede_activar_socio_con_deuda(self):
+        """Test: Admin puede activar un socio inactivo que tiene cuotas pendientes."""
+        # ARRANGE: Crear un socio inactivo con dos cuotas pendientes
+        UsuarioRol.objects.create(usuario=self.usuario, rol=self.rol_socio)
+        SocioInfo.objects.create(usuario=self.usuario, nivel_socio=self.nivel_1, estado='inactivo')
+        
+        Cuota.objects.create(
+            usuario=self.usuario, periodo='2024-09', monto=15000.00,
+            vencimiento=(timezone.now() - timedelta(days=60)).date()
+        )
+        Cuota.objects.create(
+            usuario=self.usuario, periodo='2024-10', monto=15000.00,
+            vencimiento=(timezone.now() - timedelta(days=30)).date()
+        )
+        
+        self.assertEqual(Pago.objects.filter(cuota__usuario=self.usuario).count(), 0)
+        
+        # ACT: Autenticar como admin y llamar al endpoint con los datos del pago
+        self._autenticar_cliente(self.admin)
+        
+        response = self.client.post(
+            f'/socios/api/v1/usuarios/{self.usuario.id}/activar-socio/',
+            {'medio_pago': 'efectivo', 'comprobante': 'Recibo #1234'}
+        )
+        
+        # ASSERT: Verificar que la operación fue exitosa y los datos son correctos
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], 'Socio activado exitosamente.')
+        self.assertEqual(response.data['pagos_registrados'], 2)
+        
+        # Verificar que el socio ahora está activo
+        socio_info = SocioInfo.objects.get(usuario=self.usuario)
+        self.assertEqual(socio_info.estado, 'activo')
+        self.assertTrue(socio_info.cuota_al_dia)
+        
+        # Verificar que se crearon los pagos para las cuotas pendientes
+        pagos_creados = Pago.objects.filter(cuota__usuario=self.usuario)
+        self.assertEqual(pagos_creados.count(), 2)
+        self.assertTrue(all(p.estado == 'completado' for p in pagos_creados))
+        self.assertTrue(all(p.medio_pago == 'efectivo' for p in pagos_creados))
+
+    def test_activar_socio_falla_sin_medio_pago(self):
+        """Test: Activar un socio falla si no se provee el medio de pago en el request."""
+        # ARRANGE: Crear un socio inactivo con una cuota pendiente
+        UsuarioRol.objects.create(usuario=self.usuario, rol=self.rol_socio)
+        SocioInfo.objects.create(usuario=self.usuario, nivel_socio=self.nivel_1, estado='inactivo')
+        Cuota.objects.create(
+            usuario=self.usuario, periodo='2024-09', monto=15000.00,
+            vencimiento=(timezone.now() - timedelta(days=60)).date()
+        )
+        
+        # ACT: Autenticar como admin y llamar al endpoint sin datos de pago
+        self._autenticar_cliente(self.admin)
+        response = self.client.post(
+            f'/socios/api/v1/usuarios/{self.usuario.id}/activar-socio/', 
+            {}  # Body vacío
+        )
+        
+        # ASSERT: Verificar que la API rechaza la solicitud
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('medio de pago', response.data['error'])
+        
+        # Verificar que el socio sigue inactivo y no se crearon pagos
+        socio_info = SocioInfo.objects.get(usuario=self.usuario)
+        self.assertEqual(socio_info.estado, 'inactivo')
+        self.assertEqual(Pago.objects.count(), 0)
+
+
+
+
 
 # Para ejecutar los tests:
 # python manage.py test socios.tests.test_socios

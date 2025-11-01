@@ -47,6 +47,7 @@ class Pago(models.Model):
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES)
     fecha = models.DateTimeField(auto_now_add=True)
     detalle = models.JSONField(blank=True, null=True)
+    comprobante = models.CharField(max_length=255, blank=True, null=True, help_text="Referencia o número de comprobante del pago")
 
     def __str__(self):
         return f"Pago {self.cuota} - {self.estado}"

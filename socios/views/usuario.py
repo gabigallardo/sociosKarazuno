@@ -173,7 +173,6 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         socio_info.estado = 'inactivo'
         socio_info.fecha_inactivacion = timezone.now()
         socio_info.razon_inactivacion = razon
-        socio_info.cuota_al_dia = False
         socio_info.save()
         
         return Response({
@@ -282,8 +281,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                 # Reactivar el socio
                 socio_info.estado = 'activo'
                 socio_info.fecha_inactivacion = None
-                socio_info.razon_inactivacion = None
-                socio_info.cuota_al_dia = True
+                socio_info.razon_inactivacion = None                
                 socio_info.save()
             
             # La respuesta exitosa va FUERA del bloque 'with'

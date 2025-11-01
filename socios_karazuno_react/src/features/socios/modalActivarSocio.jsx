@@ -30,7 +30,7 @@ export default function ModalActivarSocio({ socio, cuotasPendientes, isOpen, onC
 
   if (!isOpen || !socio) return null;
 
-  const totalDeuda = cuotasPendientes?.reduce((sum, c) => sum + c.monto, 0) || 0;
+  const totalDeuda = cuotasPendientes?.reduce((sum, c) => sum + Number(c.monto), 0) || 0;
   const hayDeuda = cuotasPendientes && cuotasPendientes.length > 0;
 
   return (

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from socios.models import SocioInfo, NivelSocio, Usuario
+from socios.models import SocioInfo, NivelSocio, Usuario, Cuota, Pago
 
 class NivelSocioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,6 +19,9 @@ class SocioInfoSerializer(serializers.ModelSerializer):
     # Nombre de disciplina (en lugar de solo ID)
     disciplina_nombre = serializers.CharField(source='disciplina.nombre', read_only=True)
     categoria_nombre = serializers.CharField(source='categoria.nombre_categoria', read_only=True)
+
+    # Declarar cuota_al_dia como un campo calculado
+    cuota_al_dia = serializers.SerializerMethodField()
     
     class Meta:
         model = SocioInfo
@@ -40,6 +43,19 @@ class SocioInfoSerializer(serializers.ModelSerializer):
             'razon_inactivacion'
         ]
         read_only_fields = ['fecha_inactivacion']
+
+    # Implementar el método que calcula el valor
+    def get_cuota_al_dia(self, obj: SocioInfo) -> bool:
+        """
+        Calcula en tiempo real si el socio tiene deudas pendientes.
+        'obj' es la instancia de SocioInfo que se está serializando.
+        """
+        # La lógica es simple: "está al día" si NO existen cuotas pendientes de pago.
+        tiene_deudas = Cuota.objects.filter(usuario=obj.usuario).exclude(
+            id__in=Pago.objects.filter(estado='completado').values_list('cuota_id', flat=True)
+        ).exists()
+        
+        return not tiene_deudas
     
     def get_nombre_completo(self, obj):
         """Retorna nombre completo del usuario"""

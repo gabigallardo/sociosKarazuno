@@ -26,8 +26,7 @@ class SocioInfo(models.Model):
         on_delete=models.CASCADE, 
         primary_key=True, 
         related_name='socioinfo'
-    )
-    cuota_al_dia = models.BooleanField(default=True)
+    )    
     nivel_socio = models.ForeignKey(
         NivelSocio, 
         on_delete=models.SET_NULL, 

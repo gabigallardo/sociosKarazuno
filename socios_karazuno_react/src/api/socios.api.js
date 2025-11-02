@@ -83,3 +83,19 @@ export const getCuotasPendientes = async (usuarioId) => {
     throw error;
   }
 };
+
+/**
+ * Obtener TODAS las cuotas (pagadas y pendientes) de un socio.
+ * @param {number} usuarioId - ID del usuario socio
+ */
+export const getCuotasDeSocio = async (usuarioId) => {
+  try {
+    // Llamamos al endpoint de cuotas filtrando solo por usuario para traer todo su historial
+    const response = await api.get(`${BASE_PATH}/cuotas/?usuario=${usuarioId}`);
+    console.log(`✅ Historial de cuotas obtenido para socio ${usuarioId}:`, response.data.length);
+    return response.data;
+  } catch (error) {
+    console.error(`❌ Error fetching historial de cuotas para socio ${usuarioId}:`, error);
+    throw error;
+  }
+};

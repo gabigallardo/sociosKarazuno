@@ -30,16 +30,15 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def hacerse_socio(self, request, pk=None):
-        """Convertir un usuario en socio o reactivar socio inactivo"""
+        """Convertir un usuario en socio o reactivar socio inactivo SIN generar cuota."""
         usuario = self.get_object()
 
         # Verificar si ya tiene el rol socio
         if UsuarioRol.objects.filter(usuario=usuario, rol__nombre='socio').exists():
-            # Verificar si está inactivo con deuda
             try:
                 socio_info = usuario.socioinfo
                 if socio_info.estado == 'inactivo':
-                    # 👇 BLOQUEO: Verificar si tiene cuotas sin pagar
+                    # Verificar si tiene cuotas sin pagar para bloquear la reactivación
                     cuotas_pendientes = Cuota.objects.filter(usuario=usuario).exclude(
                         id__in=Pago.objects.filter(estado='completado').values_list('cuota_id', flat=True)
                     )
@@ -49,41 +48,18 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                         return Response({
                             "error": "No puedes reactivarte como socio. Tienes cuotas pendientes de pago.",
                             "deuda_total": float(deuda_total),
-                            "cuotas_pendientes": [
-                                {
-                                    "periodo": c.periodo,
-                                    "monto": float(c.monto),
-                                    "vencimiento": c.vencimiento.isoformat()
-                                } for c in cuotas_pendientes
-                            ]
+                            "cuotas_pendientes": [...] # Tu lógica para mostrar deuda está bien
                         }, status=status.HTTP_400_BAD_REQUEST)
                     
-                    # Si no hay deuda, reactivar
+                    # Si no hay deuda, simplemente reactivar
                     socio_info.estado = 'activo'
                     socio_info.fecha_inactivacion = None
                     socio_info.razon_inactivacion = None
-                    socio_info.cuota_al_dia = True
                     socio_info.save()
-                    
-                    # Generar nueva cuota del mes actual
-                    monto_base = VALOR_CUOTA_BASE
-                    descuento = socio_info.nivel_socio.descuento if socio_info.nivel_socio else 0
-                    monto_final = monto_base * (1 - descuento / 100)
-                    periodo = timezone.now().strftime("%Y-%m")
-                    vencimiento = timezone.now() + timedelta(days=30)
-                    
-                    Cuota.objects.create(
-                        usuario=usuario,
-                        periodo=periodo,
-                        monto=monto_final,
-                        vencimiento=vencimiento.date(),
-                        descuento_aplicado=descuento
-                    )
-                    
+                                        
                     return Response({
                         "message": "Socio reactivado exitosamente.",
                         "socio_info": SocioInfoSerializer(socio_info).data,
-                        "cuota_generada": True
                     }, status=status.HTTP_200_OK)
                 else:
                     return Response(
@@ -91,7 +67,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_400_BAD_REQUEST
                     )
             except SocioInfo.DoesNotExist:
-                pass
+                pass # Continuar para crearlo si no existe por alguna razón
 
         try:
             rol_socio = Rol.objects.get(nombre='socio')
@@ -106,15 +82,13 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         socio_info, created = SocioInfo.objects.get_or_create(
             usuario=usuario,
             defaults={
-                'cuota_al_dia': False,
                 'nivel_socio': nivel_inicial,
                 'estado': 'activo'
             }
         )
 
-        # Si no fue creado, actualizar los valores
         if not created:
-            socio_info.cuota_al_dia = False
+            # Si ya existía (caso raro), lo reseteamos a los valores iniciales
             socio_info.nivel_socio = nivel_inicial
             socio_info.disciplina = None
             socio_info.categoria = None
@@ -125,25 +99,9 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
         UsuarioRol.objects.create(usuario=usuario, rol=rol_socio)
 
-        # Generar cuota
-        monto_base = VALOR_CUOTA_BASE
-        descuento = nivel_inicial.descuento
-        monto_final = monto_base * (1 - descuento / 100)
-        periodo = timezone.now().strftime("%Y-%m")
-        vencimiento = timezone.now() + timedelta(days=30)
-
-        Cuota.objects.create(
-            usuario=usuario,
-            periodo=periodo,
-            monto=monto_final,
-            vencimiento=vencimiento.date(),
-            descuento_aplicado=descuento
-        )
-
         return Response({
             "message": "El usuario ahora es socio.",
             "socio_info": SocioInfoSerializer(socio_info).data,
-            "cuota_generada": True
         }, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'], permission_classes=[RolePermission], url_path='inactivar-socio')

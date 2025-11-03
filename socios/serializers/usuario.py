@@ -13,26 +13,24 @@ class UsuarioSerializer(serializers.ModelSerializer):
         source='roles',
         many=True,
         write_only=True,
-        required=False 
+        required=False
     )
-
     disciplinas_a_cargo = serializers.SlugRelatedField(
         many=True,
         read_only=True,
-        slug_field='nombre' 
+        slug_field='nombre'
     )
     disciplinas_a_cargo_ids = serializers.PrimaryKeyRelatedField(
         queryset=Disciplina.objects.all(),
         source='disciplinas_a_cargo',
         many=True,
         write_only=True,
-        required=False 
+        required=False
     )
-
     contrasena = serializers.CharField(
         write_only=True,
-        required=False, 
-        allow_blank=True
+        required=False, # No es requerida al actualizar
+        allow_blank=True # Permite que se envíe una cadena vacía
     )
 
     class Meta:
@@ -43,39 +41,36 @@ class UsuarioSerializer(serializers.ModelSerializer):
             'sexo', 'activo', 'foto_url', 'roles', 'roles_ids', 'qr_token',
             'disciplinas_a_cargo', 'disciplinas_a_cargo_ids'
         ]
-        
-    def validate_contrasena(self, value):
-        """Hashea la contraseña si se proporciona."""
-        if value:
-            return make_password(value)
-        return None 
 
     def create(self, validated_data):
-        """Crear usuario, manejando contraseña y relaciones M2M."""
-        password = validated_data.pop('contrasena', None)
-        if password:
-            validated_data['contrasena'] = make_password(password) 
-
-        roles_data = validated_data.pop('roles', None)
-        disciplinas_data = validated_data.pop('disciplinas_a_cargo', None) 
-
+        """
+        Crear usuario, hasheando la contraseña y manejando relaciones M2M.
+        """
+        roles_data = validated_data.pop('roles', [])
+        disciplinas_data = validated_data.pop('disciplinas_a_cargo', [])
+        
+        # Hasheamos la contraseña antes de crear el usuario
+        validated_data['contrasena'] = make_password(validated_data.get('contrasena'))
+        
         usuario = Usuario.objects.create(**validated_data)
 
-        if roles_data is not None:
+        if roles_data:
             usuario.roles.set(roles_data)
-        if disciplinas_data is not None:
+        if disciplinas_data:
             usuario.disciplinas_a_cargo.set(disciplinas_data)
 
         return usuario
 
     def update(self, instance, validated_data):
-        """Actualizar usuario, hasheando contraseña si se proporciona y manejando M2M."""
+        """
+        Actualizar usuario, hasheando contraseña SOLO si se proporciona una nueva,
+        y manejando correctamente las relaciones M2M.
+        """
         password = validated_data.pop('contrasena', None)
-        if password:
-            instance.contrasena = make_password(password)
-        elif password == '': 
-             pass
 
+        if password: # Solo hashea si se proveyó una nueva contraseña
+            instance.contrasena = make_password(password)
+        
         roles_data = validated_data.pop('roles', None)
         disciplinas_data = validated_data.pop('disciplinas_a_cargo', None)
 
@@ -86,7 +81,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         if disciplinas_data is not None:
             instance.disciplinas_a_cargo.set(disciplinas_data)
 
-        instance.save() 
+        instance.save()
         return instance
 
 
@@ -106,11 +101,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             'apellido': {'required': True},
         }
 
-
     def create(self, validated_data):
         """Crear usuario con contraseña hasheada (sin roles/disciplinas por defecto)."""
-        # Asegurar hasheo de contraseña
         validated_data['contrasena'] = make_password(validated_data['contrasena'])
-        # Se crea el usuario sin roles ni disciplinas por defecto
         usuario = Usuario.objects.create(**validated_data)
         return usuario

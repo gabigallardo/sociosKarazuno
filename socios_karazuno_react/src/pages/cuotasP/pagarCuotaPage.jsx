@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaMoneyBillWave, FaCreditCard } from "react-icons/fa";
 import { getMisCuotas } from "../../api/cuotas.api";
+import { simularPagoMercadoPago } from "../../api/cuotas.api";
+import { toast } from "react-hot-toast";
 
 export default function PagarCuotaPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [cuota, setCuota] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isPaying, setIsPaying] = useState(false);
 
   useEffect(() => {
     async function fetchCuota() {
@@ -29,9 +32,28 @@ export default function PagarCuotaPage() {
     alert("Por favor, acércate a la administración para realizar el pago en efectivo.");
   };
 
-  const handlePagoMercadoPago = () => {
-    // Lógica para integración con Mercado Pago
-    alert("Redirigiendo a Mercado Pago...");
+  const handlePagoMercadoPago = async () => {
+    if (!cuota) return;
+
+    setIsPaying(true);
+    const toastId = toast.loading("Procesando pago simulado...");
+
+    try {
+      await simularPagoMercadoPago(cuota.id);
+      
+      toast.success("¡Pago registrado exitosamente!", { id: toastId });
+      
+      // Esperamos un momento para que el usuario vea el mensaje y luego redirigimos
+      setTimeout(() => {
+        navigate("/mis-cuotas");
+      }, 1500);
+
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || "No se pudo registrar el pago.";
+      toast.error(`❌ ${errorMsg}`, { id: toastId });
+      setIsPaying(false);
+    }
+    // No ponemos setIsPaying(false) en un finally, porque en caso de éxito, la página navegará
   };
 
   if (loading) {
@@ -107,10 +129,13 @@ export default function PagarCuotaPage() {
 
           <button
             onClick={handlePagoMercadoPago}
-            className="flex flex-col items-center justify-center p-6 border-2 border-gray-300 rounded-xl hover:border-blue-600 hover:bg-blue-50 transition"
+            disabled={isPaying} // Deshabilitar mientras se procesa
+            className="flex flex-col items-center justify-center p-6 border-2 border-gray-300 rounded-xl hover:border-blue-600 hover:bg-blue-50 transition disabled:opacity-50 disabled:cursor-wait"
           >
             <FaCreditCard className="text-6xl text-blue-600 mb-3" />
-            <span className="text-xl font-bold text-gray-800">Mercado Pago</span>
+            <span className="text-xl font-bold text-gray-800">
+              {isPaying ? "Procesando..." : "Mercado Pago (Simulado)"}
+            </span>
             <span className="text-sm text-gray-500 mt-2 text-center">
               Paga online con tarjeta o transferencia
             </span>

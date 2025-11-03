@@ -1,12 +1,14 @@
 # socios/views/cuota.py
 
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
-
-# 👇 Asegúrate de importar el modelo Pago para la lógica de filtrado
 from socios.models import Cuota, Pago 
 from socios.serializers import CuotaSerializer
 from socios.permissions import RolePermission
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.utils import timezone
+from django.db import transaction
 
 class CuotaViewSet(viewsets.ModelViewSet):
     """
@@ -82,3 +84,48 @@ class CuotaViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
+    
+    @action(detail=True, methods=['post'], url_path='simular-pago-mp')
+    def simular_pago_mp(self, request, pk=None):
+        """
+        SIMULACIÓN: Registra un pago para una cuota como si viniera de Mercado Pago.
+        Esta acción es para desarrollo y debe ser reemplazada por un webhook real.
+        """
+        try:
+            # Obtener la cuota y verificar permisos y estado
+            cuota = self.get_object()
+            if cuota.usuario != request.user:
+                return Response(
+                    {"error": "No tienes permiso para pagar esta cuota."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            if Pago.objects.filter(cuota=cuota, estado='completado').exists():
+                return Response(
+                    {"error": "Esta cuota ya ha sido pagada."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Crear el registro de Pago
+            # Usamos una transacción para asegurar la integridad de los datos
+            with transaction.atomic():
+                Pago.objects.create(
+                    cuota=cuota,
+                    monto=cuota.monto,
+                    estado='completado',
+                    medio_pago='mercado_pago_simulado', # Usamos un nombre claro
+                    fecha=timezone.now(),
+                    comprobante=f"sim_{cuota.id}_{timezone.now().timestamp()}" # Comprobante autogenerado
+                )
+            
+            # 3. Devolver una respuesta exitosa
+            return Response(
+                {"message": "Pago simulado registrado exitosamente."},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": f"Error al simular el pago: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

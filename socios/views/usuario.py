@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from django_crud_api.settings import VALOR_CUOTA_BASE
 
 from socios.models import Usuario, UsuarioRol, Rol, NivelSocio, SocioInfo, Cuota, Pago
-from socios.serializers import UsuarioSerializer, SocioInfoSerializer
+from socios.serializers import UsuarioSerializer, SocioInfoSerializer, CuotaSerializer
 from socios.permissions import RolePermission
 
 
@@ -44,11 +44,14 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                     )
                     
                     if cuotas_pendientes.exists():
-                        deuda_total = sum(c.monto for c in cuotas_pendientes)
+                        deuda_total = sum(c.monto for c in cuotas_pendientes)                        
+                        # Serializamos las cuotas pendientes para incluirlas en la respuesta
+                        serializer = CuotaSerializer(cuotas_pendientes, many=True)
+                        
                         return Response({
                             "error": "No puedes reactivarte como socio. Tienes cuotas pendientes de pago.",
                             "deuda_total": float(deuda_total),
-                            "cuotas_pendientes": [...] # Tu lógica para mostrar deuda está bien
+                            "cuotas_pendientes": serializer.data  # <-- Reemplazamos [...] con los datos serializados
                         }, status=status.HTTP_400_BAD_REQUEST)
                     
                     # Si no hay deuda, simplemente reactivar

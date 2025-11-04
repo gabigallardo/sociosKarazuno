@@ -5,8 +5,6 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django_crud_api.settings import VALOR_CUOTA_BASE
-
 from socios.models import Usuario, UsuarioRol, Rol, NivelSocio, SocioInfo, Cuota, Pago
 from socios.serializers import UsuarioSerializer, SocioInfoSerializer, CuotaSerializer
 from socios.permissions import RolePermission
@@ -44,14 +42,14 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                     )
                     
                     if cuotas_pendientes.exists():
-                        deuda_total = sum(c.monto for c in cuotas_pendientes)                        
+                        deuda_total = sum(c.monto for c in cuotas_pendientes)
                         # Serializamos las cuotas pendientes para incluirlas en la respuesta
                         serializer = CuotaSerializer(cuotas_pendientes, many=True)
                         
                         return Response({
                             "error": "No puedes reactivarte como socio. Tienes cuotas pendientes de pago.",
                             "deuda_total": float(deuda_total),
-                            "cuotas_pendientes": serializer.data  # <-- Reemplazamos [...] con los datos serializados
+                            "cuotas_pendientes": serializer.data 
                         }, status=status.HTTP_400_BAD_REQUEST)
                     
                     # Si no hay deuda, simplemente reactivar
@@ -70,7 +68,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_400_BAD_REQUEST
                     )
             except SocioInfo.DoesNotExist:
-                pass # Continuar para crearlo si no existe por alguna razón
+                pass # Continuar para crearlo si no existe
 
         try:
             rol_socio = Rol.objects.get(nombre='socio')
@@ -91,7 +89,6 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         )
 
         if not created:
-            # Si ya existía (caso raro), lo reseteamos a los valores iniciales
             socio_info.nivel_socio = nivel_inicial
             socio_info.disciplina = None
             socio_info.categoria = None
@@ -216,12 +213,11 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                 {"error": "Debe especificar el medio de pago."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        comprobante = request.data.get('comprobante') # opcional
+        comprobante = request.data.get('comprobante')
         
         try:
             # 2. Envolver toda la lógica de escritura en una transacción atómica
             with transaction.atomic():
-                # Obtener cuotas pendientes DENTRO de la transacción para asegurar datos frescos
                 cuotas_pendientes = Cuota.objects.filter(usuario=usuario).exclude(
                     id__in=Pago.objects.filter(estado='completado').values_list('cuota_id', flat=True)
                 )
@@ -242,10 +238,9 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                 # Reactivar el socio
                 socio_info.estado = 'activo'
                 socio_info.fecha_inactivacion = None
-                socio_info.razon_inactivacion = None                
+                socio_info.razon_inactivacion = None
                 socio_info.save()
             
-            # La respuesta exitosa va FUERA del bloque 'with'
             return Response({
                 "message": "Socio activado exitosamente.",
                 "pagos_registrados": len(pagos_creados),

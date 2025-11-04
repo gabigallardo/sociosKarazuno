@@ -34,7 +34,6 @@ class Usuario(models.Model):
         Disciplina,
         blank=True, 
         related_name='entrenadores', 
-        limit_choices_to={'roles__nombre': 'Entrenador'}
     )
 
     @property

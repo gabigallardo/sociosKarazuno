@@ -99,3 +99,23 @@ export const getCuotasDeSocio = async (usuarioId) => {
     throw error;
   }
 };
+
+/**
+ * Obtener todos los socios que pertenecen a una categoría específica.
+ * @param {number} categoriaId - El ID de la categoría por la cual filtrar.
+ */
+export const getSociosPorCategoria = async (categoriaId) => {
+  if (!categoriaId) {
+    // Evita llamadas innecesarias a la API si no hay ID
+    return [];
+  }
+  try {
+    // Usamos el filtro del backend que ya existe: /socios-info/?categoria=ID
+    const response = await api.get(`${BASE_PATH}/socios-info/?categoria=${categoriaId}`);
+    console.log(`✅ Jugadores obtenidos para categoría ${categoriaId}:`, response.data.length);
+    return response.data;
+  } catch (error) {
+    console.error(`❌ Error fetching jugadores para categoría ${categoriaId}:`, error);
+    throw error;
+  }
+};

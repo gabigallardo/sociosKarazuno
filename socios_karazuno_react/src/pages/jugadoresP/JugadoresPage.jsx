@@ -1,142 +1,157 @@
 // src/pages/jugadoresP/JugadoresPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { UserContext } from '../../contexts/User.Context'
 import { getAllSocios } from '../../api/socios.api';
 import { getAllDisciplinas } from '../../api/disciplinas.api';
 import { getAllCategorias } from '../../api/categorias.api';
-import { FaUsers, FaFilter } from 'react-icons/fa';
+import { getSociosPorCategoria } from '../../api/socios.api';
+import { FaUsers, FaArrowLeft, FaThLarge, FaSpinner } from 'react-icons/fa';
 import JugadorCard from '../../features/jugadores/JugadorCard';
 import { toast } from 'react-hot-toast';
 
 export default function JugadoresPage() {
-  const [jugadores, setJugadores] = useState([]);
-  const [disciplinas, setDisciplinas] = useState([]);
+  const { user } = useContext(UserContext);
+  // --- Estados para la lógica de la página ---
   const [categorias, setCategorias] = useState([]);
-  
-  const [filtroDisciplina, setFiltroDisciplina] = useState('');
-  const [filtroCategoria, setFiltroCategoria] = useState('');
-  
-  const [loading, setLoading] = useState(true);
+  const [categoriasParaMostrar, setCategoriasParaMostrar] = useState([]);
+  const [selectedCategoria, setSelectedCategoria] = useState(null); // Clave: Guarda la categoría seleccionada
+  const [jugadores, setJugadores] = useState([]);
 
+  // --- Estados de carga para una mejor UX ---
+  const [loadingCategorias, setLoadingCategorias] = useState(true);
+  const [loadingJugadores, setLoadingJugadores] = useState(false);
+
+  // --- Efecto 1: Cargar todas las categorías una sola vez ---
   useEffect(() => {
-    async function CargarDatos() {
-      setLoading(true);
+    async function CargarCategorias() {
+      setLoadingCategorias(true);
       try {
-        const [sociosData, disciplinasData, categoriasData] = await Promise.all([
-          getAllSocios(), // Obtenemos todos los socios
-          getAllDisciplinas(),
-          getAllCategorias(),
-        ]);
-        // Filtramos para quedarnos solo con socios que tienen disciplina asignada
-        setJugadores(sociosData.filter(s => s.disciplina));
-        setDisciplinas(disciplinasData);
+        const categoriasData = await getAllCategorias();
         setCategorias(categoriasData);
       } catch (error) {
-        console.error("Error cargando datos para el panel de jugadores:", error);
-        toast.error("No se pudieron cargar los datos.");
+        toast.error("No se pudieron cargar las categorías.");
       } finally {
-        setLoading(false);
+        setLoadingCategorias(false);
       }
     }
-    CargarDatos();
+    CargarCategorias();
   }, []);
 
-  // Filtramos las categorías disponibles según la disciplina seleccionada
-  const categoriasFiltradas = filtroDisciplina
-    ? categorias.filter(c => c.disciplina.toString() === filtroDisciplina)
-    : [];
+  // --- Efecto 2: Filtrar las categorías a mostrar según el rol del usuario ---
+  useEffect(() => {
+    if (!user || categorias.length === 0) return;
 
-  // Filtramos los jugadores según los filtros seleccionados
-  const jugadoresFiltrados = jugadores.filter(j => {
-    const matchDisciplina = !filtroDisciplina || j.disciplina.toString() === filtroDisciplina;
-    const matchCategoria = !filtroCategoria || j.categoria.toString() === filtroCategoria;
-    return matchDisciplina && matchCategoria;
-  });
+    const userRoles = user.roles || [];
+    const esGestion = userRoles.includes('admin') || userRoles.includes('dirigente') || userRoles.includes('empleado');
 
-  // Agrupamos los jugadores filtrados por su categoría para mostrarlos
-  const jugadoresAgrupados = jugadoresFiltrados.reduce((acc, jugador) => {
-    const categoriaNombre = jugador.categoria_nombre || 'Sin Categoría';
-    if (!acc[categoriaNombre]) {
-      acc[categoriaNombre] = [];
+    if (esGestion) {
+      // Admin/Dirigente/Empleado ven todas las categorías
+      setCategoriasParaMostrar(categorias);
+    } else if (userRoles.includes('profesor')) {
+      // Un profesor solo ve las categorías que tiene a cargo
+      const idsACargo = user.categorias_a_cargo_ids || [];
+      const categoriasDelProfesor = categorias.filter(c => idsACargo.includes(c.id));
+      setCategoriasParaMostrar(categoriasDelProfesor);
     }
-    acc[categoriaNombre].push(jugador);
-    return acc;
-  }, {});
+  }, [user, categorias]);
 
-  if (loading) {
-    return <div className="text-center p-8">Cargando jugadores...</div>;
+  // --- Manejador para cuando se hace clic en una categoría ---
+  const handleCategoriaClick = async (categoria) => {
+    setSelectedCategoria(categoria);
+    setLoadingJugadores(true);
+    setJugadores([]); // Limpiar la lista anterior
+    try {
+      const jugadoresData = await getSociosPorCategoria(categoria.id);
+      setJugadores(jugadoresData);
+    } catch (error) {
+      toast.error(`No se pudieron cargar los jugadores de ${categoria.nombre_categoria}.`);
+    } finally {
+      setLoadingJugadores(false);
+    }
+  };
+
+  // --- Manejador para volver a la lista de categorías ---
+  const handleVolver = () => {
+    setSelectedCategoria(null);
+    setJugadores([]);
+  };
+
+  // --- Renderizado Principal ---
+  if (loadingCategorias) {
+    return <div className="text-center p-8">Cargando categorías...</div>;
   }
 
+  // Si NO hay una categoría seleccionada, mostramos la lista de categorías
+  if (!selectedCategoria) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <h1 className="text-3xl font-extrabold text-red-700 flex items-center gap-2 mb-4">
+          <FaThLarge />
+          Selecciona una Categoría
+        </h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {categoriasParaMostrar.length > 0 ? (
+            categoriasParaMostrar.map(cat => (
+              <div
+                key={cat.id}
+                onClick={() => handleCategoriaClick(cat)}
+                className="p-4 bg-white rounded-lg shadow border border-gray-200 cursor-pointer transition-all hover:shadow-xl hover:border-red-500 hover:-translate-y-1"
+              >
+                <p className="font-bold text-lg text-red-700">{cat.disciplina_nombre}</p>
+                <p className="text-gray-800">{cat.nombre_categoria}</p>
+              </div>
+            ))
+          ) : (
+            <p className="col-span-full text-center text-gray-500 mt-8">No tienes categorías asignadas para visualizar.</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Si SÍ hay una categoría seleccionada, mostramos la parrilla de jugadores
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-extrabold text-red-700 flex items-center gap-2">
-          <FaUsers />
-          Panel de Jugadores
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Visualiza los socios organizados por deporte y categoría.
-        </p>
+      {/* Header con botón para volver */}
+      <div className="mb-6 flex items-center justify-between">
+        <div className='flex-grow'>
+          <h1 className="text-3xl font-extrabold text-red-700 flex items-center gap-2">
+            <FaUsers />
+            Jugadores de {selectedCategoria.disciplina_nombre} - {selectedCategoria.nombre_categoria}
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Total: {jugadores.length} jugadores
+          </p>
+        </div>
+        <button
+          onClick={handleVolver}
+          className="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-gray-300 transition"
+        >
+          <FaArrowLeft />
+          Volver
+        </button>
       </div>
 
-      {/* Filtros */}
-      <div className="bg-white p-4 rounded-lg shadow border border-gray-200 mb-6 flex items-center gap-4">
-        <FaFilter className="text-xl text-gray-500" />
-        <div className="flex-grow">
-          <label htmlFor="disciplina" className="block text-sm font-medium text-gray-700">Disciplina</label>
-          <select
-            id="disciplina"
-            value={filtroDisciplina}
-            onChange={(e) => {
-              setFiltroDisciplina(e.target.value);
-              setFiltroCategoria(''); // Reseteamos el filtro de categoría
-            }}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-md"
-          >
-            <option value="">Todas las disciplinas</option>
-            {disciplinas.map(d => (
-              <option key={d.id} value={d.id}>{d.nombre}</option>
-            ))}
-          </select>
+      {/* Contenido: Loader o Parrilla de Jugadores */}
+      {loadingJugadores ? (
+        <div className="flex justify-center items-center p-16">
+          <FaSpinner className="animate-spin text-4xl text-red-600" />
         </div>
-        <div className="flex-grow">
-          <label htmlFor="categoria" className="block text-sm font-medium text-gray-700">Categoría</label>
-          <select
-            id="categoria"
-            value={filtroCategoria}
-            onChange={(e) => setFiltroCategoria(e.target.value)}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-md"
-            disabled={!filtroDisciplina}
-          >
-            <option value="">Todas las categorías</option>
-            {categoriasFiltradas.map(c => (
-              <option key={c.id} value={c.id}>{c.nombre_categoria}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Lista de Jugadores Agrupados */}
-      <div className="space-y-6">
-        {Object.keys(jugadoresAgrupados).length > 0 ? (
-          Object.entries(jugadoresAgrupados).map(([categoria, listaJugadores]) => (
-            <div key={categoria}>
-              <h2 className="text-xl font-bold text-red-700 border-b-2 border-red-200 pb-2 mb-4">
-                {categoria} ({listaJugadores.length} jugadores)
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {listaJugadores.map(jugador => (
-                  <JugadorCard key={jugador.usuario} jugador={jugador} />
-                ))}
-              </div>
+      ) : (
+        <div className="space-y-6">
+          {jugadores.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {jugadores.map(jugador => (
+                <JugadorCard key={jugador.usuario} jugador={jugador} />
+              ))}
             </div>
-          ))
-        ) : (
-          <div className="text-center py-10 bg-gray-50 rounded-lg">
-            <p className="text-gray-500">No hay jugadores que coincidan con los filtros seleccionados.</p>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="text-center py-10 bg-gray-50 rounded-lg">
+              <p className="text-gray-500">No hay jugadores asignados a esta categoría.</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

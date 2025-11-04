@@ -2,6 +2,7 @@ from django.db import models
 import uuid
 from typing import TYPE_CHECKING
 from .disciplina import Disciplina
+from .disciplina import Categoria
 
 # Type checking para evitar importaciones circulares
 if TYPE_CHECKING:
@@ -35,6 +36,12 @@ class Usuario(models.Model):
         blank=True, 
         related_name='entrenadores', 
         limit_choices_to={'roles__nombre': 'Entrenador'}
+    )
+
+    categorias_a_cargo = models.ManyToManyField(
+        Categoria,
+        blank=True,
+        related_name='entrenadores'
     )
 
     @property

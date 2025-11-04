@@ -63,7 +63,6 @@ function EntrenadoresPage() {
         const profesorActual = profesores.find(p => p.id === profesorId);
         if (!profesorActual) return;
 
-        // 👇 Usar el campo correcto del profesor: categorias_a_cargo_ids (asumiendo que existe)
         const currentCategoriaIds = Array.isArray(profesorActual.categorias_a_cargo_ids)
             ? [...profesorActual.categorias_a_cargo_ids]
             : [];
@@ -92,10 +91,8 @@ function EntrenadoresPage() {
             activo: profesorActual.activo !== undefined ? profesorActual.activo : true,
             foto_url: profesorActual.foto_url || null,
             roles_ids: Array.isArray(profesorActual.roles_ids) ? profesorActual.roles_ids : [],
-            // 👇 Campo principal a actualizar (asumiendo que se llama así en el backend)
+            disciplinas_a_cargo_ids: Array.isArray(profesorActual.disciplinas_a_cargo_ids) ? profesorActual.disciplinas_a_cargo_ids : [],
             categorias_a_cargo_ids: nuevasCategoriaIds,
-            // Opcional: limpiar disciplinas_a_cargo_ids si ya no se usa o mantenerlo si es necesario
-            // disciplinas_a_cargo_ids: profesorActual.disciplinas_a_cargo_ids || [],
         };
         // --- FIN AJUSTE Payload ---
 

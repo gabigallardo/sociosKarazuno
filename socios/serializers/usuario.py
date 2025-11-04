@@ -1,33 +1,33 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
-from socios.models import Usuario, Rol, Disciplina
+from socios.models import Usuario, Rol, Disciplina, Categoria
 from .socio import SocioInfoSerializer
 
 class UsuarioSerializer(serializers.ModelSerializer):
+    # --- Roles ---
     roles = serializers.SlugRelatedField(
-        many=True,
-        read_only=True,
-        slug_field='nombre'
+        many=True, read_only=True, slug_field='nombre'
     )
     roles_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Rol.objects.all(),
-        source='roles',
-        many=True,
-        write_only=True,
-        required=False
+        queryset=Rol.objects.all(), source='roles', many=True, required=False
     )
+
+    # --- Disciplinas a Cargo ---
     disciplinas_a_cargo = serializers.SlugRelatedField(
-        many=True,
-        read_only=True,
-        slug_field='nombre'
+        many=True, read_only=True, slug_field='nombre'
     )
     disciplinas_a_cargo_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Disciplina.objects.all(),
-        source='disciplinas_a_cargo',
-        many=True,
-        write_only=True,
-        required=False
+        queryset=Disciplina.objects.all(), source='disciplinas_a_cargo', many=True, required=False
     )
+
+    # --- Categorías a Cargo ---
+    categorias_a_cargo = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field='nombre_categoria'
+    )
+    categorias_a_cargo_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Categoria.objects.all(), source='categorias_a_cargo', many=True, required=False
+    )
+
     contrasena = serializers.CharField(
         write_only=True,
         required=False, # No es requerida al actualizar
@@ -42,7 +42,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
             'id', 'tipo_documento', 'nro_documento', 'nombre', 'apellido',
             'email', 'contrasena', 'telefono', 'fecha_nacimiento', 'direccion',
             'sexo', 'activo', 'foto_url', 'roles', 'roles_ids', 'qr_token',
-            'disciplinas_a_cargo', 'disciplinas_a_cargo_ids', 'socioinfo'
+            'disciplinas_a_cargo', 'disciplinas_a_cargo_ids', 'categorias_a_cargo',
+              'categorias_a_cargo_ids', 'socioinfo'
         ]
 
     def create(self, validated_data):
@@ -51,6 +52,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         """
         roles_data = validated_data.pop('roles', [])
         disciplinas_data = validated_data.pop('disciplinas_a_cargo', [])
+        categorias_data = validated_data.pop('categorias_a_cargo', [])
         
         # Hasheamos la contraseña antes de crear el usuario
         validated_data['contrasena'] = make_password(validated_data.get('contrasena'))
@@ -61,6 +63,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
             usuario.roles.set(roles_data)
         if disciplinas_data:
             usuario.disciplinas_a_cargo.set(disciplinas_data)
+        if categorias_data:
+            usuario.categorias_a_cargo.set(categorias_data)
 
         return usuario
 
@@ -76,6 +80,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         
         roles_data = validated_data.pop('roles', None)
         disciplinas_data = validated_data.pop('disciplinas_a_cargo', None)
+        categorias_data = validated_data.pop('categorias_a_cargo', None)
 
         instance = super().update(instance, validated_data)
 
@@ -83,6 +88,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
             instance.roles.set(roles_data)
         if disciplinas_data is not None:
             instance.disciplinas_a_cargo.set(disciplinas_data)
+        if categorias_data is not None:
+            instance.categorias_a_cargo.set(categorias_data)
 
         instance.save()
         return instance

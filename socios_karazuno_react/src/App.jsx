@@ -22,8 +22,8 @@ import MisCuotasPage from "./pages/cuotasP/misCuotasPage.jsx";
 import PagarCuotaPage from "./pages/cuotasP/pagarCuotaPage.jsx";
 import SociosPagesP from "./pages/sociosP/sociosPage.jsx";
 import SocioDetailPage from "./pages/sociosP/SocioDetailPage.jsx";
-
 import EntrenadoresPage from "./pages/entrenadoresP/EntrenadoresPage.jsx";
+import JugadoresPage from "./pages/jugadoresP/JugadoresPage.jsx";
 
 // Importaciones de Componentes y Contexto
 import { UserProviderWrapper } from "./contexts/User.Context.jsx";
@@ -67,6 +67,7 @@ function App() {
 
                         {/* Rutas para Gestión de Deportes */}
                         <Route path="/deportes" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><DeportesPage /></ProtectedRoute>} />
+                        <Route path="/jugadores" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><JugadoresPage /></ProtectedRoute>} />
 
                         {/* Rutas para Admin, Dirigente, Empleado */}
                         <Route path="/form" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SociosForm /></ProtectedRoute>} />

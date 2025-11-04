@@ -14,13 +14,27 @@ class SocioInfoViewSet(viewsets.ModelViewSet):
     required_roles = ['admin', 'profesor', 'dirigente']
 
     def get_queryset(self):
-        """Optimizar queries con select_related"""
-        return SocioInfo.objects.select_related(
-            'usuario',
-            'nivel_socio',
-            'disciplina',
-            'categoria'
+        """
+        Optimizar queries y permitir filtrado por disciplina y categoría.
+        Ej: /socios/?disciplina=1&categoria=5
+        """
+        # El queryset base ya tiene la optimización de select_related
+        queryset = SocioInfo.objects.select_related(
+            'usuario', 'nivel_socio', 'disciplina', 'categoria'
         ).all()
+
+        # Obtenemos los parámetros de la URL
+        disciplina_id = self.request.query_params.get('disciplina', None)
+        categoria_id = self.request.query_params.get('categoria', None)
+
+        # Aplicamos los filtros si existen
+        if disciplina_id:
+            queryset = queryset.filter(disciplina_id=disciplina_id)
+        
+        if categoria_id:
+            queryset = queryset.filter(categoria_id=categoria_id)
+
+        return queryset
 
 class NivelSocioViewSet(viewsets.ModelViewSet):
     """ViewSet para niveles de socio"""

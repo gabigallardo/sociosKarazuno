@@ -26,6 +26,7 @@ function Navigation() {
     const puedeGestionarUsuarios = esAdmin || esDirigente || esEmpleado;
     const puedeGestionarDeportes = esAdmin || esDirigente || esEmpleado || esProfesor;
     const puedeGestionarEntrenadores = esAdmin || esDirigente || esEmpleado;
+    const puedeVerJugadores = esAdmin || esDirigente || esProfesor;
 
     // --- Items específicos para Socios ---
     if (esSocio) {
@@ -49,6 +50,9 @@ function Navigation() {
         navItems.push({ to: "/entrenadores", icon: FaChalkboardTeacher, label: "Entrenadores" });
     }
 
+    if (puedeVerJugadores) {
+        navItems.push({ to: "/jugadores", icon: FaUsers, label: "Jugadores" });
+    }
 
     return (
         <aside className="w-64 bg-red-700 text-white flex flex-col justify-between h-screen fixed shadow-2xl">

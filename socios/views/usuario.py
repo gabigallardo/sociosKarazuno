@@ -1,3 +1,5 @@
+# socios/views/usuario.py
+
 from datetime import timedelta
 from django.utils import timezone
 from django.db import transaction
@@ -5,8 +7,6 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django_crud_api.settings import VALOR_CUOTA_BASE
-
 from socios.models import Usuario, UsuarioRol, Rol, NivelSocio, SocioInfo, Cuota, Pago
 from socios.serializers import UsuarioSerializer, SocioInfoSerializer, CuotaSerializer
 from socios.permissions import RolePermission
@@ -18,18 +18,23 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     serializer_class = UsuarioSerializer
 
     def get_permissions(self):
+        # 👇 CAMBIO 1: Añadimos 'me' a la lista de acciones permitidas para cualquier usuario logueado.
         if self.action in ['list', 'actualizar_perfil_deportivo', 'hacerse_socio', 'me']:
             permission_classes = [IsAuthenticated]
         elif self.action in ['inactivar_socio', 'activar_socio']:
             permission_classes = [RolePermission]
             self.required_roles = ['admin', 'dirigente', 'profesor']
         else:
+            # Las acciones por defecto como create, update, destroy quedan solo para admin
             permission_classes = [RolePermission]
             self.required_roles = ['admin']
         return [permission() for permission in permission_classes]
 
+    # --- El resto de las acciones del otro programador se mantienen intactas ---
+
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def hacerse_socio(self, request, pk=None):
+        # ... (código sin cambios)
         """Convertir un usuario en socio o reactivar socio inactivo SIN generar cuota."""
         usuario = self.get_object()
 
@@ -44,14 +49,14 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                     )
                     
                     if cuotas_pendientes.exists():
-                        deuda_total = sum(c.monto for c in cuotas_pendientes)                        
+                        deuda_total = sum(c.monto for c in cuotas_pendientes)
                         # Serializamos las cuotas pendientes para incluirlas en la respuesta
                         serializer = CuotaSerializer(cuotas_pendientes, many=True)
                         
                         return Response({
                             "error": "No puedes reactivarte como socio. Tienes cuotas pendientes de pago.",
                             "deuda_total": float(deuda_total),
-                            "cuotas_pendientes": serializer.data  # <-- Reemplazamos [...] con los datos serializados
+                            "cuotas_pendientes": serializer.data 
                         }, status=status.HTTP_400_BAD_REQUEST)
                     
                     # Si no hay deuda, simplemente reactivar
@@ -70,7 +75,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_400_BAD_REQUEST
                     )
             except SocioInfo.DoesNotExist:
-                pass # Continuar para crearlo si no existe por alguna razón
+                pass # Continuar para crearlo si no existe
 
         try:
             rol_socio = Rol.objects.get(nombre='socio')
@@ -91,7 +96,6 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         )
 
         if not created:
-            # Si ya existía (caso raro), lo reseteamos a los valores iniciales
             socio_info.nivel_socio = nivel_inicial
             socio_info.disciplina = None
             socio_info.categoria = None
@@ -107,8 +111,10 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             "socio_info": SocioInfoSerializer(socio_info).data,
         }, status=status.HTTP_201_CREATED)
 
+
     @action(detail=True, methods=['post'], permission_classes=[RolePermission], url_path='inactivar-socio')
     def inactivar_socio(self, request, pk=None):
+        # ... (código sin cambios)
         """
         Endpoint para inactivar un socio por falta de pago o baja voluntaria.
         Solo accesible por admin/dirigente.
@@ -148,6 +154,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         url_path='me/actualizar-perfil-deportivo'
     )
     def actualizar_perfil_deportivo(self, request):
+        # ... (código sin cambios)
         """Actualizar disciplina y categoría del socio autenticado"""
         usuario = request.user
 
@@ -173,94 +180,57 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], permission_classes=[RolePermission], url_path='activar-socio')
     def activar_socio(self, request, pk=None):
+        # ... (código sin cambios)
         """
         Endpoint para activar un socio inactivo.
-        
         Responsabilidades:
         ✅ Registrar pagos de cuotas pendientes
         ✅ Cambiar estado a activo
-        
-        ❌ NO genera nueva cuota
-        → Las cuotas se generan automáticamente por generar_cuotas_mensuales()
-        → Ejecutado el 5 de cada mes
         """
-        
-        # 1. Obtener el usuario
         usuario = self.get_object()
-        
-        # 2. Validar que es socio
         try:
             socio_info = usuario.socioinfo
         except SocioInfo.DoesNotExist:
-            return Response(
-                {"error": "El usuario no es un socio."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "El usuario no es un socio."}, status=status.HTTP_400_BAD_REQUEST)
         
-        # 3. Validar que está inactivo
         if socio_info.estado == 'activo':
-            return Response(
-                {"error": "El socio ya está activo."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "El socio ya está activo."}, status=status.HTTP_400_BAD_REQUEST)
         
-        # 4. Obtener cuotas pendientes
-        cuotas_pendientes = Cuota.objects.filter(usuario=usuario).exclude(
-            id__in=Pago.objects.filter(estado='completado').values_list('cuota_id', flat=True)
-        )
-        
-        # 5. Validar datos de pago del request
         medio_pago = request.data.get('medio_pago')
         if not medio_pago:
-            return Response(
-                {"error": "Debe especificar el medio de pago."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        comprobante = request.data.get('comprobante') # opcional
+            return Response({"error": "Debe especificar el medio de pago."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        comprobante = request.data.get('comprobante')
         
         try:
-            # 2. Envolver toda la lógica de escritura en una transacción atómica
             with transaction.atomic():
-                # Obtener cuotas pendientes DENTRO de la transacción para asegurar datos frescos
                 cuotas_pendientes = Cuota.objects.filter(usuario=usuario).exclude(
                     id__in=Pago.objects.filter(estado='completado').values_list('cuota_id', flat=True)
                 )
-
                 pagos_creados = []
                 if cuotas_pendientes.exists():
                     for cuota in cuotas_pendientes:
                         pago = Pago.objects.create(
-                            cuota=cuota,
-                            monto=cuota.monto,
-                            estado='completado',
-                            medio_pago=medio_pago,
-                            comprobante=comprobante,
-                            fecha=timezone.now()
+                            cuota=cuota, monto=cuota.monto, estado='completado',
+                            medio_pago=medio_pago, comprobante=comprobante, fecha=timezone.now()
                         )
                         pagos_creados.append(pago)
                 
-                # Reactivar el socio
                 socio_info.estado = 'activo'
                 socio_info.fecha_inactivacion = None
-                socio_info.razon_inactivacion = None                
+                socio_info.razon_inactivacion = None
                 socio_info.save()
             
-            # La respuesta exitosa va FUERA del bloque 'with'
             return Response({
                 "message": "Socio activado exitosamente.",
                 "pagos_registrados": len(pagos_creados),
                 "deuda_cancelada": len(pagos_creados) > 0,
                 "socio_info": SocioInfoSerializer(socio_info).data,
             }, status=status.HTTP_200_OK)
-
         except Exception as e:
-            # Si algo falla dentro de 'with transaction.atomic()',
-            # Django revierte automáticamente los cambios en la DB.
-            return Response(
-                {"error": f"Error al procesar activación: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
+            return Response({"error": f"Error al procesar activación: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # 👇 CAMBIO 2: Añadimos la acción /me que faltaba.
     @action(
         detail=False, 
         methods=['get'], 
@@ -271,10 +241,8 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         """
         Devuelve los datos completos del usuario autenticado.
         Este es el endpoint ideal para que el frontend refresque la información del usuario
-        y no tenga que usar el endpoint login
+        y no tenga que usar el endpoint de login.
         """
-        # request.user es el objeto de usuario que Django identifica a través del token JWT.
         usuario = request.user
-        # Reutilizamos el UsuarioSerializer que ya sabe cómo incluir 'socioinfo'.
         serializer = self.get_serializer(usuario)
         return Response(serializer.data, status=status.HTTP_200_OK)

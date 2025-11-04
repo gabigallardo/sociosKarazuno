@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from socios.models import Usuario, Rol, Disciplina
+from .socio import SocioInfoSerializer
 
 class UsuarioSerializer(serializers.ModelSerializer):
     roles = serializers.SlugRelatedField(
@@ -33,13 +34,15 @@ class UsuarioSerializer(serializers.ModelSerializer):
         allow_blank=True # Permite que se envíe una cadena vacía
     )
 
+    socioinfo = SocioInfoSerializer(read_only=True, allow_null=True)
+
     class Meta:
         model = Usuario
         fields = [
             'id', 'tipo_documento', 'nro_documento', 'nombre', 'apellido',
             'email', 'contrasena', 'telefono', 'fecha_nacimiento', 'direccion',
             'sexo', 'activo', 'foto_url', 'roles', 'roles_ids', 'qr_token',
-            'disciplinas_a_cargo', 'disciplinas_a_cargo_ids'
+            'disciplinas_a_cargo', 'disciplinas_a_cargo_ids', 'socioinfo'
         ]
 
     def create(self, validated_data):

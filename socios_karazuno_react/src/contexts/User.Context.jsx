@@ -1,5 +1,5 @@
-
 import React, { createContext, useState, useEffect } from "react";
+import { getMe } from "../api/usuarios.api";
 
 export const UserContext = createContext();
 
@@ -37,12 +37,27 @@ export function UserProviderWrapper({ children }) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    console.log("🔄 Refrescando datos del usuario...");
+    try {
+      const refreshedUserData = await getMe();
+      // Actualiza tanto el localStorage como el estado de React
+      localStorage.setItem("usuario", JSON.stringify(refreshedUserData));
+      setUser(refreshedUserData);
+    } catch (error) {
+      // Si el token ya no es válido, la llamada a getMe fallará.
+      // Lo más seguro es cerrar la sesión.
+      console.error("No se pudo refrescar el usuario, cerrando sesión.");
+      logout();
+    }
+  };
+
   if (!isAuthLoaded) {
     return <div className="text-center p-10 text-lg">Cargando aplicación...</div>;
   }
 
   return (
-    <UserContext.Provider value={{ user, setUser, login, logout }}>
+    <UserContext.Provider value={{ user, setUser, login, logout, refreshUser }}>
       {children}
     </UserContext.Provider>
   );

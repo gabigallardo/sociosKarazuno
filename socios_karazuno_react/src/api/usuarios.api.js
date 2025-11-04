@@ -77,3 +77,14 @@ export const actualizarPerfilDeportivo = async (data) => {
     throw error;
   }
 };
+
+export const getMe = async () => {
+  try {
+    const response = await api.get(`${BASE_PATH}/me/`);
+    console.log("✅ Datos del usuario refrescados:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error fetching current user data:", error.response?.data || error.message);
+    throw error;
+  }
+};

@@ -4,9 +4,9 @@ import { getAllDisciplinas } from '../api/disciplinas.api';
 import { getAllCategorias } from '../api/categorias.api';
 import { actualizarPerfilDeportivo } from '../api/usuarios.api';
 import { toast } from 'react-hot-toast';
-import { FaUser } from 'react-icons/fa';
+import { FaUser, FaEdit } from 'react-icons/fa';
 
-// 1. Importa el nuevo componente de formulario
+import PerfilDeportivoDisplay from '../components/PerfilDeportivoDisplay/PerfilDeportivoDisplay.jsx';
 import PerfilDeportivoForm from '../components/PerfilDeportivoForm/PerfilDeportivoForm.jsx';
 
 export default function MiPerfilPage() {
@@ -36,13 +36,13 @@ export default function MiPerfilPage() {
     loadData();
   }, []); // El array de dependencias está vacío para que se ejecute solo una vez
 
-  // 2. Define la función de guardado que pasarás como prop
+  // Define la función de guardado que pasarás como prop
   const handleSave = async (data) => {
     setIsLoading(true);
     try {
-      await actualizarPerfilDeportivo(data);
-      await refreshUser(); // Actualiza los datos del usuario en el contexto
+      await actualizarPerfilDeportivo(data);      
       toast.success('¡Perfil actualizado con éxito!');
+      await refreshUser(); // Actualiza los datos del usuario en el contexto
     } catch (error) {
       toast.error('Hubo un error al guardar tu perfil.');
     } finally {
@@ -60,16 +60,26 @@ export default function MiPerfilPage() {
         <FaUser />
         Mi Perfil Deportivo
       </h1>
+
+       {/* Renderiza el componente de visualización aquí */}
+      <PerfilDeportivoDisplay socioInfo={user?.socioinfo} />
       
-      {/* 3. Renderiza el componente de formulario pasando los datos y funciones */}
-      <PerfilDeportivoForm
-        disciplinas={disciplinas}
-        categorias={categorias}
-        initialDisciplina={user?.socio_info?.disciplina}
-        initialCategoria={user?.socio_info?.categoria}
-        onSave={handleSave}
-        isLoading={isLoading}
-      />
+      {/* Renderiza el componente de formulario pasando los datos y funciones */}
+      <div className="mt-8">
+        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 mb-4">
+          <FaEdit />
+          Editar mi Perfil
+        </h2>
+        <PerfilDeportivoForm
+          disciplinas={disciplinas}
+          categorias={categorias}
+          // Asegúrate de usar el 'related_name' correcto ('socioinfo')
+          initialDisciplina={user?.socioinfo?.disciplina}
+          initialCategoria={user?.socioinfo?.categoria}
+          onSave={handleSave}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 }

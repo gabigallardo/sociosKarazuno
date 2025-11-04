@@ -18,7 +18,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     serializer_class = UsuarioSerializer
 
     def get_permissions(self):
-        if self.action in ['list', 'actualizar_perfil_deportivo', 'hacerse_socio']:
+        if self.action in ['list', 'actualizar_perfil_deportivo', 'hacerse_socio', 'me']:
             permission_classes = [IsAuthenticated]
         elif self.action in ['inactivar_socio', 'activar_socio']:
             permission_classes = [RolePermission]
@@ -260,3 +260,21 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                 {"error": f"Error al procesar activación: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+    @action(
+        detail=False, 
+        methods=['get'], 
+        permission_classes=[IsAuthenticated], 
+        url_path='me'
+    )
+    def me(self, request):
+        """
+        Devuelve los datos completos del usuario autenticado.
+        Este es el endpoint ideal para que el frontend refresque la información del usuario
+        y no tenga que usar el endpoint login
+        """
+        # request.user es el objeto de usuario que Django identifica a través del token JWT.
+        usuario = request.user
+        # Reutilizamos el UsuarioSerializer que ya sabe cómo incluir 'socioinfo'.
+        serializer = self.get_serializer(usuario)
+        return Response(serializer.data, status=status.HTTP_200_OK)

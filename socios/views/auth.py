@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 
 from socios.models import Usuario
-from socios.serializers import RegisterSerializer
+from socios.serializers import RegisterSerializer, UsuarioSerializer
 
 
 class LoginView(APIView):
@@ -47,21 +47,13 @@ class LoginView(APIView):
             "exp": datetime.utcnow() + timedelta(hours=2),
         }
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
+        # El serializer se encarga de construir el objeto JSON correctamente,
+        # incluyendo el campo anidado 'socioinfo'.
+        serializer = UsuarioSerializer(usuario)
 
         return Response({
             "token": token,
-            "usuario": {
-                "id": usuario.id,
-                "nombre": usuario.nombre,
-                "apellido": usuario.apellido,
-                "email": usuario.email,
-                "nro_documento": usuario.nro_documento,
-                "fecha_nacimiento": usuario.fecha_nacimiento,
-                "sexo": usuario.sexo,
-                "foto_url": usuario.foto_url,
-                "qr_token": usuario.qr_token,
-                "roles": roles,
-            }
+            "usuario": serializer.data
         })
 
 

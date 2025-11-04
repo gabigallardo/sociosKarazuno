@@ -18,20 +18,18 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     serializer_class = UsuarioSerializer
 
     def get_permissions(self):
-        # 👇 CAMBIO 1: Añadimos 'me' a la lista de acciones permitidas para cualquier usuario logueado.
+        # 👇 SOLUCIÓN DEL CONFLICTO 1: Usamos la lista que incluye 'me'
         if self.action in ['list', 'actualizar_perfil_deportivo', 'hacerse_socio', 'me']:
             permission_classes = [IsAuthenticated]
         elif self.action in ['inactivar_socio', 'activar_socio']:
             permission_classes = [RolePermission]
             self.required_roles = ['admin', 'dirigente', 'profesor']
         else:
-            # Las acciones por defecto como create, update, destroy quedan solo para admin
             permission_classes = [RolePermission]
             self.required_roles = ['admin']
         return [permission() for permission in permission_classes]
 
-    # --- El resto de las acciones del otro programador se mantienen intactas ---
-
+    # ... (Todo el código del otro programador se mantiene intacto aquí) ...
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def hacerse_socio(self, request, pk=None):
         # ... (código sin cambios)
@@ -230,7 +228,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": f"Error al procesar activación: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    # 👇 CAMBIO 2: Añadimos la acción /me que faltaba.
+    # 👇 SOLUCIÓN DEL CONFLICTO 2: Mantenemos tu nuevo método 'me'
     @action(
         detail=False, 
         methods=['get'], 
@@ -246,3 +244,4 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         usuario = request.user
         serializer = self.get_serializer(usuario)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    

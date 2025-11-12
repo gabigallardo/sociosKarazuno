@@ -101,9 +101,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
         fields = (
-            "tipo_documento", "nro_documento", "nombre", "apellido",
-            "email", "contrasena", "telefono", "fecha_nacimiento",
-            "direccion", "sexo"
+            "nombre", "apellido", "email", "contrasena"
         )
         extra_kwargs = {
             'email': {'required': True},

@@ -15,8 +15,8 @@ class Usuario(models.Model):
         ("otro", "Otro"),
     ]
 
-    tipo_documento = models.CharField(max_length=50)
-    nro_documento = models.CharField(max_length=50, unique=True)
+    tipo_documento = models.CharField(max_length=50, blank=True, null=True)
+    nro_documento = models.CharField(max_length=50, unique=True, blank=True, null=True)
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
@@ -25,7 +25,7 @@ class Usuario(models.Model):
     fecha_nacimiento = models.DateField(blank=True, null=True)
     direccion = models.TextField(blank=True, null=True)
     sexo = models.CharField(max_length=20, choices=SEXO_CHOICES, blank=True, null=True)
-    foto_url = models.CharField(max_length=255, blank=True, null=True) 
+    foto_url = models.CharField(max_length=255, blank=True, null=True)
     qr_token = models.UUIDField(default=uuid.uuid4, unique=True)
     fecha_alta = models.DateTimeField(auto_now_add=True)
     activo = models.BooleanField(default=True)

@@ -119,3 +119,18 @@ export const getSociosPorCategoria = async (categoriaId) => {
     throw error;
   }
 };
+/**
+ * Crea un nuevo registro de SocioInfo (Hacerse Socio).
+ * @param {object} socioData - Datos para crear el socio (ej: { usuario: ID })
+ */
+export const createSocioInfo = async (socioData) => {
+  try {
+    // Usamos el endpoint base de socios-info para el POST
+    const response = await api.post(`${BASE_PATH}/socios-info/`, socioData);
+    console.log("✅ SocioInfo creado:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error creando SocioInfo:", error.response?.status, error.response?.data);
+    throw error;
+  }
+};

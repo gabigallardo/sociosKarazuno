@@ -139,3 +139,4 @@ REST_FRAMEWORK = {
         'socios.authentication.JWTAuthentication',
     ],
 }
+VALOR_CUOTA_BASE = 15000.00  # Valor base de la cuota mensual

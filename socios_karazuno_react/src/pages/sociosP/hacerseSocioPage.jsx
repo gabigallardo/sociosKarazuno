@@ -1,181 +1,157 @@
-import React, { useState, useEffect, useContext, use } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaCheckCircle, FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
-import { getAllNivelesSocio } from "../../api/nivelesSocio.api";
-import { hacerseSocio } from "../../api/usuarios.api";
 import { UserContext } from "../../contexts/User.Context";
+import { getAllNivelesSocio } from "../../api/nivelesSocio.api";
 
-export default function HacerseSocioPage() {
+import { hacerseSocio } from "../../api/usuarios.api";
+import { createSocioInfo } from "../../api/socios.api";
+import AuthLayout from "../../components/Auth/AuthLayout";
+import InputField from "../../components/Form/InputField";
+import SelectField from "../../components/Form/SelectField";
+import SubmitButton from "../../components/Form/SubmitButton";
+
+function HacerseSocioPage() {
   const navigate = useNavigate();
-  const { user, setUser } = useContext(UserContext);
-  const [niveles, setNiveles] = useState([]);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const { user, login } = useContext(UserContext); 
+  
+  const [formData, setFormData] = useState({
+    tipo_documento: user?.tipo_documento || "",
+    nro_documento: user?.nro_documento || "",
+    telefono: user?.telefono || "",
+    fecha_nacimiento: user?.fecha_nacimiento || "",
+    direccion: user?.direccion || "",
+    sexo: user?.sexo || "",
+    foto_url: user?.foto_url || "",
+  });
+  
+  const [errors, setErrors] = useState({});
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const cuotaMensual = 15000; // Valor base en ARS
+  // --- Validación de datos personales ---
+  const validate = (data) => {
+    const newErrors = {};
+    if (!data.tipo_documento) newErrors.tipo_documento = "El tipo de documento es obligatorio.";
+    if (!data.nro_documento) newErrors.nro_documento = "El número de documento es obligatorio.";
+    if (!data.telefono) newErrors.telefono = "El teléfono es obligatorio.";
+    if (!data.fecha_nacimiento) newErrors.fecha_nacimiento = "La fecha de nacimiento es obligatoria.";
+    if (!data.direccion) newErrors.direccion = "La dirección es obligatoria.";
+    if (!data.sexo) newErrors.sexo = "El sexo es obligatorio.";
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   useEffect(() => {
-    async function fetchNiveles() {
-      try {
-        const nivelesData = await getAllNivelesSocio();
-        setNiveles(nivelesData);
-      } catch (error) {
-        console.error("Error fetching niveles de socio:", error);
-      }
+    // Si el usuario ya es socio, no debería estar aquí
+    if (user?.socioinfo) {
+      navigate("/mi-perfil");
     }
-    fetchNiveles();
-  }, []);
+  }, [user, navigate]);
 
-  const handleHacerseSocio = async () => {
-    setLoading(true);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate(formData)) {
+      setMessage("Por favor, completa todos los campos obligatorios.");
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage("Procesando asociación...");
+
     try {
-      const response = await hacerseSocio(user.id);
-      //Actualizar el contexto del usuario para reflejar el nuevo estado de socio
-      setUser({ ...user, roles: [...(user.roles || []), "socio"]});
-      alert("¡Te has asociado exitosamente! Ya sos parte del club.");
-      navigate("/socios");
+      // --- PASO 1: Actualizar datos personales del Usuario ---
+      // (Usamos PATCH para actualizar el usuario existente)
+      const usuarioResponse = await hacerseSocio.patch(`/${user.id}/`, formData);
+
+      // --- PASO 2: Crear el registro de SocioInfo ---
+      // (Esto vincula al usuario como socio)
+      const socioData = {
+        usuario: user.id,
+      };
+      const socioResponse = await createSocioInfo(socioData);
+
+      // Combinamos la info del usuario actualizada y la nueva info de socio
+      const usuarioActualizado = {
+        ...usuarioResponse.data,
+        socioinfo: socioResponse.data,
+      };
+      
+      // Usamos la función 'login' (o 'setUser') para guardar el estado actualizado
+      login(user.token, usuarioActualizado); 
+
+      setMessage("¡Felicitaciones! Ya eres socio del club.");
+      setTimeout(() => navigate("/mi-perfil"), 2000); // Redirigir al perfil
+
     } catch (error) {
-      console.error("Error al hacerse socio:", error);
-      if (error.response?.data?.error) {
-        alert(`Error: ${error.response.data.error}`);
-      } else {
-      alert("Hubo un error al procesar tu solicitud. Por favor, intenta nuevamente.");
+      console.error("Error al asociarse:", error);
+      let errorMessage = "Error al procesar la solicitud. Inténtalo de nuevo.";
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+        const firstErrorKey = Object.keys(errorData)[0];
+        if (firstErrorKey && Array.isArray(errorData[firstErrorKey])) {
+          errorMessage = `${firstErrorKey}: ${errorData[firstErrorKey][0]}`;
+        }
       }
+      setMessage(`Error: ${errorMessage}`);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  // Opciones para los <select>
+  const tipoDocumentoOptions = [
+    { value: 'DNI', label: 'DNI - Documento Nacional de Identidad' },
+    { value: 'CI', label: 'CI - Cédula de Identidad' },
+    { value: 'LC', label: 'LC - Libreta Cívica' },
+    { value: 'LE', label: 'LE - Libreta de Enrolamiento' },
+    { value: 'PAS', label: 'PAS - Pasaporte' },
+  ];
+  
+  const sexoOptions = [
+    { value: 'masculino', label: 'Masculino' },
+    { value: 'femenino', label: 'Femenino' },
+    { value: 'otro', label: 'Otro' },
+  ];
+
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-4xl font-extrabold text-red-700 mb-6 text-center">
-        ¡Hacete Socio del Club!
-      </h1>
-
-      {/* Valor de la cuota */}
-      <section className="bg-white p-6 rounded-xl shadow-lg mb-6 border border-gray-200">
-        <h2 className="text-2xl font-bold text-red-700 mb-4">Cuota Social Mensual</h2>
-        <div className="flex items-center justify-center gap-4 bg-red-50 p-6 rounded-lg">
-          <FaMoneyBillWave className="text-5xl text-red-700" />
-          <div>
-            <p className="text-4xl font-extrabold text-red-700">${cuotaMensual.toLocaleString()}</p>
-            <p className="text-gray-600">ARS por mes</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Niveles de socio */}
-      <section className="bg-white p-6 rounded-xl shadow-lg mb-6 border border-gray-200">
-        <h2 className="text-2xl font-bold text-red-700 mb-4">Niveles de Socio</h2>
-        {niveles.length === 0 ? (
-          <p className="text-gray-500 italic">Cargando niveles...</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {niveles.map((nivel) => (
-              <div
-                key={nivel.id}
-                className="bg-gradient-to-br from-red-50 to-white p-6 rounded-lg border-2 border-red-200 shadow hover:shadow-lg transition duration-200"
-              >
-                <h3 className="text-xl font-bold text-red-700 mb-2">
-                  Nivel {nivel.nivel}
-                </h3>
-                <p className="text-gray-700 font-semibold mb-3">{nivel.descripcion}</p>
-                <div className="mb-3">
-                  <span className="text-sm font-bold text-red-600">Descuento:</span>
-                  <p className="text-2xl font-extrabold text-red-700">{nivel.descuento}%</p>
-                </div>
-                <div className="mb-3">
-                  <span className="text-sm font-bold text-red-600">Beneficios:</span>
-                  <p className="text-gray-600 text-sm">{nivel.beneficios || "Sin detalles"}</p>
-                </div>
-                <div>
-                  <span className="text-sm font-bold text-red-600">Requisitos:</span>
-                  <p className="text-gray-600 text-sm">{nivel.requisitos || "Sin requisitos"}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Métodos de pago */}
-      <section className="bg-white p-6 rounded-xl shadow-lg mb-6 border border-gray-200">
-        <h2 className="text-2xl font-bold text-red-700 mb-4">Métodos de Pago Disponibles</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <FaCreditCard className="text-3xl text-red-700" />
-            <div>
-              <p className="font-bold">Mercado Pago</p>
-              <p className="text-sm text-gray-600">Tarjeta de crédito/débito</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <FaMoneyBillWave className="text-3xl text-red-700" />
-            <div>
-              <p className="font-bold">Efectivo</p>
-              <p className="text-sm text-gray-600">En sede del club</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <FaCreditCard className="text-3xl text-red-700" />
-            <div>
-              <p className="font-bold">Transferencia</p>
-              <p className="text-sm text-gray-600">CBU/Alias disponible</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Botón de confirmación */}
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={() => navigate("/socios")}
-          className="bg-gray-500 text-white px-6 py-3 rounded-full font-bold shadow-lg transition duration-300 hover:bg-gray-600 transform hover:scale-105"
-          disabled={loading}
-        >
-          Volver
-        </button>
-        <button
-          onClick={() => setShowConfirmModal(true)}
-          className="bg-red-700 text-white px-8 py-3 rounded-full font-bold shadow-lg transition duration-300 hover:bg-red-800 transform hover:scale-105 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={loading}
-        >
-          <FaCheckCircle />
-          {loading ? "Procesando..." : "Confirmar Asociación"}
-        </button>
-      </div>
-
-      {/* Modal de confirmación */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-xl shadow-2xl max-w-md">
-            <h3 className="text-2xl font-bold text-red-700 mb-4">Confirmar Asociación</h3>
-            <p className="text-gray-700 mb-6">
-              ¿Estás seguro que deseas asociarte al club? Se te asignará el Nivel 1 
-              y deberás abonar la cuota mensual de ${cuotaMensual.toLocaleString()}.
-            </p>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setShowConfirmModal(false)}
-                className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-full font-bold hover:bg-gray-600 transition"
-                disabled={loading}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  setShowConfirmModal(false);
-                  handleHacerseSocio();
-                }}
-                className="flex-1 bg-red-700 text-white px-4 py-2 rounded-full font-bold hover:bg-red-800 transition disabled:opacity-50"
-                disabled={loading}
-              >
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </div>
+    <AuthLayout title="Completar Perfil" subtitle="¡Último paso para hacerte socio!" size="2xl">
+      {message && (
+        <p className={`text-center mb-4 p-3 rounded-lg font-medium ${message.includes("Error") || message.includes("completa") ? "bg-red-100 text-red-700 border border-red-300" : "bg-green-100 text-green-700 border border-green-300"}`}>
+          {message}
+        </p>
       )}
-    </div>
+      
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <SelectField label="Tipo de Documento" name="tipo_documento" value={formData.tipo_documento} onChange={handleChange} error={errors.tipo_documento} options={tipoDocumentoOptions} />
+        <InputField label="Número de Documento" name="nro_documento" value={formData.nro_documento} onChange={handleChange} error={errors.nro_documento} />
+        
+        <InputField label="Teléfono" name="telefono" value={formData.telefono} onChange={handleChange} error={errors.telefono} />
+        <InputField type="date" label="Fecha de Nacimiento" name="fecha_nacimiento" value={formData.fecha_nacimiento} onChange={handleChange} error={errors.fecha_nacimiento} />
+        
+        <div className="md:col-span-2">
+          <InputField label="Dirección" name="direccion" value={formData.direccion} onChange={handleChange} error={errors.direccion} />
+        </div>
+
+        <SelectField label="Sexo" name="sexo" value={formData.sexo} onChange={handleChange} options={sexoOptions} error={errors.sexo} />
+        
+        <InputField label="URL de Foto de Perfil (Opcional)" name="foto_url" placeholder="https://ejemplo.com/mi-foto.jpg" value={formData.foto_url} onChange={handleChange} />
+
+        <div className="md:col-span-2 mt-4">
+          <SubmitButton icon={FaUserCheck} disabled={isLoading}>
+            {isLoading ? "Procesando..." : "Completar y Asociarme"}
+          </SubmitButton>
+        </div>
+      </form>
+    </AuthLayout>
   );
 }
+
+export default HacerseSocioPage;

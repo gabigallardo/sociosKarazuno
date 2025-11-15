@@ -1,10 +1,9 @@
 // src/pages/jugadoresP/JugadoresPage.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../../contexts/User.Context';
-import { getAllSocios } from '../../api/socios.api';
+import { getAllSocios, getSociosPorCategoria } from '../../api/socios.api';
 import { getAllDisciplinas } from '../../api/disciplinas.api';
 import { getAllCategorias } from '../../api/categorias.api';
-import { getSociosPorCategoria } from '../../api/socios.api';
 import { 
   FaUsers, 
   FaArrowLeft, 
@@ -17,31 +16,49 @@ import { toast } from 'react-hot-toast';
 
 export default function JugadoresPage() {
   const { user } = useContext(UserContext);
+  
+  // Estados de datos
   const [categorias, setCategorias] = useState([]);
   const [categoriasParaMostrar, setCategoriasParaMostrar] = useState([]);
-  const [selectedCategoria, setSelectedCategoria] = useState(null);
-  const [jugadores, setJugadores] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(""); 
-  const [loadingCategorias, setLoadingCategorias] = useState(true);
-  const [loadingJugadores, setLoadingJugadores] = useState(false);
+  const [allJugadores, setAllJugadores] = useState([]); // Todos los jugadores para búsqueda global
+  const [jugadores, setJugadores] = useState([]); // Jugadores de la categoría seleccionada
 
-  // Efecto 1: Cargar categorías
+  // Estados de UI y búsqueda
+  const [selectedCategoria, setSelectedCategoria] = useState(null);
+  const [globalSearchTerm, setGlobalSearchTerm] = useState(""); // Buscador principal
+  const [categorySearchTerm, setCategorySearchTerm] = useState(""); // Buscador dentro de categoría
+  
+  // Estados de carga
+  const [loadingCategorias, setLoadingCategorias] = useState(true);
+  const [loadingAllJugadores, setLoadingAllJugadores] = useState(true);
+  const [loadingJugadores, setLoadingJugadores] = useState(false); // Carga de jugadores de UNA categoría
+
+  // Efecto 1: Cargar datos globales (Categorías y TODOS los jugadores)
   useEffect(() => {
-    async function CargarCategorias() {
+    async function CargarDatosGlobales() {
       setLoadingCategorias(true);
+      setLoadingAllJugadores(true);
       try {
-        const categoriasData = await getAllCategorias();
+        // Cargamos categorías y todos los socios en paralelo
+        const [categoriasData, allSociosData] = await Promise.all([
+          getAllCategorias(),
+          getAllSocios() 
+        ]);
+        
         setCategorias(categoriasData);
+        setAllJugadores(allSociosData);
+
       } catch (error) {
-        toast.error("No se pudieron cargar las categorías.");
+        toast.error("No se pudieron cargar los datos iniciales.");
       } finally {
         setLoadingCategorias(false);
+        setLoadingAllJugadores(false);
       }
     }
-    CargarCategorias();
+    CargarDatosGlobales();
   }, []); //
 
-  // Efecto 2: Filtrar categorías por rol
+  // Efecto 2: Filtrar categorías por rol (sin cambios)
   useEffect(() => {
     if (!user || categorias.length === 0) return;
     const userRoles = user.roles || [];
@@ -55,19 +72,13 @@ export default function JugadoresPage() {
     }
   }, [user, categorias]); //
 
-  // Manejador click en categoría
+  // Manejador click en categoría (sin cambios en la lógica de fetch)
   const handleCategoriaClick = async (categoria) => {
     setSelectedCategoria(categoria);
     setLoadingJugadores(true);
     setJugadores([]); 
     try {
       const jugadoresData = await getSociosPorCategoria(categoria.id); //
-      
-      // (Puedes quitar el console.log si ya no lo necesitas)
-      if (jugadoresData.length > 0) {
-        console.log("Estructura de un JUGADOR:", jugadoresData[0]);
-      }
-      
       setJugadores(jugadoresData); //
     } catch (error) {
       toast.error(`No se pudieron cargar los jugadores de ${categoria.nombre_categoria}.`);
@@ -80,65 +91,115 @@ export default function JugadoresPage() {
   const handleVolver = () => {
     setSelectedCategoria(null);
     setJugadores([]);
-    setSearchTerm(""); 
+    setGlobalSearchTerm(""); 
+    setCategorySearchTerm(""); // Limpiar también el buscador de categoría
   }; //
 
 
-  // --- Lógica de filtrado  ---
-  // Usamos el campo 'nombre_completo' que vimos en la consola.
-  const jugadoresFiltrados = jugadores.filter(jugador => {
-    // 1. Obtener el término de búsqueda
-    const busqueda = searchTerm.toLowerCase().trim();
-
-    // 2. Si la búsqueda está vacía, mostrar el jugador
+  // --- Lógica de filtrado GLOBAL ---
+  const globalJugadoresFiltrados = allJugadores.filter(jugador => {
+    const busqueda = globalSearchTerm.toLowerCase().trim();
     if (busqueda === "") {
-      return true;
+      // Si la búsqueda está vacía, no mostramos NINGÚN jugador en esta lista
+      return false; 
     }
-    
-    // 3. Validar que el jugador tenga el campo 'nombre_completo'
     if (!jugador.nombre_completo) {
       return false; 
     }
+    return jugador.nombre_completo.toLowerCase().includes(busqueda);
+  });
 
-    // 4. Comprobar si el nombre incluye la búsqueda
+  // --- Lógica de filtrado POR CATEGORÍA ---
+  const categoryJugadoresFiltrados = jugadores.filter(jugador => {
+    const busqueda = categorySearchTerm.toLowerCase().trim();
+    if (busqueda === "") {
+      return true;
+    }
+    if (!jugador.nombre_completo) {
+      return false; 
+    }
     return jugador.nombre_completo.toLowerCase().includes(busqueda);
   });
   
 
   // --- Renderizado Principal ---
-  if (loadingCategorias) {
-    return <div className="text-center p-8">Cargando categorías...</div>; //
-  }
-
-  // Vista de Categorías
-  if (!selectedCategoria) {
+  if (loadingCategorias || loadingAllJugadores) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <h1 className="text-3xl font-extrabold text-red-700 flex items-center gap-2 mb-4">
-          <FaThLarge />
-          Selecciona una Categoría
-        </h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {categoriasParaMostrar.length > 0 ? (
-            categoriasParaMostrar.map(cat => (
-              <div
-                key={cat.id}
-                onClick={() => handleCategoriaClick(cat)}
-                className="p-4 bg-white rounded-lg shadow border border-gray-200 cursor-pointer transition-all hover:shadow-xl hover:border-red-500 hover:-translate-y-1"
-              >
-                <p className="font-bold text-lg text-red-700">{cat.disciplina_nombre}</p>
-                <p className="text-gray-800">{cat.nombre_categoria}</p>
-              </div>
-            ))
-          ) : (
-            <p className="col-span-full text-center text-gray-500 mt-8">No tienes categorías asignadas para visualizar.</p>
-          )}
-        </div>
+      <div className="flex justify-center items-center p-16">
+        <FaSpinner className="animate-spin text-4xl text-red-600" />
+        <span className="ml-4 text-xl text-gray-700">Cargando datos...</span>
       </div>
     );
   }
 
-  // Vista de Jugadores (con buscador)
+  // Vista de Categorías (con buscador GLOBAL)
+  if (!selectedCategoria) {
+    const isSearching = globalSearchTerm.trim() !== "";
+
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <h1 className="text-3xl font-extrabold text-red-700 flex items-center gap-2 mb-4">
+          <FaUsers />
+          Jugadores
+        </h1>
+        
+        {/* BUSCADOR GLOBAL (AHORA ESTÁ PRIMERO) */}
+        <div className="relative mb-6">
+          <input
+            type="text"
+            placeholder="Buscar jugador por nombre (en todo el club)..."
+            className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+            value={globalSearchTerm}
+            onChange={(e) => setGlobalSearchTerm(e.target.value)}
+          />
+          <span className="absolute left-3 top-3.5 text-gray-400">
+            <FaSearch />
+          </span>
+        </div>
+
+        {/* CONTENIDO CONDICIONAL: RESULTADOS DE BÚSQUEDA O FILTRO DE EQUIPOS */}
+        {isSearching ? (
+          // --- MODO BÚSQUEDA (Resultados Globales) ---
+          <>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Resultados de la búsqueda</h2>
+            {globalJugadoresFiltrados.length === 0 ? (
+              <div className="text-center py-10 bg-gray-50 rounded-lg">
+                <p className="text-gray-500">No se encontraron jugadores con "{globalSearchTerm}".</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {globalJugadoresFiltrados.map(jugador => (
+                  <JugadorCard key={jugador.usuario} jugador={jugador} /> 
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Filtrar por categoría</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {categoriasParaMostrar.length > 0 ? (
+                categoriasParaMostrar.map(cat => (
+                  <div
+                    key={cat.id}
+                    onClick={() => handleCategoriaClick(cat)}
+                    className="p-4 bg-white rounded-lg shadow border border-gray-200 cursor-pointer transition-all hover:shadow-xl hover:border-red-500 hover:-translate-y-1"
+                  >
+                    <p className="font-bold text-lg text-red-700">{cat.disciplina_nombre}</p>
+                    <p className="text-gray-800">{cat.nombre_categoria}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="col-span-full text-center text-gray-500 mt-8">No tienes categorías asignadas para visualizar.</p>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Vista de Jugadores (DE UNA CATEGORÍA)
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -149,7 +210,8 @@ export default function JugadoresPage() {
             Jugadores de {selectedCategoria.disciplina_nombre} - {selectedCategoria.nombre_categoria}
           </h1>
           <p className="text-gray-600 mt-1">
-            Mostrando {jugadoresFiltrados.length} de {jugadores.length} jugadores
+            {/* Actualizado para usar el filtro de categoría */}
+            Mostrando {categoryJugadoresFiltrados.length} de {jugadores.length} jugadores
           </p>
         </div>
         <button
@@ -169,14 +231,14 @@ export default function JugadoresPage() {
       ) : (
         <div className="space-y-6">
 
-          {/* Input de búsqueda */}
+          {/* Input de búsqueda DE CATEGORÍA */}
           <div className="relative">
             <input
               type="text"
-              placeholder="Buscar por nombre..."
+              placeholder="Buscar por nombre (en esta categoría)..."
               className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={categorySearchTerm}
+              onChange={(e) => setCategorySearchTerm(e.target.value)}
             />
             <span className="absolute left-3 top-3.5 text-gray-400">
               <FaSearch />
@@ -188,13 +250,15 @@ export default function JugadoresPage() {
             <div className="text-center py-10 bg-gray-50 rounded-lg">
               <p className="text-gray-500">No hay jugadores asignados a esta categoría.</p>
             </div>
-          ) : jugadoresFiltrados.length === 0 ? (
+          // Actualizado para usar el filtro de categoría
+          ) : categoryJugadoresFiltrados.length === 0 ? ( 
             <div className="text-center py-10 bg-gray-50 rounded-lg">
-              <p className="text-gray-500">No se encontraron jugadores con "{searchTerm}".</p>
+              <p className="text-gray-500">No se encontraron jugadores con "{categorySearchTerm}".</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {jugadoresFiltrados.map(jugador => (
+              {/* Actualizado para usar el filtro de categoría */}
+              {categoryJugadoresFiltrados.map(jugador => (
                 <JugadorCard key={jugador.usuario} jugador={jugador} /> //
               ))}
             </div>

@@ -24,6 +24,7 @@ import SociosPagesP from "./pages/sociosP/sociosPage.jsx";
 import SocioDetailPage from "./pages/sociosP/SocioDetailPage.jsx";
 import EntrenadoresPage from "./pages/entrenadoresP/EntrenadoresPage.jsx";
 import JugadoresPage from "./pages/jugadoresP/JugadoresPage.jsx";
+import GestionUsuariosPage from './pages/GestionUsuariosPage'; 
 
 // Importaciones de Componentes y Contexto
 import { UserProviderWrapper } from "./contexts/User.Context.jsx";
@@ -79,7 +80,7 @@ function App() {
                         <Route path="/eventos/editar/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EventosEditarPage /></ProtectedRoute>} />
                         <Route path="/socios" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SociosPagesP /></ProtectedRoute>} />
                         <Route path="/socios/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SocioDetailPage /></ProtectedRoute>} />
-
+                        <Route path="/gestionar-usuarios" element={<GestionUsuariosPage />} />
                         {/* RUTA PARA ENTRENADORES */}
                         <Route path="/entrenadores" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EntrenadoresPage /></ProtectedRoute>} />
 

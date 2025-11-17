@@ -3,7 +3,7 @@ from .rol import RolSerializer
 from .evento import EventoSerializer
 from .socio import SocioInfoSerializer, NivelSocioSerializer
 from .cuota import CuotaSerializer
-from .disciplina import DisciplinaSerializer, CategoriaSerializer
+from .disciplina import DisciplinaSerializer, CategoriaSerializer, HorarioEntrenamientoSerializer
 
 __all__ = [
     'UsuarioSerializer',
@@ -15,4 +15,5 @@ __all__ = [
     'CuotaSerializer',
     'DisciplinaSerializer',
     'CategoriaSerializer',
+    'HorarioEntrenamientoSerializer',
 ]

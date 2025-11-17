@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
     FaHome, FaUser, FaCalendarAlt, FaMoneyBill, FaCalendarCheck,
     FaUsers, FaFutbol, 
-    FaUsersCog 
+    FaUsersCog, FaClock 
 } from "react-icons/fa";
 import logoImg from '../assets/logo.png'; 
 import { UserContext } from "../contexts/User.Context"; 
@@ -53,6 +53,7 @@ function Navigation() {
     // --- Items de Gestión  ---
     if (puedeGestionarDeportes) {
         navItems.push({ to: "/deportes", icon: FaFutbol, label: "Deportes" });
+        navItems.push({ to: "/horarios", icon: FaClock, label: "Gestionar Horarios" });
     }
 
     if (puedeVerJugadores) {

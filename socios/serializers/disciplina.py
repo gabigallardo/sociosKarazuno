@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from socios.models import Disciplina, Categoria, Usuario
+from socios.models import Disciplina, Categoria, Usuario, HorarioEntrenamiento
 
 class UsuarioSimpleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,3 +30,12 @@ class CategoriaSerializer(serializers.ModelSerializer):
             'id', 'disciplina', 'disciplina_nombre', 'nombre_categoria',
             'edad_minima', 'edad_maxima', 'sexo'
         ]
+
+class HorarioEntrenamientoSerializer(serializers.ModelSerializer):
+    # Campos para mostrar nombres legibles en el frontend
+    disciplina_nombre = serializers.CharField(source='categoria.disciplina.nombre', read_only=True)
+    categoria_nombre = serializers.CharField(source='categoria.nombre_categoria', read_only=True)
+
+    class Meta:
+        model = HorarioEntrenamiento
+        fields = '__all__'

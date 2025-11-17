@@ -39,6 +39,36 @@ class Categoria(models.Model):
         verbose_name_plural = "Categorías"
         ordering = ['disciplina', 'edad_minima']
 
+class HorarioEntrenamiento(models.Model):
+    """
+    Define un horario RECURRENTE para una categoría.
+    Ej: "Sub-15 entrena todos los martes de 18:00 a 20:00 en la Cancha 2".
+    """
+    DIA_SEMANA_CHOICES = [
+        (0, "Lunes"),
+        (1, "Martes"),
+        (2, "Miércoles"),
+        (3, "Jueves"),
+        (4, "Viernes"),
+        (5, "Sábado"),
+        (6, "Domingo"),
+    ]
+
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name="horarios")
+    dia_semana = models.IntegerField(choices=DIA_SEMANA_CHOICES)
+    hora_inicio = models.TimeField()
+    hora_fin = models.TimeField()
+    lugar = models.CharField(max_length=255, help_text="Ej: Cancha 2, Gimnasio Principal")
+    activo = models.BooleanField(default=True, help_text="Desmarcar si el horario ya no es vigente")
+
+    class Meta:
+        verbose_name = "Horario de Entrenamiento"
+        verbose_name_plural = "Horarios de Entrenamiento"
+        ordering = ['categoria', 'dia_semana', 'hora_inicio']
+
+    def __str__(self):
+        return f"{self.categoria} - {self.get_dia_semana_display()} a las {self.hora_inicio.strftime('%H:%M')}"
+
 
 class CategoriaEntrenador(models.Model):
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)

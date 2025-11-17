@@ -24,7 +24,8 @@ import SociosPagesP from "./pages/sociosP/sociosPage.jsx";
 import SocioDetailPage from "./pages/sociosP/SocioDetailPage.jsx";
 import EntrenadoresPage from "./pages/entrenadoresP/EntrenadoresPage.jsx";
 import JugadoresPage from "./pages/jugadoresP/JugadoresPage.jsx";
-import GestionUsuariosPage from './pages/GestionUsuariosPage'; 
+import GestionUsuariosPage from './pages/GestionUsuariosPage';
+import HorariosPage from "./pages/HorariosPage.jsx";
 
 // Importaciones de Componentes y Contexto
 import { UserProviderWrapper } from "./contexts/User.Context.jsx";
@@ -69,6 +70,7 @@ function App() {
                         {/* Rutas para Gestión de Deportes */}
                         <Route path="/deportes" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><DeportesPage /></ProtectedRoute>} />
                         <Route path="/jugadores" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><JugadoresPage /></ProtectedRoute>} />
+                        <Route path="/horarios" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><HorariosPage /></ProtectedRoute>} />
 
                         {/* Rutas para Admin, Dirigente, Empleado */}
                         <Route path="/form" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SociosForm /></ProtectedRoute>} />

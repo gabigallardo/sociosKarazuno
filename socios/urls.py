@@ -10,7 +10,7 @@ from drf_spectacular.views import (
 from socios.views import (
     LoginView, RegisterView, UsuarioViewSet, RolesViewSet,
     EventoViewSet, NivelSocioViewSet, SocioInfoViewSet,
-    DisciplinaViewSet, CategoriaViewSet, CuotaViewSet
+    DisciplinaViewSet, CategoriaViewSet, CuotaViewSet, HorarioEntrenamientoViewSet
 )
 
 router = routers.DefaultRouter()
@@ -22,6 +22,7 @@ router.register(r'socios-info', SocioInfoViewSet, 'socios-info')
 router.register(r'disciplinas', DisciplinaViewSet, 'disciplinas')
 router.register(r'categorias', CategoriaViewSet, 'categorias')
 router.register(r'cuotas', CuotaViewSet, 'cuotas')
+router.register(r'horarios', HorarioEntrenamientoViewSet, 'horarios')
 
 
 urlpatterns = [

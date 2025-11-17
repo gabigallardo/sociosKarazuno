@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { FaChalkboardTeacher } from "react-icons/fa";
 
-export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] }) {
+export default function UsuariosForm({ onSubmit, initialValues, allRoles = [], allDisciplinas = [], allCategorias = [] }) {
   const [formData, setFormData] = useState({
     tipo_documento: "",
     nro_documento: "",
@@ -16,17 +17,13 @@ export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] })
     foto_url: "",
     qr_token: "",
     roles: [],
+    disciplinas_a_cargo_ids: [],
+    categorias_a_cargo_ids: [],
   });
 
   useEffect(() => {
-    if (initialValues && allRoles.length > 0) {
-      // Convertir nombres de roles a IDs
-      const rolesIds = initialValues.roles
-        ? allRoles
-            .filter((rol) => initialValues.roles.includes(rol.nombre))
-            .map((rol) => rol.id)
-        : [];
-
+    if (initialValues) {
+      
       setFormData({
         tipo_documento: initialValues.tipo_documento || "",
         nro_documento: initialValues.nro_documento || "",
@@ -41,10 +38,12 @@ export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] })
         activo: initialValues.activo ?? true,
         foto_url: initialValues.foto_url || "",
         qr_token: initialValues.qr_token || "",
-        roles: rolesIds,
+        roles: initialValues.roles_ids || [],
+        disciplinas_a_cargo_ids: initialValues.disciplinas_a_cargo_ids || [],
+        categorias_a_cargo_ids: initialValues.categorias_a_cargo_ids || [],
       });
     }
-  }, [initialValues, allRoles]);
+  }, [initialValues]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -59,8 +58,17 @@ export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] })
     onSubmit(formData);
   };
 
+  // Lógica para mostrar/ocultar las secciones de profesor
+  const rolProfesor = allRoles.find(rol => rol.nombre.toLowerCase() === 'profesor');
+  const esProfesor = rolProfesor && formData.roles?.includes(rolProfesor.id);
+
+  // Helper para encontrar los nombres de las categorías asignadas
+  const categoriasAsignadas = allCategorias.filter(cat =>
+    formData.categorias_a_cargo_ids.includes(cat.id)
+  );
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-md">
       <input
         type="text"
         name="tipo_documento"
@@ -181,7 +189,7 @@ export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] })
                   name="roles"
                   value={rol.id}
                   checked={isChecked}
-                  disabled={esSocio} // ✨ DESHABILITAR si es rol 'socio'
+                  disabled={esSocio} // DESHABILITAR si es rol 'socio'
                   onChange={(e) => {
                     const { checked, value } = e.target;
                     setFormData((prev) => {
@@ -196,7 +204,6 @@ export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] })
                 <span className={esSocio ? 'text-gray-500' : ''}>
                   {rol.nombre}
                 </span>
-                {/* ✨ AGREGAR tooltip explicativo */}
                 {esSocio && (
                   <span className="text-xs text-gray-500 italic ml-2">
                     (Gestiona desde 'Gestión de Socios')
@@ -207,6 +214,37 @@ export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] })
           })}
         </div>
       </div>
+
+      {esProfesor && (
+        <>
+          <hr/>
+
+          {/* Sección para Categorías */}
+          <div>
+            <label className="font-semibold flex items-center gap-2">
+              <FaChalkboardTeacher />
+              Categorías Asignadas
+            </label>
+            <div className="mt-2 p-3 bg-gray-100 border border-gray-200 rounded-md">
+              {categoriasAsignadas.length > 0 ? (
+                <ul className="space-y-1 list-disc list-inside text-sm text-gray-700">
+                  {categoriasAsignadas.map((cat) => (
+                    <li key={cat.id}>
+                      <strong>{cat.disciplina_nombre}:</strong> {cat.nombre_categoria}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500 italic">No tiene categorías asignadas.</p>
+              )}
+              <p className="text-xs text-gray-500 mt-2">
+                * Para modificar las asignaciones, utiliza la página de <strong className="font-semibold">"Gestionar Personal / Entrenadores"</strong>.
+              </p>
+            </div>
+          </div>
+          <hr/>
+        </>
+      )}
 
       <div>
         <label className="block font-semibold">QR Token:</label>
@@ -219,8 +257,8 @@ export default function UsuariosForm({ onSubmit, initialValues, allRoles = [] })
         />
       </div>
 
-      <button type="submit" className="bg-blue-500 text-white px-3 py-1 rounded">
-        Guardar
+      <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+        Guardar Cambios
       </button>
     </form>
   );

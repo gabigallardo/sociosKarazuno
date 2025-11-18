@@ -68,7 +68,32 @@ class HorarioEntrenamiento(models.Model):
 
     def __str__(self):
         return f"{self.categoria} - {self.get_dia_semana_display()} a las {self.hora_inicio.strftime('%H:%M')}"
+    
+class SesionEntrenamiento(models.Model):
+    """
+    Representa UNA instancia específica de un entrenamiento en una fecha concreta.
+    Ej: "La sesión del martes 19/11/2025 para la Sub-15".
+    """
+    ESTADO_CHOICES = [
+        ('programada', 'Programada'),
+        ('completada', 'Completada'),
+        ('cancelada', 'Cancelada'),
+    ]
 
+    horario = models.ForeignKey(HorarioEntrenamiento, on_delete=models.SET_NULL, null=True, blank=True, related_name="sesiones")
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name="sesiones") # Mantenemos la categoría por si el horario se borra
+    fecha = models.DateField()
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='programada')
+    notas = models.TextField(blank=True, null=True, help_text="Notas para esta sesión específica (ej: 'Entrenamiento bajo lluvia')")
+
+    class Meta:
+        verbose_name = "Sesión de Entrenamiento"
+        verbose_name_plural = "Sesiones de Entrenamiento"
+        unique_together = ('categoria', 'fecha') # No puede haber dos sesiones para el mismo equipo el mismo día
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f"Sesión de {self.categoria} - {self.fecha.strftime('%d/%m/%Y')}"
 
 class CategoriaEntrenador(models.Model):
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)

@@ -52,3 +52,20 @@ export const deleteHorario = async (id) => {
     throw error;
   }
 };
+
+/**
+ * Genera sesiones de entrenamiento para una categoría en un rango de fechas.
+ */
+export const generarSesionesDeEntrenamiento = async (categoriaId, fechaInicio, fechaFin) => {
+  try {
+    const payload = {
+      fecha_inicio: fechaInicio,
+      fecha_fin: fechaFin,
+    };
+    const response = await api.post(`/socios/api/v1/categorias/${categoriaId}/generar-sesiones/`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error generando sesiones:", error.response?.data);
+    throw error;
+  }
+};

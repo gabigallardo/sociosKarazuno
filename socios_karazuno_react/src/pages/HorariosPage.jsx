@@ -8,8 +8,12 @@ import HorarioCard from '../features/horarios/HorarioCard';
 import HorarioForm from '../features/horarios/HorarioForm';
 import Modal from '../components/Modal'; // Un componente Modal genérico
 
-import { FaClock, FaPlus, FaArrowLeft, FaThLarge } from 'react-icons/fa';
+import { FaClock, FaPlus, FaArrowLeft, FaThLarge, FaCalendarPlus } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+
+import GenerarSesionesForm from '../features/horarios/GenerarSesionesForm'; // Importa el nuevo form
+import { generarSesionesDeEntrenamiento } from '../api/horarios.api'; // Importa la nueva API
+
 
 export default function HorariosPage() {
   const { user } = useContext(UserContext);
@@ -22,6 +26,7 @@ export default function HorariosPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHorario, setEditingHorario] = useState(null); // Para saber si estamos editando o creando
+  const [isGenerarModalOpen, setIsGenerarModalOpen] = useState(false);
 
   // Carga y filtra las categorías según el rol
   useEffect(() => {
@@ -104,6 +109,16 @@ export default function HorariosPage() {
     }
   };
 
+  const handleGenerarSubmit = async (fechaInicio, fechaFin) => {
+        try {
+            const response = await generarSesionesDeEntrenamiento(selectedCategoria.id, fechaInicio, fechaFin);
+            toast.success(response.message);
+            setIsGenerarModalOpen(false);
+        } catch (error) {
+            toast.error(error.response?.data?.error || "Error al generar sesiones.");
+        }
+    };
+
   if (loading && !selectedCategoria) {
     return <p>Cargando categorías...</p>;
   }
@@ -128,16 +143,21 @@ export default function HorariosPage() {
   // Vista 2: Gestión de Horarios para la Categoría seleccionada
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
         <div>
             <button onClick={() => setSelectedCategoria(null)} className="flex items-center gap-2 text-gray-600 hover:text-black">
                 <FaArrowLeft /> Volver a Categorías
             </button>
             <h1 className="text-3xl font-bold flex items-center gap-2"><FaClock /> Horarios de {selectedCategoria.nombre_categoria}</h1>
         </div>
-        <button onClick={() => handleOpenModal()} className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-          <FaPlus /> Añadir Horario
-        </button>
+        <div className="flex gap-2"> {/* Contenedor para botones */}
+              <button onClick={() => setIsGenerarModalOpen(true)} className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <FaCalendarPlus /> Generar Sesiones
+              </button>
+              <button onClick={() => handleOpenModal()} className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <FaPlus /> Añadir Horario
+              </button>
+            </div>
       </div>
       
       {loading ? <p>Cargando horarios...</p> : (
@@ -158,6 +178,13 @@ export default function HorariosPage() {
             onSubmit={handleSubmit} 
             initialValues={editingHorario}
         />
+      </Modal>
+
+      <Modal isOpen={isGenerarModalOpen} onClose={() => setIsGenerarModalOpen(false)}>
+            <GenerarSesionesForm 
+              onSubmit={handleGenerarSubmit}
+              onClose={() => setIsGenerarModalOpen(false)}
+            />
       </Modal>
     </div>
   );

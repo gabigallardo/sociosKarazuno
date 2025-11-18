@@ -5,7 +5,7 @@ import { Toaster } from 'react-hot-toast';
 
 // Contexto y Componentes
 import { UserContext } from "../contexts/User.Context.jsx";
-import Navigation from "../components/Navig ation.jsx";
+import Navigation from "../components/Navigation.jsx";
 import Footer from "../components/Footer/Footer.jsx"; 
 
 export default function Layout() { 

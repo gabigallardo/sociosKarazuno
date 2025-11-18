@@ -1,9 +1,12 @@
 import React, { useContext } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import Navigation from "../components/Navigation.jsx";
-import { UserContext } from "../contexts/User.Context.jsx";
 import { FaSignOutAlt } from "react-icons/fa";
 import { Toaster } from 'react-hot-toast';
+
+// Contexto y Componentes
+import { UserContext } from "../contexts/User.Context.jsx";
+import Navigation from "../components/Navig ation.jsx";
+import Footer from "../components/Footer/Footer.jsx"; 
 
 export default function Layout() { 
     const { user, setUser } = useContext(UserContext);
@@ -16,7 +19,6 @@ export default function Layout() {
         navigate("/login");
     };
 
-    // Lógica para mostrar navegación
     const userRoles = user?.roles || [];
     const puedeVerNavegacion = userRoles.some(rol =>
         ['socio', 'admin', 'profesor', 'dirigente', 'empleado'].includes(rol) 
@@ -25,12 +27,12 @@ export default function Layout() {
     return (
         <div className="flex min-h-screen bg-gray-50" style={{ fontFamily: "'Poppins', sans-serif" }}>
 
-            {/* Renderiza la navegación si el usuario tiene un rol permitido */}
             {puedeVerNavegacion && <Navigation />}
 
-            {/* Contenedor principal que se ajusta si la navegación está visible */}
-            <div className={`flex-1 flex flex-col ${puedeVerNavegacion ? 'ml-64' : 'ml-0'} transition-all duration-300 ease-in-out`}>
-                <header className="p-4 md:p-6 bg-white text-gray-800 flex justify-between items-center shadow-md sticky top-0 z-10 border-b border-gray-100">
+
+            <div className={`flex-1 flex flex-col min-h-screen ${puedeVerNavegacion ? 'ml-64' : 'ml-0'} transition-all duration-300 ease-in-out`}>
+                
+                <header className="p-4 md:p-6 bg-white text-gray-800 flex justify-between items-center shadow-md sticky top-0 z-20 border-b border-gray-100">
                     <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold tracking-tight">
                         Hola, {user ? <span className="text-red-600">{user.nombre}</span> : "Invitado"}
                     </h1>
@@ -47,13 +49,14 @@ export default function Layout() {
                     )}
                 </header>
 
-                {/* 👇 2. Usa Outlet en lugar de children */}
                 <main className="flex-1 p-4 md:p-8 overflow-y-auto">
                     <Outlet />
                 </main>
 
-                 {/* Contenedor para las notificaciones */}
-                 {/* <Toaster position="bottom-right" reverseOrder={false} /> */}
+    
+                <Footer />
+
+                <Toaster position="bottom-right" reverseOrder={false} />
             </div>
         </div>
     );

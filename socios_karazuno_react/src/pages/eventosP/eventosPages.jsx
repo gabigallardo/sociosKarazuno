@@ -33,7 +33,7 @@ export default function EventosPage() {
       setLoading(true);
       try {
         const [eventosData, disciplinasData, misViajesData = []] = await Promise.all([
-          getAllEventos(),
+          getAllEventos(), 
           getAllDisciplinas(),
           esSocio ? getMisViajes() : Promise.resolve([]),
         ]);
@@ -55,7 +55,7 @@ export default function EventosPage() {
     const fuenteDeDatos = vistaActual === 'todos' ? listaCompletaEventos : listaMisViajes;
 
     if (filtroDisciplina) {
-      const filtrados = fuenteDeDatos.filter(evento => evento.disciplina === filtroDisciplina);
+      const filtrados = fuenteDeDatos.filter(evento => evento.disciplina?.id === filtroDisciplina);
       setEventosMostrados(filtrados);
     } else {
       setEventosMostrados(fuenteDeDatos);

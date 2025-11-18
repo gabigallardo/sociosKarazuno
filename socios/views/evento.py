@@ -15,10 +15,18 @@ class EventoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Obtener eventos futuros ordenados por fecha"""
-        return Evento.objects.filter(
-            fecha_fin__gte=timezone.now()
-        ).order_by('fecha_inicio')
+        """
+        Obtener eventos.
+        Por defecto muestra todos (historial y futuros) ordenados por fecha de inicio.
+        Soporta filtrado por disciplina mediante parámetro URL.
+        """
+        queryset = Evento.objects.all().order_by('fecha_inicio')
+
+        disciplina_id = self.request.query_params.get('disciplina')
+        if disciplina_id:
+            queryset = queryset.filter(disciplina_id=disciplina_id)
+
+        return queryset
 
     @action(
         detail=False,
@@ -27,14 +35,14 @@ class EventoViewSet(viewsets.ModelViewSet):
         url_path='mis-viajes'
     )
     def mis_viajes(self, request):
-        """Obtener viajes filtrados por disciplina y categoría del socio"""
+        """Obtener viajes futuros filtrados por disciplina y categoría del socio"""
         usuario = request.user
 
         try:
             socio_info = usuario.socioinfo
             disciplina_socio = socio_info.disciplina
             categoria_socio = socio_info.categoria
-        except SocioInfo.DoesNotExist:
+        except (AttributeError, SocioInfo.DoesNotExist):
             return Response([], status=200)
 
         if not disciplina_socio:

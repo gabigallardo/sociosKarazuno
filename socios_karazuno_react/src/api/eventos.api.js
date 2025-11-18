@@ -2,9 +2,10 @@ import api from "../config/axiosConfig";
 
 const BASE_PATH = "http://localhost:8000/socios/api/v1/eventos";
 
-export const getAllEventos = async () => {
+export const getAllEventos = async (filters = {}) => {
   try {
-    const response = await api.get(`${BASE_PATH}/`);
+    // Convertimos filtros a query params si existen
+    const response = await api.get(`${BASE_PATH}/`, { params: filters });
     console.log("✅ Eventos obtenidos:", response.data.length);
     return response.data;
   } catch (error) {
@@ -58,6 +59,7 @@ export const deleteEvento = async (id) => {
     throw error;
   }
 };
+
 export const getMisViajes = async () => {
   try {
     const response = await api.get(`${BASE_PATH}/mis-viajes/`);

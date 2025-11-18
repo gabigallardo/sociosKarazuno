@@ -47,7 +47,7 @@ export const descargarElementoComoPDF = (elementId, fileName) => {
         format: [pdfWidthMm, pdfHeightMm] 
       });
       
-      doc.addImage(imgData, 'PNG', 0, 0, pdfWidthMm, pdfHeightMm);
+      doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeightInPdf);
       doc.save(fileName);
     });
 };
@@ -61,26 +61,27 @@ export const generarReportePDF = (elementId, fileName) => {
     return;
   }
 
-  // Aseguramos que el fondo sea blanco y el texto legible antes de capturar
+  const originalOverflow = input.style.overflow;
+  input.style.overflow = 'visible';
+
   html2canvas(input, {
-    scale: 2.5, // Mayor escala = mayor calidad en el PDF
-    useCORS: true, // Permite cargar imágenes externas
-    backgroundColor: '#ffffff', // Fondo blanco forzado
+    scale: 2.5, 
+    useCORS: true,
+    backgroundColor: '#ffffff',
     logging: false
   }).then((canvas) => {
     const imgData = canvas.toDataURL('image/png');
     
-    // Medidas A4 en mm: 210 x 297
     const pdfWidth = 210; 
     const pdfHeight = 297;
     
-    // Calculamos la altura proporcional de la imagen
     const imgProps = canvas.width / canvas.height;
     const imgHeightInPdf = pdfWidth / imgProps;
 
     const doc = new jsPDF('p', 'mm', 'a4');
-    
     doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeightInPdf);
     doc.save(fileName);
+
+    input.style.overflow = originalOverflow;
   });
 };

@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useContext } from "react";
 import { getMisCuotas } from "../../api/cuotas.api";
 import { UserContext } from "../../contexts/User.Context.jsx";
-// 1. Importamos el ícono de PDF y la función de descarga
 import { FaMoneyBillWave, FaCheckCircle, FaExclamationTriangle, FaFilePdf } from "react-icons/fa";
-import { descargarElementoComoPDF } from "../../utils/pdfUtils.js";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+
+import { generarReportePDF } from "../../utils/pdfUtils.js";
+import PlantillaComprobante from "../../components/Reporte/PlantillaComprobante"; 
 
 export default function MisCuotasPage() {
     const { user } = useContext(UserContext);
     const [cuotas, setCuotas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    const [cuotaParaImprimir, setCuotaParaImprimir] = useState(null);
+    
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -20,7 +24,6 @@ export default function MisCuotasPage() {
             setError(null);
             try {
                 const cuotasData = await getMisCuotas();
-                console.log("Datos recibidos de getMisCuotas:", cuotasData); 
 
                 if (Array.isArray(cuotasData)) {
                     const cuotasOrdenadas = [...cuotasData].sort((a, b) => {
@@ -57,6 +60,16 @@ export default function MisCuotasPage() {
         fetchCuotas();
     }, [navigate]); 
 
+    const handleDescargarComprobante = (cuota) => {
+        setCuotaParaImprimir(cuota);
+
+   
+        setTimeout(() => {
+            const nombreArchivo = `Comprobante_Karazuno_${cuota.periodo || cuota.id}.pdf`;
+            generarReportePDF('plantilla-comprobante-oculta', nombreArchivo);
+        }, 100);
+    };
+
 
     const getCuotaStatus = (vencimiento, pagada) => {
         if (pagada) return "pagada";
@@ -84,7 +97,7 @@ export default function MisCuotasPage() {
     }
 
     return (
-        <div className="p-4 md:p-6 max-w-6xl mx-auto">
+        <div className="p-4 md:p-6 max-w-6xl mx-auto relative"> 
              <h1 className="text-3xl md:text-4xl font-extrabold text-red-700 mb-6 text-center">
                  Mis Cuotas
              </h1>
@@ -107,13 +120,9 @@ export default function MisCuotasPage() {
                              currency: 'ARS',
                          }).format(parseFloat(cuota.monto) || 0);
 
-                         // 2. Definimos un ID único para la tarjeta de la cuota
-                         const cardId = `cuota-card-${cuota.id}`;
-
                          return (
                              <div
                                  key={cuota.id || Math.random()}
-                                 id={cardId} // 3. Asignamos el ID aquí
                                  className={`p-5 rounded-xl shadow-md border ${
                                      isPagada ? "bg-gray-50 border-gray-300" : isVencida ? "bg-red-50 border-red-400" : "bg-green-50 border-green-400"
                                  } transition-shadow hover:shadow-lg`}
@@ -153,7 +162,6 @@ export default function MisCuotasPage() {
                                      </div>
                                  </div>
 
-                                 {/* --- 4. Lógica de botones --- */}
                                  {!isPagada ? (
                                      <button
                                          onClick={() => navigate(`/cuotas/pagar/${cuota.id}`)}
@@ -163,9 +171,9 @@ export default function MisCuotasPage() {
                                      </button>
                                  ) : (
                                      <button
-                                         onClick={() => descargarElementoComoPDF(cardId, `comprobante-${cuota.periodo}.pdf`)}
+                                         onClick={() => handleDescargarComprobante(cuota)}
                                          className="mt-4 w-full py-2 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition duration-200 flex items-center justify-center gap-2"
-                                         title="Descargar comprobante de pago"
+                                         title="Descargar comprobante oficial de pago"
                                      >
                                          <FaFilePdf />
                                          Descargar Comprobante
@@ -173,9 +181,16 @@ export default function MisCuotasPage() {
                                  )}
                              </div>
                          );
-                        })}
+                     })}
                  </div>
              )}
+
+             <PlantillaComprobante 
+                id="plantilla-comprobante-oculta" 
+                cuota={cuotaParaImprimir} 
+                usuario={user} 
+             />
+
         </div>
     );
 }

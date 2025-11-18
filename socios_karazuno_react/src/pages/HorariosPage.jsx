@@ -14,6 +14,9 @@ import { toast } from 'react-hot-toast';
 import GenerarSesionesForm from '../features/horarios/GenerarSesionesForm'; // Importa el nuevo form
 import { generarSesionesDeEntrenamiento } from '../api/horarios.api'; // Importa la nueva API
 
+import { getSesionesPorCategoria } from '../api/sesiones.api';
+import SesionCard from '../features/horarios/SesionCard'; 
+
 
 export default function HorariosPage() {
   const { user } = useContext(UserContext);
@@ -27,6 +30,10 @@ export default function HorariosPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHorario, setEditingHorario] = useState(null); // Para saber si estamos editando o creando
   const [isGenerarModalOpen, setIsGenerarModalOpen] = useState(false);
+
+  const [sesiones, setSesiones] = useState([]);
+  const [activeTab, setActiveTab] = useState('horarios');
+
 
   // Carga y filtra las categorías según el rol
   useEffect(() => {
@@ -58,8 +65,13 @@ export default function HorariosPage() {
     setSelectedCategoria(categoria);
     setLoading(true);
     try {
-      const data = await getHorariosPorCategoria(categoria.id);
-      setHorarios(data);
+      // Carga en paralelo para más eficiencia
+      const [horariosData, sesionesData] = await Promise.all([
+        getHorariosPorCategoria(categoria.id),
+        getSesionesPorCategoria(categoria.id)
+      ]);
+      setHorarios(horariosData);
+      setSesiones(sesionesData);
     } catch (error) {
       toast.error("No se pudieron cargar los horarios.");
     } finally {
@@ -110,12 +122,19 @@ export default function HorariosPage() {
   };
 
   const handleGenerarSubmit = async (fechaInicio, fechaFin) => {
+    const toastId = toast.loading("Generando sesiones...");
         try {
             const response = await generarSesionesDeEntrenamiento(selectedCategoria.id, fechaInicio, fechaFin);
-            toast.success(response.message);
             setIsGenerarModalOpen(false);
+            // Volvemos a pedir la lista COMPLETA y ACTUALIZADA de sesiones para esta categoría
+            const nuevasSesiones = await getSesionesPorCategoria(selectedCategoria.id);            
+            // Actualizamos el estado de React con la nueva lista
+            setSesiones(nuevasSesiones);
+            // 5. (Mejora UX) Cambiamos automáticamente a la pestaña de sesiones para ver el resultado
+            setActiveTab('sesiones');            
+            toast.success(response.message, { id: toastId });
         } catch (error) {
-            toast.error(error.response?.data?.error || "Error al generar sesiones.");
+            toast.error(error.response?.data?.error || "Error al generar sesiones.", { id: toastId });
         }
     };
 
@@ -143,7 +162,7 @@ export default function HorariosPage() {
   // Vista 2: Gestión de Horarios para la Categoría seleccionada
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
         <div>
             <button onClick={() => setSelectedCategoria(null)} className="flex items-center gap-2 text-gray-600 hover:text-black">
                 <FaArrowLeft /> Volver a Categorías
@@ -160,14 +179,43 @@ export default function HorariosPage() {
             </div>
       </div>
       
-      {loading ? <p>Cargando horarios...</p> : (
-        <div className="space-y-4">
-          {horarios.length > 0 ? (
-            horarios.map(h => (
-              <HorarioCard key={h.id} horario={h} onEdit={() => handleOpenModal(h)} onDelete={() => handleDelete(h.id)} />
-            ))
-          ) : (
-            <p>No hay horarios definidos para esta categoría.</p>
+       {/* Pestañas de Navegación */}
+      <div className="border-b border-gray-200 mb-4">
+        <nav className="flex space-x-4">
+          <button onClick={() => setActiveTab('horarios')} className={`py-2 px-4 font-semibold ${activeTab === 'horarios' ? 'border-b-2 border-red-600 text-red-600' : 'text-gray-500 hover:text-gray-700'}`}>
+            Horarios Semanales ({horarios.length})
+          </button>
+          <button onClick={() => setActiveTab('sesiones')} className={`py-2 px-4 font-semibold ${activeTab === 'sesiones' ? 'border-b-2 border-red-600 text-red-600' : 'text-gray-500 hover:text-gray-700'}`}>
+            Sesiones Programadas ({sesiones.length})
+          </button>
+        </nav>
+      </div>
+      
+      {loading ? <p>Cargando...</p> : (
+        <div>
+          {/* Contenido Condicional basado en la Pestaña Activa */}
+          {activeTab === 'horarios' && (
+            <div className="space-y-4">
+              {horarios.length > 0 ? (
+                horarios.map(h => (
+                  <HorarioCard key={h.id} horario={h} onEdit={() => handleOpenModal(h)} onDelete={() => handleDelete(h.id)} />
+                ))
+              ) : (
+                <p>No hay horarios definidos para esta categoría.</p>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'sesiones' && (
+            <div className="space-y-4">
+              {sesiones.length > 0 ? (
+                sesiones.map(s => (
+                  <SesionCard key={s.id} sesion={s} />
+                ))
+              ) : (
+                <p>No hay sesiones programadas. Puedes generarlas desde la pestaña de "Horarios Semanales".</p>
+              )}
+            </div>
           )}
         </div>
       )}

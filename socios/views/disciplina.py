@@ -6,7 +6,7 @@ from datetime import date, timedelta
 from django.db import transaction
 
 from socios.models import Disciplina, Categoria, HorarioEntrenamiento, SesionEntrenamiento
-from socios.serializers import DisciplinaSerializer, CategoriaSerializer, HorarioEntrenamientoSerializer
+from socios.serializers import DisciplinaSerializer, CategoriaSerializer, HorarioEntrenamientoSerializer, SesionEntrenamientoSerializer
 from socios.permissions import RolePermission
 
 
@@ -120,3 +120,25 @@ class HorarioEntrenamientoViewSet(viewsets.ModelViewSet):
         if categoria_id:
             return queryset.filter(categoria_id=categoria_id)
         return queryset
+    
+class SesionEntrenamientoViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gestionar las sesiones de entrenamiento (instancias concretas).
+    """
+    queryset = SesionEntrenamiento.objects.select_related('horario', 'categoria').all()
+    serializer_class = SesionEntrenamientoSerializer
+    permission_classes = [RolePermission]
+    required_roles = ['admin', 'dirigente', 'profesor']
+
+    def get_queryset(self):
+        """
+        Filtra las sesiones por categoría.
+        Ej: /api/v1/sesiones/?categoria=5
+        """
+        queryset = super().get_queryset()
+        categoria_id = self.request.query_params.get('categoria', None)
+        if categoria_id:
+            return queryset.filter(categoria_id=categoria_id).order_by('fecha')
+        # Por defecto, devuelve un queryset vacío si no se especifica categoría
+        return queryset.none()
+

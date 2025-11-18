@@ -4,7 +4,7 @@ from .rol import RolesViewSet
 from .evento import EventoViewSet
 from .socio import SocioInfoViewSet, NivelSocioViewSet
 from .cuota import CuotaViewSet
-from .disciplina import DisciplinaViewSet, CategoriaViewSet, HorarioEntrenamientoViewSet
+from .disciplina import DisciplinaViewSet, CategoriaViewSet, HorarioEntrenamientoViewSet, SesionEntrenamientoViewSet
 
 __all__ = [
     'LoginView',
@@ -18,4 +18,5 @@ __all__ = [
     'DisciplinaViewSet',
     'CategoriaViewSet',
     'HorarioEntrenamientoViewSet',
+    'SesionEntrenamientoViewSet',
 ]

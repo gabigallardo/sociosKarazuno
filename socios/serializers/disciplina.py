@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from socios.models import Disciplina, Categoria, Usuario, HorarioEntrenamiento
+from socios.models import Disciplina, Categoria, Usuario, HorarioEntrenamiento, SesionEntrenamiento
 
 class UsuarioSimpleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,10 +7,8 @@ class UsuarioSimpleSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'apellido', 'email']
 
 class DisciplinaSerializer(serializers.ModelSerializer):
-
-
     entrenadores = UsuarioSimpleSerializer(many=True, read_only=True)
-
+    
     class Meta:
         model = Disciplina
         fields = '__all__'
@@ -39,3 +37,15 @@ class HorarioEntrenamientoSerializer(serializers.ModelSerializer):
     class Meta:
         model = HorarioEntrenamiento
         fields = '__all__'
+
+class SesionEntrenamientoSerializer(serializers.ModelSerializer):
+    # Campos de solo lectura para mostrar info útil en el frontend
+    dia_semana = serializers.CharField(source='horario.get_dia_semana_display', read_only=True, allow_null=True)
+    hora_inicio = serializers.TimeField(source='horario.hora_inicio', read_only=True, allow_null=True)
+    hora_fin = serializers.TimeField(source='horario.hora_fin', read_only=True, allow_null=True)
+    lugar = serializers.CharField(source='horario.lugar', read_only=True, allow_null=True)
+    
+    class Meta:
+        model = SesionEntrenamiento
+        fields = '__all__'
+

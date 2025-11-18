@@ -2,7 +2,7 @@ from django.db import models
 from typing import TYPE_CHECKING
 
 from .usuario import Usuario
-from .disciplina import Disciplina, Categoria
+from .disciplina import Disciplina, Categoria, SesionEntrenamiento
 
 
 
@@ -113,11 +113,26 @@ class CalendarItem(models.Model):
 
 
 class AsistenciaEntrenamiento(models.Model):
+    sesion = models.ForeignKey(
+        SesionEntrenamiento, 
+        on_delete=models.CASCADE, 
+        related_name="asistencias",
+        null=True, # Temporalmente null para la migración
+        blank=True
+    )
     usuario = models.ForeignKey(
         Usuario, on_delete=models.CASCADE, related_name="asistencias"
     )
-    fecha = models.DateField()
-    presente = models.BooleanField()
+    ESTADO_CHOICES = [
+        ('presente', 'Presente'),
+        ('ausente', 'Ausente'),
+        ('justificado', 'Justificado'),
+    ]
+    estado = models.CharField(
+        max_length=20, 
+        choices=ESTADO_CHOICES, 
+        default='ausente'
+    )
     registrado_por = models.ForeignKey(
         Usuario, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="asistencias_registradas"
@@ -127,9 +142,9 @@ class AsistenciaEntrenamiento(models.Model):
     class Meta:
         verbose_name = "Asistencia a Entrenamiento"
         verbose_name_plural = "Asistencias a Entrenamientos"
-        ordering = ['-fecha']
+        # Aseguramos que no haya duplicados por sesión y usuario
+        unique_together = ('sesion', 'usuario') 
+        ordering = ['-sesion__fecha'] # Ordenamos por la fecha de la sesión
 
     def __str__(self):
-        estado = "Presente" if self.presente else "Ausente"
-        user_display = str(self.usuario) if self.usuario else 'Usuario desconocido'
-        return f"{user_display} - {self.fecha} ({estado})"
+        return f"{self.usuario} en {self.sesion} ({self.estado})"

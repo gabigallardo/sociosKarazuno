@@ -15,3 +15,32 @@ export const getSesionesPorCategoria = async (categoriaId) => {
     throw error;
   }
 };
+
+/**
+ * Obtener la hoja de asistencia (lista de jugadores y estado) para una sesión.
+ */
+export const getHojaAsistencia = async (sesionId) => {
+  try {
+    const response = await api.get(`${BASE_PATH}/${sesionId}/hoja-asistencia/`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching hoja de asistencia:", error.response?.data);
+    throw error;
+  }
+};
+
+/**
+ * Guardar la asistencia.
+ * @param {number} sesionId
+ * @param {Array} listaAsistencia - Array de objetos { usuario_id, estado, nota }
+ */
+export const registrarAsistencia = async (sesionId, listaAsistencia) => {
+  try {
+    const payload = { asistencias: listaAsistencia };
+    const response = await api.post(`${BASE_PATH}/${sesionId}/registrar-asistencia/`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error registrando asistencia:", error.response?.data);
+    throw error;
+  }
+};

@@ -14,9 +14,9 @@ import { toast } from 'react-hot-toast';
 import GenerarSesionesForm from '../features/horarios/GenerarSesionesForm'; // Importa el nuevo form
 import { generarSesionesDeEntrenamiento } from '../api/horarios.api'; // Importa la nueva API
 
-import { getSesionesPorCategoria } from '../api/sesiones.api';
+import { getSesionesPorCategoria, getHojaAsistencia, registrarAsistencia } from '../api/sesiones.api';
 import SesionCard from '../features/horarios/SesionCard'; 
-
+import TomarAsistenciaForm from '../features/horarios/TomarAsistenciaForm';
 
 export default function HorariosPage() {
   const { user } = useContext(UserContext);
@@ -33,6 +33,11 @@ export default function HorariosPage() {
 
   const [sesiones, setSesiones] = useState([]);
   const [activeTab, setActiveTab] = useState('horarios');
+
+  const [isAsistenciaModalOpen, setIsAsistenciaModalOpen] = useState(false);
+  const [sesionSeleccionada, setSesionSeleccionada] = useState(null);
+  const [hojaAsistencia, setHojaAsistencia] = useState([]);
+  const [loadingAsistencia, setLoadingAsistencia] = useState(false);
 
 
   // Carga y filtra las categorías según el rol
@@ -136,7 +141,38 @@ export default function HorariosPage() {
         } catch (error) {
             toast.error(error.response?.data?.error || "Error al generar sesiones.", { id: toastId });
         }
-    };
+  };
+
+  //  Abrir el modal y cargar la lista
+  const handleOpenAsistencia = async (sesion) => {
+      setSesionSeleccionada(sesion);
+      setIsAsistenciaModalOpen(true);
+      setLoadingAsistencia(true);
+      try {
+          const data = await getHojaAsistencia(sesion.id);
+          setHojaAsistencia(data);
+      } catch (error) {
+          toast.error("Error al cargar la lista de jugadores.");
+          setIsAsistenciaModalOpen(false); // Cierra si falla
+      } finally {
+          setLoadingAsistencia(false);
+      }
+  };
+
+  //  Guardar los cambios
+  const handleSubmitAsistencia = async (listaActualizada) => {
+      setLoadingAsistencia(true);
+      const toastId = toast.loading("Guardando asistencia...");
+      try {
+          await registrarAsistencia(sesionSeleccionada.id, listaActualizada);
+          toast.success("Asistencia guardada correctamente", { id: toastId });
+          setIsAsistenciaModalOpen(false);
+      } catch (error) {
+          toast.error("Error al guardar la asistencia", { id: toastId });
+      } finally {
+          setLoadingAsistencia(false);
+      }
+  };
 
   if (loading && !selectedCategoria) {
     return <p>Cargando categorías...</p>;
@@ -210,7 +246,11 @@ export default function HorariosPage() {
             <div className="space-y-4">
               {sesiones.length > 0 ? (
                 sesiones.map(s => (
-                  <SesionCard key={s.id} sesion={s} />
+                  <SesionCard 
+                    key={s.id} 
+                    sesion={s} 
+                    onTomarAsistencia={handleOpenAsistencia}
+                  />
                 ))
               ) : (
                 <p>No hay sesiones programadas. Puedes generarlas desde la pestaña de "Horarios Semanales".</p>
@@ -233,6 +273,19 @@ export default function HorariosPage() {
               onSubmit={handleGenerarSubmit}
               onClose={() => setIsGenerarModalOpen(false)}
             />
+      </Modal>
+
+      <Modal isOpen={isAsistenciaModalOpen} onClose={() => setIsAsistenciaModalOpen(false)}>
+          {loadingAsistencia && hojaAsistencia.length === 0 ? (
+              <div className="p-8 text-center">Cargando lista de jugadores...</div>
+          ) : (
+              <TomarAsistenciaForm 
+                  listaJugadores={hojaAsistencia}
+                  onSubmit={handleSubmitAsistencia}
+                  onClose={() => setIsAsistenciaModalOpen(false)}
+                  isLoading={loadingAsistencia}
+              />
+          )}
       </Modal>
     </div>
   );

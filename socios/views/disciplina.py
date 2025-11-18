@@ -5,8 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from datetime import date, timedelta
 from django.db import transaction
 
-from socios.models import Disciplina, Categoria, HorarioEntrenamiento, SesionEntrenamiento
-from socios.serializers import DisciplinaSerializer, CategoriaSerializer, HorarioEntrenamientoSerializer, SesionEntrenamientoSerializer
+from socios.models import Disciplina, Categoria, HorarioEntrenamiento, SesionEntrenamiento, AsistenciaEntrenamiento, SocioInfo
+from socios.serializers import DisciplinaSerializer, CategoriaSerializer, HorarioEntrenamientoSerializer, SesionEntrenamientoSerializer, AsistenciaEntrenamientoSerializer
 from socios.permissions import RolePermission
 
 
@@ -132,13 +132,96 @@ class SesionEntrenamientoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Filtra las sesiones por categoría.
-        Ej: /api/v1/sesiones/?categoria=5
+        Filtra las sesiones.
         """
         queryset = super().get_queryset()
         categoria_id = self.request.query_params.get('categoria', None)
-        if categoria_id:
-            return queryset.filter(categoria_id=categoria_id).order_by('fecha')
-        # Por defecto, devuelve un queryset vacío si no se especifica categoría
-        return queryset.none()
 
+        # Si hay filtro de categoría, lo aplicamos siempre
+        if categoria_id:
+            queryset = queryset.filter(categoria_id=categoria_id)
+
+        # Solo devolvemos 'none' si estamos LISTANDO (action='list') y no hay filtro.
+        # Para acciones de detalle (retrieve, hoja_asistencia, etc.), permitimos buscar en todo.
+        if self.action == 'list' and not categoria_id:
+            return queryset.none()
+
+        return queryset.order_by('fecha')
+    
+    @action(detail=True, methods=['get'], url_path='hoja-asistencia')
+    def hoja_asistencia(self, request, pk=None):
+        sesion = self.get_object()
+        categoria = sesion.categoria
+
+        # 1. Traer todos los socios activos
+        socios_categoria = SocioInfo.objects.filter(
+            categoria=categoria, 
+            estado='activo'
+        ).select_related('usuario')
+
+        # 2. Traer asistencias YA registradas
+        asistencias_existentes = AsistenciaEntrenamiento.objects.filter(sesion=sesion)
+        
+        # Usamos ENTEROS para el mapa (más seguro y rápido)
+        mapa_asistencias = {a.usuario_id: a for a in asistencias_existentes}
+        
+        # DEBUG
+        # print(f"DEBUG: IDs (int) en mapa: {list(mapa_asistencias.keys())}")
+
+        data = []
+        for socio_info in socios_categoria:
+            # ID como entero
+            user_id = socio_info.pk 
+            
+            asistencia = mapa_asistencias.get(user_id)
+            
+            estado_final = asistencia.estado if asistencia else 'ausente'
+            
+            # DEBUG: Ver qué estado tiene realmente el objeto si existe
+            # if asistencia:
+            #     print(f" - Socio {user_id} encontrado. Estado en DB: '{asistencia.estado}'")
+
+            data.append({
+                "usuario_id": user_id,
+                "nombre_completo": f"{socio_info.usuario.nombre} {socio_info.usuario.apellido}",
+                "foto_url": socio_info.usuario.foto_url,
+                "estado": estado_final,
+                "nota": asistencia.nota if asistencia else ""
+            })
+        
+        data.sort(key=lambda x: x['nombre_completo'])
+        return Response(data)
+
+    @action(detail=True, methods=['post'], url_path='registrar-asistencia')
+    def registrar_asistencia(self, request, pk=None):
+        sesion = self.get_object()
+        datos_asistencias = request.data.get('asistencias', [])
+        registrador = request.user
+
+        print(f"DEBUG: Recibidos {len(datos_asistencias)} registros para guardar.")
+
+        try:
+            with transaction.atomic():
+                for item in datos_asistencias:
+                    usuario_id = item.get('usuario_id')
+                    nuevo_estado = item.get('estado')
+                    nota = item.get('nota', '')
+
+                    # DEBUG: Ver qué estamos a punto de guardar
+                    # print(f" -> Guardando ID {usuario_id}: Estado '{nuevo_estado}'")
+
+                    AsistenciaEntrenamiento.objects.update_or_create(
+                        sesion=sesion,
+                        usuario_id=usuario_id,
+                        defaults={
+                            'estado': nuevo_estado,
+                            'registrado_por': registrador,
+                            'nota': nota,
+                        }
+                    )
+
+            return Response({"message": "Asistencia guardada."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(f"ERROR CRÍTICO al guardar: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

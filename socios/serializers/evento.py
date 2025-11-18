@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from socios.models import Evento, Usuario, Disciplina, Categoria
+from socios.models import Evento, Usuario, Disciplina, Categoria, AsistenciaEntrenamiento
 from .usuario import UsuarioSerializer
 from .disciplina import DisciplinaSerializer, CategoriaSerializer
 
@@ -82,5 +82,12 @@ class EventoSerializer(serializers.ModelSerializer):
             'pago_inscripcion_a_id', 'pago_transporte_a_id', 'pago_hospedaje_a_id', 'pago_comida_a_id',
             'profesores_a_cargo_ids'
         ]
-        read_only_fields = ['creado'] 
+        read_only_fields = ['creado']
+
+class AsistenciaEntrenamientoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AsistenciaEntrenamiento
+        fields = ['usuario', 'estado', 'nota']
+
+
 

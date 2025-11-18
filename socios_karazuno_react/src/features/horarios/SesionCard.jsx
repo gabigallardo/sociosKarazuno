@@ -1,7 +1,7 @@
 import React from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { FaCalendarDay, FaClock, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaExclamationCircle } from 'react-icons/fa';
+import { FaCalendarDay, FaClock, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaExclamationCircle, FaClipboardList  } from 'react-icons/fa';
 
 const estadoInfo = {
   programada: { icon: FaClock, color: 'text-blue-500', label: 'Programada' },
@@ -9,7 +9,7 @@ const estadoInfo = {
   cancelada: { icon: FaTimesCircle, color: 'text-red-500', label: 'Cancelada' },
 };
 
-export default function SesionCard({ sesion }) {
+export default function SesionCard({ sesion, onTomarAsistencia  }) {
   const fecha = parseISO(sesion.fecha);
   const info = estadoInfo[sesion.estado] || { icon: FaExclamationCircle, color: 'text-gray-500', label: sesion.estado };
   const IconoEstado = info.icon;
@@ -29,10 +29,17 @@ export default function SesionCard({ sesion }) {
           <span>{sesion.lugar ?? 'Lugar no definido'}</span>
         </div>
       </div>
-      <div className={`flex items-center gap-2 font-semibold p-2 rounded-lg ${info.color}`}>
-        <IconoEstado />
-        <span>{info.label}</span>
-      </div>
+      <div className="flex flex-col items-end gap-2">
+        <div className={`flex items-center gap-2 font-semibold p-2 rounded-lg ${info.color}`}>
+          <IconoEstado />
+          <span>{info.label}</span>
+        </div>
+        <button
+            onClick={() => onTomarAsistencia(sesion)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition shadow-sm text-sm font-bold">
+            <FaClipboardList /> Tomar Asistencia
+        </button>
+      </div>      
     </div>
   );
 }

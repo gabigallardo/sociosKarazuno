@@ -40,12 +40,11 @@ function Navigation() {
 
     // --- Items para roles de Gestión (AQUÍ EL CAMBIO) ---
 
-    // 👇 2. CAMBIO: Unificamos los 3 enlaces en este bloque
     if (puedeGestionarUsuarios) {
         navItems.push({ 
             to: "/gestionar-usuarios", 
             icon: FaUsersCog, 
-            label: "Gestionar Personal" 
+            label: "Gestion de Usuarios" 
         });
     }
 
@@ -60,7 +59,6 @@ function Navigation() {
         navItems.push({ to: "/jugadores", icon: FaUsers, label: "Jugadores" });
     }
 
-    // --- RENDERIZADO (SIN CAMBIOS, MANTIENE TUS ESTILOS 'ROJOS') ---
     return (
         <aside className="w-64 bg-red-700 text-white flex flex-col justify-between h-screen fixed shadow-2xl">
             {/* Logo  */}

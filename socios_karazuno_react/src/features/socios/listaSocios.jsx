@@ -1,52 +1,46 @@
+import React from 'react';
 import { FaCheckCircle, FaTimesCircle, FaEye, FaUserSlash, FaToggleOn, FaFilePdf } from "react-icons/fa";
-// 1. Importamos la función de descarga
-import { descargarElementoComoPDF } from "../../utils/pdfUtils";
+// Importamos la función avanzada (Técnica 3) de pdfUtils
+import { generarReportePDF } from "../../utils/pdfUtils"; 
+// Importamos el componente visual del reporte
+import PlantillaReporte from "../../components/Reporte/PlantillaReporte";
 
 export default function ListaSocios({ socios, onViewDetail, onInactivar, onActivar }) {
+  
+  // Función que busca el elemento oculto por su ID y lo convierte a PDF
+  const handleExportarPDF = () => {
+    // El primer parámetro debe coincidir EXACTAMENTE con el prop 'id' del componente <PlantillaReporte /> de abajo
+    generarReportePDF('plantilla-reporte-socios-hidden', 'Reporte_Estado_Socios.pdf');
+  };
+
   return (
-    // 2. Creamos un contenedor general
-    <div className="w-full">
-      {/* 3. Botón de exportación */}
+    <div className="w-full relative"> {/* 'relative' ayuda a posicionar elementos absolutos si fuera necesario */}
+      
+      {/* Botón de Exportación */}
       <div className="mb-4 flex justify-end">
         <button
-          onClick={() => descargarElementoComoPDF('tabla-socios', 'reporte-socios.pdf')}
-          className="bg-red-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-red-800 transition"
-          title="Descargar reporte de socios en PDF"
+          onClick={handleExportarPDF}
+          className="bg-red-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-red-800 transition shadow-md"
+          title="Descargar reporte con gráficos y estadísticas"
         >
           <FaFilePdf />
-          Exportar a PDF
+          Exportar Reporte PDF
         </button>
       </div>
 
-      {/* 4. Le damos un ID al contenedor de la tabla */}
+      {/* Tabla de Socios */}
       <div id="tabla-socios" className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ID
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Nombre Completo
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estado
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Nivel
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Cuotas al día
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Disciplina
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Acciones
-              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre Completo</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nivel</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuotas al día</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disciplina</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -71,21 +65,17 @@ export default function ListaSocios({ socios, onViewDetail, onInactivar, onActiv
                   <td className="px-6 py-4 whitespace-nowrap">
                     {socio.estado === "activo" ? (
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                        <FaCheckCircle className="mr-1" />
-                        Activo
+                        <FaCheckCircle className="mr-1" /> Activo
                       </span>
                     ) : (
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                        <FaTimesCircle className="mr-1" />
-                        Inactivo
+                        <FaTimesCircle className="mr-1" /> Inactivo
                       </span>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {socio.nivel_socio_info ? (
-                      <span className="font-medium text-red-700">
-                        Nivel {socio.nivel_socio_info.nivel}
-                      </span>
+                      <span className="font-medium text-red-700">Nivel {socio.nivel_socio_info.nivel}</span>
                     ) : (
                       <span className="text-gray-400 italic">Sin nivel</span>
                     )}
@@ -110,31 +100,26 @@ export default function ListaSocios({ socios, onViewDetail, onInactivar, onActiv
                       className="inline-flex items-center bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition"
                       title="Ver detalles completos"
                     >
-                      <FaEye className="mr-1" />
-                      Ver
+                      <FaEye className="mr-1" /> Ver
                     </button>
                     
-                    {/* Botón Inactivar (solo si está activo) */}
                     {socio.estado === "activo" && (
                       <button
                         onClick={() => onInactivar(socio)}
                         className="inline-flex items-center bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600 transition"
                         title="Inactivar este socio"
                       >
-                        <FaUserSlash className="mr-1" />
-                        Inactivar
+                        <FaUserSlash className="mr-1" /> Inactivar
                       </button>
                     )}
 
-                    {/* Botón Activar (solo si está inactivo) */}
                     {socio.estado === "inactivo" && (
                       <button
                         onClick={() => onActivar(socio)}
                         className="inline-flex items-center bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 transition"
                         title="Registrar pago y activar"
                       >
-                        <FaToggleOn className="mr-1" />
-                        Activar
+                        <FaToggleOn className="mr-1" /> Activar
                       </button>
                     )}
                   </td>
@@ -144,6 +129,16 @@ export default function ListaSocios({ socios, onViewDetail, onInactivar, onActiv
           </tbody>
         </table>
       </div>
+
+      {/* 
+         Se renderiza con los datos actuales pero fuera de la vista (controlado por CSS interno).
+      */}
+      <PlantillaReporte 
+        id="plantilla-reporte-socios-hidden" 
+        socios={socios} 
+        usuarioActivo="Administrador" 
+      />
+
     </div>
   );
 }

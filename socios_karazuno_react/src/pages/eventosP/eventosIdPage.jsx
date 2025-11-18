@@ -4,66 +4,66 @@ import { getAllUsuarios } from "../../api/usuarios.api";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { UserContext } from "../../contexts/User.Context";
-// 1. Importamos el ícono de PDF y la función de descarga
 import { FaFilePdf } from "react-icons/fa";
-import { descargarElementoComoPDF } from "../../utils/pdfUtils";
+
+import { generarReportePDF } from "../../utils/pdfUtils"; 
+import PlantillaEventoPDF from "../../components/Reporte/PlantillaEventoPDF"; 
 
 const ChecklistPagosSocio = ({ evento, findUserName, userId }) => {
-    // ... (El componente interno ChecklistPagosSocio no necesita cambios)
-  const storageKey = `checklist-user${userId}-event${evento.id}`;
+  const storageKey = `checklist-user${userId}-event${evento.id}`;
 
-  const [pagos, setPagos] = useState(() => {
-    try {
-      const datosGuardados = localStorage.getItem(storageKey);
-      return datosGuardados ? JSON.parse(datosGuardados) : { inscripcion: false, transporte: false, hospedaje: false, comida: false };
-    } catch (error) {
-      console.error("Error al leer de localStorage", error);
-      return { inscripcion: false, transporte: false, hospedaje: false, comida: false };
-    }
-  });
+  const [pagos, setPagos] = useState(() => {
+    try {
+      const datosGuardados = localStorage.getItem(storageKey);
+      return datosGuardados ? JSON.parse(datosGuardados) : { inscripcion: false, transporte: false, hospedaje: false, comida: false };
+    } catch (error) {
+      console.error("Error al leer de localStorage", error);
+      return { inscripcion: false, transporte: false, hospedaje: false, comida: false };
+    }
+  });
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(pagos));
-    } catch (error) {
-      console.error("Error al guardar en localStorage", error);
-    }
-  }, [pagos, storageKey]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(pagos));
+    } catch (error) {
+      console.error("Error al guardar en localStorage", error);
+    }
+  }, [pagos, storageKey]);
 
-  const handlePagoChange = (pago) => {
-    setPagos(prev => ({ ...prev, [pago]: !prev[pago] }));
-  };
+  const handlePagoChange = (pago) => {
+    setPagos(prev => ({ ...prev, [pago]: !prev[pago] }));
+  };
 
-  const pagosData = [
-    { key: 'inscripcion', label: 'Inscripción', costo: evento.costo, a_pagar: evento.pago_inscripcion_a },
-    { key: 'transporte', label: 'Transporte', costo: evento.costo_viaje, a_pagar: evento.pago_transporte_a },
-    { key: 'hospedaje', label: 'Hospedaje', costo: evento.costo_hospedaje, a_pagar: evento.pago_hospedaje_a },
-    { key: 'comida', label: 'Comida', costo: evento.costo_comida, a_pagar: evento.pago_comida_a },
-  ];
+  const pagosData = [
+    { key: 'inscripcion', label: 'Inscripción', costo: evento.costo, a_pagar: evento.pago_inscripcion_a },
+    { key: 'transporte', label: 'Transporte', costo: evento.costo_viaje, a_pagar: evento.pago_transporte_a },
+    { key: 'hospedaje', label: 'Hospedaje', costo: evento.costo_hospedaje, a_pagar: evento.pago_hospedaje_a },
+    { key: 'comida', label: 'Comida', costo: evento.costo_comida, a_pagar: evento.pago_comida_a },
+  ];
 
-  return (
-    <div className="mt-4 p-4 border rounded-lg bg-gray-50 animate-fade-in">
-      <h2 className="text-xl font-bold mb-3 text-gray-800">Mi Checklist de Pagos</h2>
-      <ul className="space-y-3">
-        {pagosData.map(pago => (
-          pago.costo > 0 && (
-            <li key={pago.key} className="flex items-center">
-              <input
-                type="checkbox"
-                id={pago.key}
-                checked={pagos[pago.key]}
-                onChange={() => handlePagoChange(pago.key)}
-                className="h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
-              />
-              <label htmlFor={pago.key} className={`ml-3 text-gray-700 transition-colors ${pagos[pago.key] ? 'line-through text-gray-400' : ''}`}>
-                <strong>{pago.label}:</strong> ${new Intl.NumberFormat('es-AR').format(pago.costo || 0)} - Pagar a: <strong>{findUserName(pago.a_pagar)}</strong>
-              </label>
-            </li>
-          )
-        ))}
-      </ul>
-    </div>
-  );
+  return (
+    <div className="mt-4 p-4 border rounded-lg bg-gray-50 animate-fade-in">
+      <h2 className="text-xl font-bold mb-3 text-gray-800">Mi Checklist de Pagos</h2>
+      <ul className="space-y-3">
+        {pagosData.map(pago => (
+          pago.costo > 0 && (
+            <li key={pago.key} className="flex items-center">
+              <input
+                type="checkbox"
+                id={pago.key}
+                checked={pagos[pago.key]}
+                onChange={() => handlePagoChange(pago.key)}
+                className="h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
+              />
+              <label htmlFor={pago.key} className={`ml-3 text-gray-700 transition-colors ${pagos[pago.key] ? 'line-through text-gray-400' : ''}`}>
+                <strong>{pago.label}:</strong> ${new Intl.NumberFormat('es-AR').format(pago.costo || 0)} - Pagar a: <strong>{findUserName(pago.a_pagar)}</strong>
+              </label>
+            </li>
+          )
+        ))}
+      </ul>
+    </div>
+  );
 };
 
 export default function EventosIdPage() {
@@ -106,12 +106,20 @@ export default function EventosIdPage() {
         loadData();
     }, [id, navigate]);
     
+    // Helper para la vista Web (funciona bien)
     const findUserName = (userOrId) => {
         if (!userOrId || !usuarios.length) return <span className="text-gray-500">No asignado</span>;
         const idToFind = typeof userOrId === 'object' && userOrId !== null ? userOrId.id : userOrId;
         if (!idToFind) return <span className="text-gray-500">No asignado</span>;
         const foundUser = usuarios.find(u => u.id === idToFind);
         return foundUser ? `${foundUser.nombre} ${foundUser.apellido}` : <span className="text-red-500">Usuario no encontrado</span>;
+    };
+
+    // Función para descargar el PDF
+    const handleDescargarInfo = () => {
+        if (!evento) return;
+        const nombreArchivo = `Info_Evento_${evento.titulo.replace(/\s+/g, '_')}.pdf`;
+        generarReportePDF('plantilla-info-evento', nombreArchivo);
     };
 
     if (loading) {
@@ -132,8 +140,7 @@ export default function EventosIdPage() {
     if (!evento) return null;
 
     return (
-        // 2. Le damos un ID al contenedor principal
-        <div id="detalle-evento" className="max-w-2xl mx-auto my-8 p-6 bg-white rounded-lg shadow-md">
+        <div className="max-w-2xl mx-auto my-8 p-6 bg-white rounded-lg shadow-md relative">
             <h1 className="text-3xl font-bold text-gray-800 mb-4">{evento.titulo}</h1>
             <div className="space-y-3 text-gray-700">
                 <p><strong>Tipo:</strong> <span className="capitalize">{evento.tipo}</span></p>
@@ -187,25 +194,33 @@ export default function EventosIdPage() {
                 </div>
             )}
 
-            {/* 3. Agregamos el botón de descarga */}
             <div className="mt-6 flex flex-wrap gap-4 border-t pt-4">
                 {puedeGestionar && (
                     <button onClick={() => navigate(`/eventos/editar/${evento.id}`)} className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md font-semibold shadow-sm">
                         Editar
                     </button>
                 )}
+                
                 <button
-                    onClick={() => descargarElementoComoPDF('detalle-evento', `evento-${evento.titulo.replace(/ /g, '_')}.pdf`)}
+                    onClick={handleDescargarInfo}
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-semibold shadow-sm flex items-center gap-2"
-                    title="Descargar información del evento"
+                    title="Descargar ficha técnica del evento en PDF"
                 >
                     <FaFilePdf />
                     Descargar Info
                 </button>
+
                 <button onClick={() => navigate(-1)} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md font-semibold shadow-sm">
                     Volver
                 </button>
             </div>
+
+            <PlantillaEventoPDF 
+                id="plantilla-info-evento" 
+                evento={evento} 
+                usuarios={usuarios} 
+            />
+
         </div>
     );
 }

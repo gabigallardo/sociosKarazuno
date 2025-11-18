@@ -1,7 +1,6 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-// --- TÉCNICA 1 (Sin cambios) ---
 export const descargarCanvasComoPDF = (canvasId, fileName, pdfSize = [120, 120]) => {
   const canvas = document.getElementById(canvasId);
   if (!canvas) {
@@ -22,16 +21,6 @@ export const descargarCanvasComoPDF = (canvasId, fileName, pdfSize = [120, 120])
   doc.save(fileName);
 };
 
-
-// -----------------------------------------------------------------
-// --- INICIO DE LA MODIFICACIÓN (TÉCNICA 2) ---
-// -----------------------------------------------------------------
-
-/**
- * TÉCNICA 2: "Fotografía" cualquier elemento HTML y lo guarda en un PDF.
- * @param {string} elementId - El 'id' del elemento HTML a descargar.
- * @param {string} fileName - El nombre del archivo PDF de salida (ej. "credencial.pdf").
- */
 export const descargarElementoComoPDF = (elementId, fileName) => {
   const input = document.getElementById(elementId);
   if (!input) {
@@ -45,30 +34,53 @@ export const descargarElementoComoPDF = (elementId, fileName) => {
   })
     .then((canvas) => {
       const imgData = canvas.toDataURL('image/png');
-      
-      // 1. Obtenemos las dimensiones en píxeles de nuestra imagen
       const imgWidthPx = canvas.width;
       const imgHeightPx = canvas.height;
-      
-      // 2. Determinamos la orientación basándonos en las dimensiones del canvas
       const orientation = imgWidthPx > imgHeightPx ? 'landscape' : 'portrait';
-
-      // 3. Definimos un ancho físico en milímetros (mm)
-      const pdfWidthMm = 85.6; // Ancho de tarjeta de crédito
-      
-      // 4. Calculamos el alto en mm manteniendo la proporción
+      const pdfWidthMm = 85.6; 
       const aspectRatio = imgHeightPx / imgWidthPx;
       const pdfHeightMm = pdfWidthMm * aspectRatio;
 
-      // 5. Creamos el PDF usando la orientación y unidades correctas
       const doc = new jsPDF({
-        orientation: orientation, // <-- Usamos la orientación calculada
+        orientation: orientation,
         unit: 'mm',
         format: [pdfWidthMm, pdfHeightMm] 
       });
       
-      // 6. Añadimos la imagen para que ocupe el 100% del PDF
       doc.addImage(imgData, 'PNG', 0, 0, pdfWidthMm, pdfHeightMm);
       doc.save(fileName);
     });
+};
+
+
+
+export const generarReportePDF = (elementId, fileName) => {
+  const input = document.getElementById(elementId);
+  if (!input) {
+    console.error(`Elemento no encontrado con id: ${elementId}`);
+    return;
+  }
+
+  // Aseguramos que el fondo sea blanco y el texto legible antes de capturar
+  html2canvas(input, {
+    scale: 2.5, // Mayor escala = mayor calidad en el PDF
+    useCORS: true, // Permite cargar imágenes externas
+    backgroundColor: '#ffffff', // Fondo blanco forzado
+    logging: false
+  }).then((canvas) => {
+    const imgData = canvas.toDataURL('image/png');
+    
+    // Medidas A4 en mm: 210 x 297
+    const pdfWidth = 210; 
+    const pdfHeight = 297;
+    
+    // Calculamos la altura proporcional de la imagen
+    const imgProps = canvas.width / canvas.height;
+    const imgHeightInPdf = pdfWidth / imgProps;
+
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeightInPdf);
+    doc.save(fileName);
+  });
 };

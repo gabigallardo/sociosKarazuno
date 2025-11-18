@@ -1,18 +1,21 @@
-// src/components/CredencialSocio/CredencialSocio.jsx
-
 import React from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { FaQrcode } from 'react-icons/fa';
 import patternImg from '../../assets/pattern.jpg';
 
-// Importamos solo la función de utilidad que necesitamos
-import { descargarCanvasComoPDF } from '../../utils/pdfUtils';
-
+import { generarReportePDF } from '../../utils/pdfUtils';
+import PlantillaCredencialPDF from '../Reporte/PlantillaCredencialPDF';
 
 function CredencialSocio({ userData }) {
+
+  const handleDescargarPase = () => {
+    const nombreArchivo = `Pase_Acceso_${userData.nombreCompleto.replace(/\s+/g, '_')}.pdf`;
+    generarReportePDF('plantilla-pase-acceso-oculta', nombreArchivo);
+  };
+
   return (
     <section
-      id="credencial-completa" // Mantenemos un ID por si acaso
+      id="credencial-completa"
       className="bg-gradient-to-br from-red-800 via-red-700 to-black text-white p-6 rounded-3xl shadow-2xl transition duration-300 transform hover:scale-[1.03] hover:shadow-red-900/50 relative overflow-hidden flex flex-col"
       style={{ height: '450px' }}
     >
@@ -30,7 +33,7 @@ function CredencialSocio({ userData }) {
               src={userData.fotoUrl} 
               alt="Foto de perfil" 
               className="w-full h-full object-cover" 
-              crossOrigin="anonymous" // Lo dejamos por buenas prácticas
+              crossOrigin="anonymous"
             />
           </div>
           <p className="text-sm text-center">Foto perfil</p>
@@ -48,9 +51,10 @@ function CredencialSocio({ userData }) {
           <span className="text-xl font-extrabold tracking-wider">{userData.fechaNacimiento}</span>
         </div>
         
-        {/* --- Código QR --- */}
+        {/* --- Código QR () --- */}
         <div className="col-span-1 flex flex-col items-center justify-center p-2 bg-black/70 rounded-lg backdrop-blur-sm shadow-inner border border-white/30">
           <div className="p-1 bg-white rounded shadow-xl mb-1">
+            {/* Este QR es el que se ve en la web */}
             <QRCodeCanvas id="qr-code-canvas" value={userData.uuidQr} size={80} bgColor="#fff" fgColor="#000" />
           </div>
         </div>
@@ -72,14 +76,21 @@ function CredencialSocio({ userData }) {
       <div className="flex justify-end items-center gap-3 mt-4 z-10 relative">
         
         <button 
-          onClick={() => descargarCanvasComoPDF('qr-code-canvas', 'qr_socio.pdf')}
-          className="text-sm bg-white text-gray-800 px-4 py-2 rounded-full flex items-center gap-2 font-bold shadow-lg transition duration-300 hover:bg-gray-100 transform hover:scale-105" 
-          title="Descargar solo el QR"
+          onClick={handleDescargarPase}
+          className="text-sm bg-white text-gray-800 px-4 py-2 rounded-full flex items-center gap-2 font-bold shadow-lg transition duration-300 hover:bg-gray-100 transform hover:scale-105 cursor-pointer" 
+          title="Descargar Pase de Acceso PDF"
         >
-          <FaQrcode className="text-xl" /> Descargar QR
+          <FaQrcode className="text-xl" /> Descargar Pase PDF
         </button>
 
       </div>
+
+
+      <PlantillaCredencialPDF 
+        id="plantilla-pase-acceso-oculta"
+        userData={userData}
+      />
+
     </section>
   );
 }

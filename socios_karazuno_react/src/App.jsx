@@ -26,6 +26,7 @@ import EntrenadoresPage from "./pages/entrenadoresP/EntrenadoresPage.jsx";
 import JugadoresPage from "./pages/jugadoresP/JugadoresPage.jsx";
 import GestionUsuariosPage from './pages/GestionUsuariosPage';
 import HorariosPage from "./pages/HorariosPage.jsx";
+import MiCalendarioPage from "./pages/MiCalendarioPage";
 
 // Importaciones de Componentes y Contexto
 import { UserProviderWrapper } from "./contexts/User.Context.jsx";
@@ -91,7 +92,7 @@ function App() {
 
                         {/* Ruta Catch-all para usuarios logueados: redirige a su dashboard o perfil */}
                         <Route path="*" element={<Navigate to="/dashboard" replace />} />
-
+                        <Route path="/mi-calendario" element={<MiCalendarioPage />} />
                     </Route>
 
                   

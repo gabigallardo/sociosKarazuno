@@ -210,7 +210,10 @@ export default function EventosForm({ onSubmit, initialValues, usuarios, discipl
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => {
-        const newState = { ...prev, [name]: type === "checkbox" || type === "toggle" ? checked : value };
+
+        const valorAUsar = type === "checkbox" ? checked : value;
+        
+        const newState = { ...prev, [name]: valorAUsar };
         if (name === 'disciplina') { 
           newState.categoria = ""; 
         }

@@ -106,12 +106,20 @@ export default function EventosIdPage() {
         loadData();
     }, [id, navigate]);
     
-    // Helper para la vista Web (funciona bien)
     const findUserName = (userOrId) => {
-        if (!userOrId || !usuarios.length) return <span className="text-gray-500">No asignado</span>;
-        const idToFind = typeof userOrId === 'object' && userOrId !== null ? userOrId.id : userOrId;
-        if (!idToFind) return <span className="text-gray-500">No asignado</span>;
+        if (!userOrId) return <span className="text-gray-500">No asignado</span>;
+
+        if (typeof userOrId === 'object' && userOrId !== null) {
+             if (userOrId.nombre) {
+                 return `${userOrId.nombre} ${userOrId.apellido}`;
+             }
+        }
+
+        if (!usuarios.length) return <span className="text-gray-500">Cargando...</span>;
+
+        const idToFind = typeof userOrId === 'object' ? userOrId.id : userOrId;
         const foundUser = usuarios.find(u => u.id === idToFind);
+        
         return foundUser ? `${foundUser.nombre} ${foundUser.apellido}` : <span className="text-red-500">Usuario no encontrado</span>;
     };
 

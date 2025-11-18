@@ -1,55 +1,67 @@
 // src/components/Navigation.jsx
-import React from "react";
+import React, { useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-    FaHome, FaUser, FaCalendarAlt, FaMoneyBill, FaCalendarCheck,
-    FaUsers, FaFutbol, 
-    FaUsersCog, FaClock 
+    FaHome, 
+    FaUser, 
+    FaCalendarAlt, 
+    FaMoneyBill, 
+    FaCalendarCheck,
+    FaUsers, 
+    FaFutbol, 
+    FaUsersCog, 
+    FaClock
 } from "react-icons/fa";
 import logoImg from '../assets/logo.png'; 
 import { UserContext } from "../contexts/User.Context"; 
 
 function Navigation() {
     const location = useLocation();
-    const { user } = React.useContext(UserContext);
+    const { user } = useContext(UserContext);
     const userRoles = user?.roles || [];
 
+    // Items base visibles para todos
     const navItems = [
         { to: "/dashboard", icon: FaHome, label: "Inicio" }, 
         { to: "/eventos", icon: FaCalendarCheck, label: "Eventos" },
     ];
 
+    // Definición de roles
     const esSocio = userRoles.includes("socio");
     const esAdmin = userRoles.includes("admin");
     const esDirigente = userRoles.includes("dirigente");
     const esEmpleado = userRoles.includes("empleado");
     const esProfesor = userRoles.includes("profesor");
 
-    // Mantenemos tus variables de permisos
+    // Variables de permisos
     const puedeGestionarUsuarios = esAdmin || esDirigente || esEmpleado;
     const puedeGestionarDeportes = esAdmin || esDirigente || esEmpleado || esProfesor;
     const puedeVerJugadores = esAdmin || esDirigente || esProfesor;
 
-    // --- Items específicos para Socios  ---
+    // --- Items específicos para Socios ---
     if (esSocio) {
         navItems.push(
-            { to: "/mis-cuotas", icon: FaMoneyBill, label: "Mis cuotas" },
+            { to: "/mis-cuotas", icon: FaMoneyBill, label: "Mis cuotas" }
+        );
+    }
+
+    //  Calendario visible para Socios Y Admins ---
+    if (esSocio || esAdmin || esDirigente || esEmpleado || esProfesor) {
+        navItems.push(
             { to: "/mi-calendario", icon: FaCalendarAlt, label: "Mi calendario" } 
         );
     }
 
-    // --- Items para roles de Gestión (AQUÍ EL CAMBIO) ---
-
+    // --- Items para roles de Gestión de Usuarios ---
     if (puedeGestionarUsuarios) {
         navItems.push({ 
             to: "/gestionar-usuarios", 
             icon: FaUsersCog, 
-            label: "Gestion de Usuarios" 
+            label: "Gestión de Usuarios" 
         });
     }
 
-
-    // --- Items de Gestión  ---
+    // --- Items de Gestión Deportiva ---
     if (puedeGestionarDeportes) {
         navItems.push({ to: "/deportes", icon: FaFutbol, label: "Deportes" });
         navItems.push({ to: "/horarios", icon: FaClock, label: "Gestionar Horarios" });
@@ -60,26 +72,29 @@ function Navigation() {
     }
 
     return (
-        <aside className="w-64 bg-red-700 text-white flex flex-col justify-between h-screen fixed shadow-2xl">
-            {/* Logo  */}
+        <aside className="w-64 bg-red-700 text-white flex flex-col justify-between h-screen fixed shadow-2xl z-50">
+            {/* Logo y Cabecera */}
             <div className="p-6 flex flex-col items-center">
                 <img src={logoImg} alt="Logo Punto Karazuno" className="w-32 mb-4" />
                 <div className="w-16 h-1 bg-red-400 rounded-full mb-6 mt-2"></div>
             </div>
 
-            {/* Navegación Principal  */}
-            <nav className="flex-1 px-4 overflow-y-auto">
+            {/* Navegación Principal */}
+            <nav className="flex-1 px-4 overflow-y-auto custom-scrollbar">
                 <ul className="space-y-2 text-base font-semibold">
                     {navItems.map((item) => {
-                        // Lógica de 'isActive' 
                         const isActive = location.pathname === item.to ||
-                                         (item.to !== "/dashboard" && location.pathname.startsWith(item.to));
+                                       (item.to !== "/dashboard" && location.pathname.startsWith(item.to));
+                        
                         return (
                             <li key={item.to}>
                                 <Link
                                     to={item.to}
-                                    // Estilos 
-                                    className={`flex items-center gap-3 p-3 rounded-xl transition duration-200 ease-in-out w-full ${isActive ? "bg-white text-red-700 shadow-md font-extrabold transform translate-x-1" : "hover:bg-red-600 hover:text-white"}`}
+                                    className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ease-in-out w-full 
+                                        ${isActive 
+                                            ? "bg-white text-red-700 shadow-md font-extrabold transform translate-x-1" 
+                                            : "hover:bg-red-600 hover:text-white hover:translate-x-1"
+                                        }`}
                                 >
                                     {item.icon && <item.icon className="text-xl flex-shrink-0" />}
                                     <span>{item.label}</span>
@@ -90,11 +105,15 @@ function Navigation() {
                 </ul>
             </nav>
 
-            {/* Mi Perfil Abajo  */}
-            <div className="p-4 border-t border-red-600">
+            {/* Mi Perfil (Fijo abajo) */}
+            <div className="p-4 border-t border-red-600 bg-red-700">
                 <Link
                     to="/mi-perfil"
-                    className={`flex items-center gap-3 p-3 rounded-xl transition duration-200 ease-in-out w-full font-semibold ${location.pathname === "/mi-perfil" ? "bg-white text-red-700 shadow-md font-extrabold transform translate-x-1" : "hover:bg-red-600 hover:text-white"}`}
+                    className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ease-in-out w-full font-semibold 
+                        ${location.pathname === "/mi-perfil" 
+                            ? "bg-white text-red-700 shadow-md font-extrabold transform translate-x-1" 
+                            : "hover:bg-red-600 hover:text-white hover:translate-x-1"
+                        }`}
                 >
                     <FaUser className="text-xl flex-shrink-0" />
                     <span>Mi perfil</span>

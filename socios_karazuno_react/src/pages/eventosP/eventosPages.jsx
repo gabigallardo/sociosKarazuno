@@ -38,8 +38,19 @@ export default function EventosPage() {
           esSocio ? getMisViajes() : Promise.resolve([]),
         ]);
 
-        setListaCompletaEventos(eventosData);
-        setListaMisViajes(misViajesData);
+        const ahora = new Date();
+        const eventosFuturos = eventosData.filter(evento => {
+            const finEvento = new Date(evento.fecha_fin);
+            return finEvento >= ahora;
+        });
+
+        setListaCompletaEventos(eventosFuturos);
+        
+        const misViajesFuturos = Array.isArray(misViajesData) 
+            ? misViajesData.filter(viaje => new Date(viaje.fecha_fin) >= ahora) 
+            : [];
+
+        setListaMisViajes(misViajesFuturos);
         setDisciplinas(disciplinasData);
       } catch (error) {
         console.error("Error cargando datos:", error);
@@ -129,7 +140,7 @@ export default function EventosPage() {
         <p className="text-center text-gray-500 italic p-10">
           {vistaActual === 'mis_viajes' 
             ? 'No hay viajes disponibles para tu disciplina o categoría.' 
-            : 'No hay eventos que coincidan con el filtro.'}
+            : 'No hay eventos futuros que coincidan con el filtro.'}
         </p>
       ) : (
         <ListaEventos

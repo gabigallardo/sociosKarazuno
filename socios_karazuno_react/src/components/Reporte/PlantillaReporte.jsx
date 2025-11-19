@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import logo from '../../assets/logo.png';
+import logo from '../../assets/logo.webp';
 
 // 1. Recibimos "socios" con valor por defecto vacío para evitar errores
 const PlantillaReporte = ({ id, socios = [], usuarioActivo }) => {

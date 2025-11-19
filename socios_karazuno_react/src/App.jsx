@@ -1,102 +1,106 @@
-// src/App.jsx
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-// Importaciones de Páginas (Asegúrate que las rutas sean correctas)
-import SociosPage from "./pages/sociosPage.jsx"; 
-import SociosForm from "./pages/SociosForm.jsx"; 
-import UsuariosPage from "./pages/usuariosP/usuariosPage.jsx";
-import UsuariosCreatePage from "./pages/usuariosP/UsuariosCreatePage.jsx";
-import UsuariosEditarPage from "./pages/usuariosP/UsuariosEditarPage.jsx";
-import UsuarioIdPage from "./pages/usuariosP/UsuarioIdPage.jsx";
-import EventosPage from "./pages/eventosP/eventosPages.jsx";
-import EventosCreatePage from "./pages/eventosP/eventosCreatePage.jsx";
-import EventosEditarPage from "./pages/eventosP/eventosEditarPage.jsx";
-import EventosIdPage from "./pages/eventosP/eventosIdPage.jsx";
-import RolesPage from "./pages/rolesPage.jsx";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import HacerseSocioPage from "./pages/sociosP/hacerseSocioPage.jsx"; 
-import DeportesPage from "./pages/deportesP/DeportesPage.jsx";
-import MiPerfilPage from './pages/MiPerfilPage';
-import MisCuotasPage from "./pages/cuotasP/misCuotasPage.jsx";
-import PagarCuotaPage from "./pages/cuotasP/pagarCuotaPage.jsx";
-import SociosPagesP from "./pages/sociosP/sociosPage.jsx";
-import SocioDetailPage from "./pages/sociosP/SocioDetailPage.jsx";
-import EntrenadoresPage from "./pages/entrenadoresP/EntrenadoresPage.jsx";
-import JugadoresPage from "./pages/jugadoresP/JugadoresPage.jsx";
-import GestionUsuariosPage from './pages/GestionUsuariosPage';
-import HorariosPage from "./pages/HorariosPage.jsx";
-import MiCalendarioPage from "./pages/MiCalendarioPage";
-
-// Importaciones de Componentes y Contexto
+// Importaciones de Componentes de Layout y Contexto (estos se mantienen estáticos porque son críticos)
 import { UserProviderWrapper } from "./contexts/User.Context.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import Layout from "./Layouts/Layout.jsx"; 
-
+import Layout from "./Layouts/Layout.jsx";
 import "./index.css";
 
+// El navegador no descargará estos archivos hasta que sean necesarios.
+const SociosPage = lazy(() => import("./pages/sociosPage.jsx"));
+const SociosForm = lazy(() => import("./pages/SociosForm.jsx"));
+const UsuariosPage = lazy(() => import("./pages/usuariosP/usuariosPage.jsx"));
+const UsuariosCreatePage = lazy(() => import("./pages/usuariosP/UsuariosCreatePage.jsx"));
+const UsuariosEditarPage = lazy(() => import("./pages/usuariosP/UsuariosEditarPage.jsx"));
+const UsuarioIdPage = lazy(() => import("./pages/usuariosP/UsuarioIdPage.jsx"));
+const EventosPage = lazy(() => import("./pages/eventosP/eventosPages.jsx"));
+const EventosCreatePage = lazy(() => import("./pages/eventosP/eventosCreatePage.jsx"));
+const EventosEditarPage = lazy(() => import("./pages/eventosP/eventosEditarPage.jsx"));
+const EventosIdPage = lazy(() => import("./pages/eventosP/eventosIdPage.jsx"));
+const RolesPage = lazy(() => import("./pages/rolesPage.jsx"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const HacerseSocioPage = lazy(() => import("./pages/sociosP/hacerseSocioPage.jsx"));
+const DeportesPage = lazy(() => import("./pages/deportesP/DeportesPage.jsx"));
+const MiPerfilPage = lazy(() => import('./pages/MiPerfilPage'));
+const MisCuotasPage = lazy(() => import("./pages/cuotasP/misCuotasPage.jsx"));
+const PagarCuotaPage = lazy(() => import("./pages/cuotasP/pagarCuotaPage.jsx"));
+const SociosPagesP = lazy(() => import("./pages/sociosP/sociosPage.jsx"));
+const SocioDetailPage = lazy(() => import("./pages/sociosP/SocioDetailPage.jsx"));
+const EntrenadoresPage = lazy(() => import("./pages/entrenadoresP/EntrenadoresPage.jsx"));
+const JugadoresPage = lazy(() => import("./pages/jugadoresP/JugadoresPage.jsx"));
+const GestionUsuariosPage = lazy(() => import('./pages/GestionUsuariosPage'));
+const HorariosPage = lazy(() => import("./pages/HorariosPage.jsx"));
+const MiCalendarioPage = lazy(() => import("./pages/MiCalendarioPage"));
+
+// Componente de carga simple y ligero
+const Loading = () => (
+  <div className="flex items-center justify-center h-screen w-full bg-gray-50">
+    <div className="text-lg font-medium text-gray-600 animate-pulse">Cargando...</div>
+  </div>
+);
+
 function App() {
-    const rolesSocio = ['socio']; // Ajusta si el nombre del rol es diferente
+    const rolesSocio = ['socio'];
     const rolesGestionDeportes = ['admin', 'profesor', 'dirigente', 'empleado'];
-    const rolesGestionAdmin = ['admin', 'dirigente', 'empleado']; // Para usuarios, eventos, entrenadores
-    const rolesSuperAdmin = ['admin', 'dirigente']; // Para roles, por ejemplo
+    const rolesGestionAdmin = ['admin', 'dirigente', 'empleado'];
+    const rolesSuperAdmin = ['admin', 'dirigente'];
 
     return (
         <UserProviderWrapper>
             <BrowserRouter>
-                <Routes>
-                    {/* ----------------------------------------------------- */}
-                    {/* RUTAS PÚBLICAS (Sin Layout/Navigation) */}
-                    {/* ----------------------------------------------------- */}
-                    <Route path="/" element={<Navigate to="/login" replace />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
+                {/* Suspense maneja el estado de carga mientras llegan los archivos JS */}
+                <Suspense fallback={<Loading />}>
+                    <Routes>
+                        {/* RUTAS PÚBLICAS */}
+                        <Route path="/" element={<Navigate to="/login" replace />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
 
-                    {/* ----------------------------------------------------- */}
-                    {/* RUTAS PROTEGIDAS (Usan Layout con Navigation) */}
-                    {/* ----------------------------------------------------- */}
-                    <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}> {/* Protege el Layout */}
+                        {/* RUTAS PROTEGIDAS */}
+                        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                            
+                            {/* Comunes */}
+                            <Route path="/dashboard" element={<SociosPage />} /> 
+                            <Route path="/mi-perfil" element={<MiPerfilPage />} />
+                            <Route path="/eventos" element={<EventosPage />} />
+                            <Route path="/eventos/:id" element={<EventosIdPage />} />
+                            <Route path="/hacerse-socio" element={<HacerseSocioPage />} />
 
-                        {/* Rutas Comunes para usuarios logueados */}
-                        <Route path="/dashboard" element={<SociosPage />} /> 
-                        <Route path="/mi-perfil" element={<MiPerfilPage />} />
-                        <Route path="/eventos" element={<EventosPage />} />
-                        <Route path="/eventos/:id" element={<EventosIdPage />} />
-                        <Route path="/hacerse-socio" element={<HacerseSocioPage />} />
+                            {/* Socios */}
+                            <Route path="/mis-cuotas" element={<ProtectedRoute allowedRoles={rolesSocio}><MisCuotasPage /></ProtectedRoute>} />
+                            <Route path="/cuotas/pagar/:id" element={<ProtectedRoute allowedRoles={rolesSocio}><PagarCuotaPage /></ProtectedRoute>} />
 
-                        {/* Rutas solo para Socios */}
-                        <Route path="/mis-cuotas" element={<ProtectedRoute allowedRoles={rolesSocio}><MisCuotasPage /></ProtectedRoute>} />
-                        <Route path="/cuotas/pagar/:id" element={<ProtectedRoute allowedRoles={rolesSocio}><PagarCuotaPage /></ProtectedRoute>} />
+                            {/* Gestión Deportes */}
+                            <Route path="/deportes" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><DeportesPage /></ProtectedRoute>} />
+                            <Route path="/jugadores" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><JugadoresPage /></ProtectedRoute>} />
+                            <Route path="/horarios" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><HorariosPage /></ProtectedRoute>} />
 
-                        {/* Rutas para Gestión de Deportes */}
-                        <Route path="/deportes" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><DeportesPage /></ProtectedRoute>} />
-                        <Route path="/jugadores" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><JugadoresPage /></ProtectedRoute>} />
-                        <Route path="/horarios" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><HorariosPage /></ProtectedRoute>} />
+                            {/* Admin/Gestión */}
+                            <Route path="/form" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SociosForm /></ProtectedRoute>} />
+                            <Route path="/usuarios" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuariosPage /></ProtectedRoute>} />
+                            <Route path="/usuarios/crear" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuariosCreatePage /></ProtectedRoute>} />
+                            <Route path="/usuarios/editar/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuariosEditarPage /></ProtectedRoute>} />
+                            <Route path="/usuarios/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuarioIdPage /></ProtectedRoute>} />
+                            <Route path="/eventos/crear" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EventosCreatePage /></ProtectedRoute>} />
+                            <Route path="/eventos/editar/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EventosEditarPage /></ProtectedRoute>} />
+                            <Route path="/socios" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SociosPagesP /></ProtectedRoute>} />
+                            <Route path="/socios/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SocioDetailPage /></ProtectedRoute>} />
+                            <Route path="/gestionar-usuarios" element={<GestionUsuariosPage />} />
+                            
+                            {/* Entrenadores */}
+                            <Route path="/entrenadores" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EntrenadoresPage /></ProtectedRoute>} />
 
-                        {/* Rutas para Admin, Dirigente, Empleado */}
-                        <Route path="/form" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SociosForm /></ProtectedRoute>} />
-                        <Route path="/usuarios" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuariosPage /></ProtectedRoute>} />
-                        <Route path="/usuarios/crear" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuariosCreatePage /></ProtectedRoute>} />
-                        <Route path="/usuarios/editar/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuariosEditarPage /></ProtectedRoute>} />
-                        <Route path="/usuarios/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuarioIdPage /></ProtectedRoute>} />
-                        <Route path="/eventos/crear" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EventosCreatePage /></ProtectedRoute>} />
-                        <Route path="/eventos/editar/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EventosEditarPage /></ProtectedRoute>} />
-                        <Route path="/socios" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SociosPagesP /></ProtectedRoute>} />
-                        <Route path="/socios/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SocioDetailPage /></ProtectedRoute>} />
-                        <Route path="/gestionar-usuarios" element={<GestionUsuariosPage />} />
-                        {/* RUTA PARA ENTRENADORES */}
-                        <Route path="/entrenadores" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EntrenadoresPage /></ProtectedRoute>} />
+                            {/* Super Admin */}
+                            <Route path="/roles" element={<ProtectedRoute allowedRoles={rolesSuperAdmin}><RolesPage /></ProtectedRoute>} />
 
-                        {/* Rutas solo para Admin, Dirigente */}
-                        <Route path="/roles" element={<ProtectedRoute allowedRoles={rolesSuperAdmin}><RolesPage /></ProtectedRoute>} />
-
-                        {/* Ruta Catch-all para usuarios logueados: redirige a su dashboard o perfil */}
-                        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/mi-calendario" element={<MiCalendarioPage />} />
-                    </Route>
-
-                  
-                </Routes>
+                            {/* Fallback */}
+                            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                            <Route path="/mi-calendario" element={<MiCalendarioPage />} />
+                        </Route>
+                    </Routes>
+                </Suspense>
             </BrowserRouter>
         </UserProviderWrapper>
     );

@@ -1,6 +1,6 @@
 import React from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
-import logo from '../../assets/logo.png'; 
+import logo from '../../assets/logo.webp'; 
 
 const PlantillaCredencialPDF = ({ id, userData }) => {
   if (!userData) return null;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUserPlus } from 'react-icons/fa';
-import logoImg from '../../assets/logo.png';
+import logoImg from '../../assets/logo.webp';
 
 function UsuarioNoAsociado() {
   const navigate = useNavigate();

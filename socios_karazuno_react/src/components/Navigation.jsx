@@ -12,7 +12,7 @@ import {
     FaUsersCog, 
     FaClock
 } from "react-icons/fa";
-import logoImg from '../assets/logo.png'; 
+import logoImg from '../assets/logo.webp'; 
 import { UserContext } from "../contexts/User.Context"; 
 
 function Navigation() {

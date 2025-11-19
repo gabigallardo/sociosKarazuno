@@ -1,5 +1,5 @@
 import React from 'react';
-import logo from '../../assets/logo.png'; // Ajusta la ruta a tu logo
+import logo from '../../assets/logo.webp'; // Ajusta la ruta a tu logo
 
 const PlantillaComprobante = ({ id, cuota, usuario }) => {
   if (!cuota || !usuario) return null;

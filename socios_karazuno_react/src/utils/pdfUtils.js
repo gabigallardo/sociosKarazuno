@@ -1,12 +1,15 @@
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
-export const descargarCanvasComoPDF = (canvasId, fileName, pdfSize = [120, 120]) => {
+
+export const descargarCanvasComoPDF = async (canvasId, fileName, pdfSize = [120, 120]) => {
   const canvas = document.getElementById(canvasId);
   if (!canvas) {
     console.error(`No se encontró el canvas con id: ${canvasId}`);
     return;
   }
+
+  // Importación dinámica
+  const { default: jsPDF } = await import('jspdf');
+
   const imageData = canvas.toDataURL('image/png');
   const [ancho, alto] = pdfSize;
   const doc = new jsPDF({
@@ -21,12 +24,18 @@ export const descargarCanvasComoPDF = (canvasId, fileName, pdfSize = [120, 120])
   doc.save(fileName);
 };
 
-export const descargarElementoComoPDF = (elementId, fileName) => {
+export const descargarElementoComoPDF = async (elementId, fileName) => {
   const input = document.getElementById(elementId);
   if (!input) {
     console.error(`Elemento no encontrado con id: ${elementId}`);
     return;
   }
+
+  // Importación dinámica paralela
+  const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+    import('jspdf'),
+    import('html2canvas')
+  ]);
 
   html2canvas(input, { 
     useCORS: true,
@@ -47,19 +56,23 @@ export const descargarElementoComoPDF = (elementId, fileName) => {
         format: [pdfWidthMm, pdfHeightMm] 
       });
       
-      doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeightInPdf);
+      doc.addImage(imgData, 'PNG', 0, 0, pdfWidthMm, pdfHeightMm);
       doc.save(fileName);
     });
 };
 
-
-
-export const generarReportePDF = (elementId, fileName) => {
+export const generarReportePDF = async (elementId, fileName) => {
   const input = document.getElementById(elementId);
   if (!input) {
     console.error(`Elemento no encontrado con id: ${elementId}`);
     return;
   }
+
+  // Importación dinámica paralela
+  const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+    import('jspdf'),
+    import('html2canvas')
+  ]);
 
   const originalOverflow = input.style.overflow;
   input.style.overflow = 'visible';

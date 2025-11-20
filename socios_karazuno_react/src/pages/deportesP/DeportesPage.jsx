@@ -28,6 +28,17 @@ export default function DeportesPage() {
 
     const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm();
 
+    const [busqueda, setBusqueda] = useState("");
+
+    // Lógica para agrupar
+    const deportesFiltrados = disciplinas.filter(d => 
+        d.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    );
+
+    const obtenerCategoriasPorDeporte = (disciplinaId) => {
+        return categorias.filter(c => c.disciplina === disciplinaId);
+    };
+
     const cargarDatos = async () => {
         try {
             const [disciplinasData, categoriasData] = await Promise.all([
@@ -133,98 +144,109 @@ export default function DeportesPage() {
     };
 
     return (
-        <div className="p-6 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-center mb-8 border-b pb-4 gap-4">
+        <div className="p-6 max-w-5xl mx-auto">
+            {/* Header con Buscador */}
+            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <h1 className="text-3xl font-extrabold text-gray-800 flex items-center gap-3">
-                    <FaFutbol className="text-red-600" />
-                    Gestión Deportiva
+                    <FaFutbol className="text-red-700" /> {/* Color de marca */}
+                    Deportes y Categorías
                 </h1>
-                <div className="flex gap-3">
+                
+                <div className="flex gap-3 w-full md:w-auto">
+                    <input 
+                        type="text"
+                        placeholder="Buscar deporte..."
+                        className="border rounded-lg px-4 py-2 w-full md:w-64 focus:ring-2 focus:ring-red-500 outline-none"
+                        value={busqueda}
+                        onChange={(e) => setBusqueda(e.target.value)}
+                    />
                     <button 
                         onClick={() => abrirModalCrear('disciplina')}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow transition flex items-center gap-2 text-sm font-medium"
+                        className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-lg shadow transition flex items-center gap-2 whitespace-nowrap"
                     >
-                        <FaPlus /> Nuevo Deporte
-                    </button>
-                    <button 
-                        onClick={() => abrirModalCrear('categoria')}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg shadow transition flex items-center gap-2 text-sm font-medium"
-                    >
-                        <FaLayerGroup /> Nueva Categoría
+                        <FaPlus /> Deporte
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
-                {/* --- SECCIÓN DEPORTES --- */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                        <h2 className="text-lg font-bold text-gray-700">Deportes ({disciplinas.length})</h2>
-                    </div>
-                    <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto custom-scrollbar">
-                        {disciplinas.length === 0 ? (
-                            <p className="p-6 text-center text-gray-500 italic">No hay deportes registrados.</p>
-                        ) : (
-                            disciplinas.map((d) => (
-                                <div key={d.id} className="p-4 hover:bg-gray-50 transition flex justify-between items-center group">
-                                    <div>
-                                        <h3 className="font-semibold text-gray-800">{d.nombre}</h3>
-                                        <p className="text-sm text-gray-500 line-clamp-1">{d.descripcion || "Sin descripción"}</p>
+            {/* LISTA AGRUPADA (La gran mejora UX) */}
+            <div className="space-y-6">
+                {deportesFiltrados.map(deporte => {
+                    const catsDeEsteDeporte = obtenerCategoriasPorDeporte(deporte.id);
+                    
+                    return (
+                        <div key={deporte.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            {/* Cabecera del Deporte */}
+                            <div className="bg-gray-50 px-6 py-4 flex justify-between items-center border-b border-gray-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-white p-2 rounded-full shadow-sm text-red-600">
+                                        <FaFutbol />
                                     </div>
-                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => abrirModalEditar(d, 'disciplina')} className="p-2 text-blue-600 hover:bg-blue-50 rounded-full" title="Editar">
-                                            <FaEdit />
-                                        </button>
-                                        <button onClick={() => handleDelete(d.id, 'disciplina')} className="p-2 text-red-600 hover:bg-red-50 rounded-full" title="Eliminar">
-                                            <FaTrash />
-                                        </button>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-gray-800">{deporte.nombre}</h3>
+                                        <p className="text-sm text-gray-500">{deporte.descripcion}</p>
                                     </div>
                                 </div>
-                            ))
-                        )}
-                    </div>
-                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => abrirModalEditar(deporte, 'disciplina')} className="text-blue-600 hover:bg-blue-100 p-2 rounded-lg transition">
+                                        <FaEdit />
+                                    </button>
+                                    <button onClick={() => handleDelete(deporte.id, 'disciplina')} className="text-red-600 hover:bg-red-100 p-2 rounded-lg transition">
+                                        <FaTrash />
+                                    </button>
+                                    {/* Botón rápido para crear categoría en ESTE deporte */}
+                                    <button 
+                                        onClick={() => {
+                                            abrirModalCrear('categoria');
+                                            // Truco: Pre-seleccionar el deporte en el formulario
+                                            setTimeout(() => setValue('disciplina', deporte.id), 100); 
+                                        }}
+                                        className="ml-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1 rounded-lg text-sm font-medium flex items-center gap-1"
+                                    >
+                                        <FaPlus size={10} /> Categoría
+                                    </button>
+                                </div>
+                            </div>
 
-                {/* --- SECCIÓN CATEGORÍAS --- */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                        <h2 className="text-lg font-bold text-gray-700">Categorías ({categorias.length})</h2>
-                    </div>
-                    <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto custom-scrollbar">
-                        {categorias.length === 0 ? (
-                            <p className="p-6 text-center text-gray-500 italic">No hay categorías registradas.</p>
-                        ) : (
-                            categorias.map((c) => {
-                                const deporteNombre = disciplinas.find(d => d.id === c.disciplina)?.nombre || "Desconocido";
-                                return (
-                                    <div key={c.id} className="p-4 hover:bg-gray-50 transition flex justify-between items-center group">
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="font-semibold text-gray-800">{c.nombre_categoria}</h3>
-                                                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">
-                                                    {deporteNombre}
-                                                </span>
+                            {/* Lista de Categorías del Deporte */}
+                            <div className="px-6 py-2">
+                                {catsDeEsteDeporte.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 py-4">
+                                        {catsDeEsteDeporte.map(cat => (
+                                            <div key={cat.id} className="flex justify-between items-center p-3 rounded-lg border border-gray-100 hover:border-red-200 hover:bg-red-50 transition group">
+                                                <div>
+                                                    <h4 className="font-semibold text-gray-800">{cat.nombre_categoria}</h4>
+                                                    <div className="text-xs text-gray-500 flex gap-2 mt-1">
+                                                        <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600">{cat.edad_minima}-{cat.edad_maxima} años</span>
+                                                        <span className="capitalize bg-gray-100 px-2 py-0.5 rounded text-gray-600">{cat.sexo}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => abrirModalEditar(cat, 'categoria')} className="text-blue-500 hover:bg-blue-100 p-1.5 rounded">
+                                                        <FaEdit size={14} />
+                                                    </button>
+                                                    <button onClick={() => handleDelete(cat.id, 'categoria')} className="text-red-500 hover:bg-red-100 p-1.5 rounded">
+                                                        <FaTrash size={14} />
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className="text-xs text-gray-500 mt-1 flex gap-3">
-                                                <span>Edad: {c.edad_minima}-{c.edad_maxima} años</span>
-                                                <span className="capitalize">• {c.sexo}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => abrirModalEditar(c, 'categoria')} className="p-2 text-blue-600 hover:bg-blue-50 rounded-full">
-                                                <FaEdit />
-                                            </button>
-                                            <button onClick={() => handleDelete(c.id, 'categoria')} className="p-2 text-red-600 hover:bg-red-50 rounded-full">
-                                                <FaTrash />
-                                            </button>
-                                        </div>
+                                        ))}
                                     </div>
-                                );
-                            })
-                        )}
+                                ) : (
+                                    <div className="py-4 text-center text-gray-400 text-sm italic">
+                                        Sin categorías asignadas.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
+                
+                {deportesFiltrados.length === 0 && (
+                    <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                        <p className="text-gray-500">No se encontraron deportes.</p>
                     </div>
-                </div>
+                )}
             </div>
 
             <Modal isOpen={isModalOpen} onClose={cerrarModal}>

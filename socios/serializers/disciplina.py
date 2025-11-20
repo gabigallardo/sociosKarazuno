@@ -44,6 +44,8 @@ class SesionEntrenamientoSerializer(serializers.ModelSerializer):
     hora_inicio = serializers.TimeField(source='horario.hora_inicio', read_only=True, allow_null=True)
     hora_fin = serializers.TimeField(source='horario.hora_fin', read_only=True, allow_null=True)
     lugar = serializers.CharField(source='horario.lugar', read_only=True, allow_null=True)
+    categoria_nombre = serializers.CharField(source='categoria.nombre_categoria', read_only=True)
+    disciplina_nombre = serializers.CharField(source='categoria.disciplina.nombre', read_only=True)
     
     class Meta:
         model = SesionEntrenamiento

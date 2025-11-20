@@ -44,3 +44,17 @@ export const registrarAsistencia = async (sesionId, listaAsistencia) => {
     throw error;
   }
 };
+
+/**
+ * Obtener las sesiones de entrenamiento correspondientes al usuario logueado
+ * (Ya sea por ser socio de una categoría o profesor de ella).
+ */
+export const getMisSesiones = async () => {
+  try {
+    const response = await api.get(`${BASE_PATH}/mis-sesiones/`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching mis sesiones:", error.response?.data);
+    throw error;
+  }
+};

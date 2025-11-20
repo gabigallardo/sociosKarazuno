@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from datetime import date, timedelta
 from django.db import transaction
+from django.db.models import Q
 
 from socios.models import Disciplina, Categoria, HorarioEntrenamiento, SesionEntrenamiento, AsistenciaEntrenamiento, SocioInfo
 from socios.serializers import DisciplinaSerializer, CategoriaSerializer, HorarioEntrenamientoSerializer, SesionEntrenamientoSerializer, AsistenciaEntrenamientoSerializer
@@ -225,3 +226,46 @@ class SesionEntrenamientoViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(f"ERROR CRÍTICO al guardar: {e}")
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    @action(detail=False, methods=['get'], url_path='mis-sesiones', permission_classes=[IsAuthenticated])
+    def mis_sesiones(self, request):
+        """
+        Devuelve las sesiones de entrenamiento relevantes para el usuario actual:
+        - Si es Socio: Las sesiones de su categoría asignada.
+        - Si es Profesor: Las sesiones de todas las categorías que tiene a cargo.
+        """
+        user = request.user
+        queryset = self.get_queryset() # Empieza con el queryset base
+
+        # 1. Lógica para Profesores
+        categorias_profesor_ids = []
+        if hasattr(user, 'categorias_a_cargo'):
+             categorias_profesor_ids = user.categorias_a_cargo.values_list('id', flat=True)
+        
+        # 2. Lógica para Socios
+        categoria_socio_id = None
+        try:
+            if hasattr(user, 'socioinfo') and user.socioinfo.categoria:
+                categoria_socio_id = user.socioinfo.categoria.id
+        except SocioInfo.DoesNotExist:
+            pass
+
+        # 3. Filtrar
+        # Si es admin/dirigente ve todo (opcional, aquí restringimos para no saturar el calendario)
+        # Aquí combinamos: O es mi categoría de socio, O es una de mis categorías de profe
+        filtro = Q(pk__isnull=True) # Filtro base vacío (falso)
+        
+        if categoria_socio_id:
+            filtro = filtro | Q(categoria_id=categoria_socio_id)
+        
+        if categorias_profesor_ids:
+            filtro = filtro | Q(categoria_id__in=categorias_profesor_ids)
+
+        # Si no tiene categoría ni es profe, devolvemos lista vacía
+        if not categoria_socio_id and not categorias_profesor_ids:
+             return Response([])
+
+        sesiones = SesionEntrenamiento.objects.filter(filtro).select_related('horario', 'categoria', 'categoria__disciplina')
+        
+        serializer = self.get_serializer(sesiones, many=True)
+        return Response(serializer.data)

@@ -13,7 +13,7 @@ export default function GestionUsuariosPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <h1 className="text-3xl font-extrabold text-red-700 mb-8">
-        Gestionar Personal
+        Gestionar usuarios
       </h1>
       
       <p className="text-xl text-gray-700 mb-6">

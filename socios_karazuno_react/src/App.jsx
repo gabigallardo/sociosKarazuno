@@ -33,7 +33,7 @@ const JugadoresPage = lazy(() => import("./pages/jugadoresP/JugadoresPage.jsx"))
 const GestionUsuariosPage = lazy(() => import('./pages/GestionUsuariosPage'));
 const HorariosPage = lazy(() => import("./pages/HorariosPage.jsx"));
 const MiCalendarioPage = lazy(() => import("./pages/MiCalendarioPage"));
-
+const GestionClubPage = lazy(() => import("./pages/GestionClubPage.jsx"));
 // Componente de carga simple y ligero
 const Loading = () => (
   <div className="flex items-center justify-center h-screen w-full bg-gray-50">
@@ -46,7 +46,7 @@ function App() {
     const rolesGestionDeportes = ['admin', 'profesor', 'dirigente', 'empleado'];
     const rolesGestionAdmin = ['admin', 'dirigente', 'empleado'];
     const rolesSuperAdmin = ['admin', 'dirigente'];
-
+    const rolesGestionClub = ['admin', 'dirigente', 'empleado', 'profesor'];
     return (
         <UserProviderWrapper>
             <BrowserRouter>
@@ -76,7 +76,7 @@ function App() {
                             <Route path="/deportes" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><DeportesPage /></ProtectedRoute>} />
                             <Route path="/jugadores" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><JugadoresPage /></ProtectedRoute>} />
                             <Route path="/horarios" element={<ProtectedRoute allowedRoles={rolesGestionDeportes}><HorariosPage /></ProtectedRoute>} />
-
+                            <Route path="/gestion-club" element={<ProtectedRoute allowedRoles={rolesGestionClub}><GestionClubPage /></ProtectedRoute>} />                                           
                             {/* Admin/Gestión */}
                             <Route path="/form" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SociosForm /></ProtectedRoute>} />
                             <Route path="/usuarios" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><UsuariosPage /></ProtectedRoute>} />

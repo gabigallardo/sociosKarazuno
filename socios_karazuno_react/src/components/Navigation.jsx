@@ -6,11 +6,10 @@ import {
     FaUser, 
     FaCalendarAlt, 
     FaMoneyBill, 
-    FaCalendarCheck,
     FaUsers, 
-    FaFutbol, 
-    FaUsersCog, 
-    FaClock
+    FaCogs,
+    FaCalendarCheck,
+    FaUsersCog 
 } from "react-icons/fa";
 import logoImg from '../assets/logo.webp'; 
 import { UserContext } from "../contexts/User.Context"; 
@@ -20,23 +19,23 @@ function Navigation() {
     const { user } = useContext(UserContext);
     const userRoles = user?.roles || [];
 
-    // Items base visibles para todos
     const navItems = [
         { to: "/dashboard", icon: FaHome, label: "Inicio" }, 
-        { to: "/eventos", icon: FaCalendarCheck, label: "Eventos" },
     ];
 
     // Definición de roles
     const esSocio = userRoles.includes("socio");
+    const esJugador = userRoles.includes("jugador");
     const esAdmin = userRoles.includes("admin");
     const esDirigente = userRoles.includes("dirigente");
     const esEmpleado = userRoles.includes("empleado");
-    const esProfesor = userRoles.includes("profesor");
+    const esProfesor = userRoles.includes("profesor"); 
 
     // Variables de permisos
-    const puedeGestionarUsuarios = esAdmin || esDirigente || esEmpleado;
-    const puedeGestionarDeportes = esAdmin || esDirigente || esEmpleado || esProfesor;
     const puedeVerJugadores = esAdmin || esDirigente || esProfesor;
+    const puedeGestionarClub = esAdmin || esDirigente || esEmpleado || esProfesor;
+    
+    const puedeGestionarUsuarios = esAdmin || esDirigente || esEmpleado || esProfesor;
 
     // --- Items específicos para Socios ---
     if (esSocio) {
@@ -45,26 +44,36 @@ function Navigation() {
         );
     }
 
-    //  Calendario visible para Socios Y Admins ---
-    if (esSocio || esAdmin || esDirigente || esEmpleado || esProfesor) {
+    // --- Items específicos para Jugadores ---
+    if (esJugador || esSocio) {
+        navItems.push(
+            { to: "/eventos", icon: FaCalendarCheck, label: "Mis eventos" }
+        );
+    }
+
+    //  Calendario visible para todos los roles internos y socios ---
+    if (esSocio || esJugador || esAdmin || esDirigente || esEmpleado || esProfesor) {
         navItems.push(
             { to: "/mi-calendario", icon: FaCalendarAlt, label: "Mi calendario" } 
         );
     }
 
-    // --- Items para roles de Gestión de Usuarios ---
+    // --- Gestionar Usuarios ) ---
     if (puedeGestionarUsuarios) {
         navItems.push({ 
             to: "/gestionar-usuarios", 
             icon: FaUsersCog, 
-            label: "Gestión de Usuarios" 
+            label: "Gestionar Usuarios" 
         });
     }
 
-    // --- Items de Gestión Deportiva ---
-    if (puedeGestionarDeportes) {
-        navItems.push({ to: "/deportes", icon: FaFutbol, label: "Deportes" });
-        navItems.push({ to: "/horarios", icon: FaClock, label: "Gestionar Horarios" });
+    // --- Item unificado para Gestión del Club (Deportes, Horarios, Eventos generales) ---
+    if (puedeGestionarClub) {
+        navItems.push({ 
+            to: "/gestion-club", 
+            icon: FaCogs, 
+            label: "Gestión del Club" 
+        });
     }
 
     if (puedeVerJugadores) {
@@ -105,7 +114,7 @@ function Navigation() {
                 </ul>
             </nav>
 
-            {/* Mi Perfil (Fijo abajo) */}
+            {/* Mi Perfil  */}
             <div className="p-4 border-t border-red-600 bg-red-700">
                 <Link
                     to="/mi-perfil"

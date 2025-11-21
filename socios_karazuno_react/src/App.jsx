@@ -34,6 +34,7 @@ const GestionUsuariosPage = lazy(() => import('./pages/GestionUsuariosPage'));
 const HorariosPage = lazy(() => import("./pages/HorariosPage.jsx"));
 const MiCalendarioPage = lazy(() => import("./pages/MiCalendarioPage"));
 const GestionClubPage = lazy(() => import("./pages/GestionClubPage.jsx"));
+const ControlAccesoPage = lazy(() => import("./pages/ControlAccesoPage.jsx"));
 // Componente de carga simple y ligero
 const Loading = () => (
   <div className="flex items-center justify-center h-screen w-full bg-gray-50">
@@ -88,7 +89,15 @@ function App() {
                             <Route path="/socios" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SociosPagesP /></ProtectedRoute>} />
                             <Route path="/socios/:id" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><SocioDetailPage /></ProtectedRoute>} />
                             <Route path="/gestionar-usuarios" element={<GestionUsuariosPage />} />
-                            
+                            <Route 
+                                path="/control-acceso" 
+                                element={
+                                    // Solo Admin, Empleados o Dirigentes pueden controlar la puerta
+                                    <ProtectedRoute allowedRoles={rolesGestionAdmin}>
+                                        <ControlAccesoPage />
+                                    </ProtectedRoute>
+                                } 
+                            />
                             {/* Entrenadores */}
                             <Route path="/entrenadores" element={<ProtectedRoute allowedRoles={rolesGestionAdmin}><EntrenadoresPage /></ProtectedRoute>} />
 

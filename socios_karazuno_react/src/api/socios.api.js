@@ -119,6 +119,7 @@ export const getSociosPorCategoria = async (categoriaId) => {
     throw error;
   }
 };
+
 /**
  * Crea un nuevo registro de SocioInfo (Hacerse Socio).
  * @param {object} socioData - Datos para crear el socio (ej: { usuario: ID })
@@ -131,6 +132,22 @@ export const createSocioInfo = async (socioData) => {
     return response.data;
   } catch (error) {
     console.error("❌ Error creando SocioInfo:", error.response?.status, error.response?.data);
+    throw error;
+  }
+};
+
+/**
+ * Verificar Acceso mediante Scanner QR
+ * Envía el código leído (ID) al backend para validar deuda y estado.
+ * @param {string} qrData - El contenido leído por el scanner (ID del socio)
+ */
+export const verificarAcceso = async (qrData) => {
+  try {
+    const response = await api.post('http://localhost:8000/socios/api/control-acceso/', { qr_data: qrData });
+    console.log("✅ Verificación de acceso realizada:", response.data);
+    return response; // Retornamos response completo para acceder a status y data
+  } catch (error) {
+    console.error("❌ Error verificando acceso:", error);
     throw error;
   }
 };

@@ -6,12 +6,15 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
-
+# Importamos las vistas y ViewSets
 from socios.views import (
     LoginView, RegisterView, UsuarioViewSet, RolesViewSet,
     EventoViewSet, NivelSocioViewSet, SocioInfoViewSet,
-    DisciplinaViewSet, CategoriaViewSet, CuotaViewSet, HorarioEntrenamientoViewSet, SesionEntrenamientoViewSet
+    DisciplinaViewSet, CategoriaViewSet, CuotaViewSet, 
+    HorarioEntrenamientoViewSet, SesionEntrenamientoViewSet, 
 )
+# Importamos la vista específica para el control de acceso (QR)
+from socios.views.acceso import validar_acceso
 
 router = routers.DefaultRouter()
 router.register(r'usuarios', UsuarioViewSet, 'usuarios')
@@ -25,21 +28,20 @@ router.register(r'cuotas', CuotaViewSet, 'cuotas')
 router.register(r'horarios', HorarioEntrenamientoViewSet, 'horarios')
 router.register(r'sesiones', SesionEntrenamientoViewSet, 'sesiones')
 
-
 urlpatterns = [
+    # Rutas de la API v1 (generadas por el router)
     path('api/v1/', include(router.urls)),
 
-    # Endpoint que genera el esquema OpenAPI en JSON
+    # Esquema y Documentación API
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-
-    # Documentación interactiva con Swagger
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-
-    # Documentación alternativa con Redoc
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
-    # Endpoint para login
+
+    # Autenticación
     path("login/", LoginView.as_view(), name="login"),
-        # Endpoint para registro
     path("register/", RegisterView.as_view(), name="register"),
 
+    # Control de Acceso (Endpoint para el lector QR)
+
+    path('api/control-acceso/', validar_acceso, name='control_acceso'),
 ]

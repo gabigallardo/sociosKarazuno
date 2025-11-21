@@ -9,7 +9,8 @@ import {
     FaUsers, 
     FaCogs,
     FaCalendarCheck,
-    FaUsersCog 
+    FaUsersCog,
+    FaQrcode // Importamos el icono para Control de Acceso
 } from "react-icons/fa";
 import logoImg from '../assets/logo.webp'; 
 import { UserContext } from "../contexts/User.Context"; 
@@ -34,8 +35,11 @@ function Navigation() {
     // Variables de permisos
     const puedeVerJugadores = esAdmin || esDirigente || esProfesor;
     const puedeGestionarClub = esAdmin || esDirigente || esEmpleado || esProfesor;
-    
     const puedeGestionarUsuarios = esAdmin || esDirigente || esEmpleado || esProfesor;
+    
+    // Permiso para Control de Acceso (Portería)
+    // Generalmente Admins, Dirigentes y Empleados (se excluye profesor por defecto para esto)
+    const puedeControlarAcceso = esAdmin || esDirigente || esEmpleado;
 
     // --- Items específicos para Socios ---
     if (esSocio) {
@@ -58,12 +62,21 @@ function Navigation() {
         );
     }
 
-    // --- Gestionar Usuarios ) ---
+    // --- Gestionar Usuarios ---
     if (puedeGestionarUsuarios) {
         navItems.push({ 
             to: "/gestionar-usuarios", 
             icon: FaUsersCog, 
             label: "Gestionar Usuarios" 
+        });
+    }
+
+    // --- Control de Acceso  ---
+    if (puedeControlarAcceso) {
+        navItems.push({ 
+            to: "/control-acceso", 
+            icon: FaQrcode, 
+            label: "Control de Acceso" 
         });
     }
 
@@ -114,7 +127,7 @@ function Navigation() {
                 </ul>
             </nav>
 
-            {/* Mi Perfil  */}
+            {/* Mi Perfil */}
             <div className="p-4 border-t border-red-600 bg-red-700">
                 <Link
                     to="/mi-perfil"

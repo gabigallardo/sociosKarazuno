@@ -16,7 +16,9 @@ class SocioInfoSerializer(serializers.ModelSerializer):
     nro_documento = serializers.CharField(source='usuario.nro_documento', read_only=True)
     telefono = serializers.CharField(source='usuario.telefono', read_only=True)
     
-    # Nombre de disciplina (en lugar de solo ID)
+    qr_token = serializers.UUIDField(source='usuario.qr_token', read_only=True)
+    
+    # Nombre de disciplina
     disciplina_nombre = serializers.CharField(source='disciplina.nombre', read_only=True)
     categoria_nombre = serializers.CharField(source='categoria.nombre_categoria', read_only=True)
 
@@ -31,6 +33,7 @@ class SocioInfoSerializer(serializers.ModelSerializer):
             'email',
             'nro_documento',
             'telefono',
+            'qr_token', 
             'cuota_al_dia',
             'nivel_socio',
             'nivel_socio_info',
@@ -50,7 +53,6 @@ class SocioInfoSerializer(serializers.ModelSerializer):
         Calcula en tiempo real si el socio tiene deudas pendientes.
         'obj' es la instancia de SocioInfo que se está serializando.
         """
-        # La lógica es simple: "está al día" si NO existen cuotas pendientes de pago.
         tiene_deudas = Cuota.objects.filter(usuario=obj.usuario).exclude(
             id__in=Pago.objects.filter(estado='completado').values_list('cuota_id', flat=True)
         ).exists()

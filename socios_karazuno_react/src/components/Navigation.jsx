@@ -71,14 +71,7 @@ function Navigation() {
         });
     }
 
-    // --- Control de Acceso  ---
-    if (puedeControlarAcceso) {
-        navItems.push({ 
-            to: "/control-acceso", 
-            icon: FaQrcode, 
-            label: "Control de Acceso" 
-        });
-    }
+
 
     // --- Item unificado para Gestión del Club (Deportes, Horarios, Eventos generales) ---
     if (puedeGestionarClub) {
@@ -92,7 +85,14 @@ function Navigation() {
     if (puedeVerJugadores) {
         navItems.push({ to: "/jugadores", icon: FaUsers, label: "Jugadores" });
     }
-
+    // --- Control de Acceso  ---
+    if (puedeControlarAcceso) {
+        navItems.push({ 
+            to: "/control-acceso", 
+            icon: FaQrcode, 
+            label: "Control de Acceso" 
+        });
+    }
     return (
         <aside className="w-64 bg-red-700 text-white flex flex-col justify-between h-screen fixed shadow-2xl z-50">
             {/* Logo y Cabecera */}

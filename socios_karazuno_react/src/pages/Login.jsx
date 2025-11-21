@@ -38,7 +38,7 @@ function Login() {
       login(token, usuario);
 
       setMessage("¡Inicio de sesión exitoso! Redirigiendo...");
-      navigate("/socios");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
       const errorMessage =

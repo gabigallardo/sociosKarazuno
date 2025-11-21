@@ -10,8 +10,18 @@ class SocioInfoViewSet(viewsets.ModelViewSet):
     """ViewSet para información de socios"""
     queryset = SocioInfo.objects.all()
     serializer_class = SocioInfoSerializer
-    permission_classes = [RolePermission]
     required_roles = ['admin', 'profesor', 'dirigente']
+
+    def get_permissions(self):
+        """
+        Configuración dinámica de permisos:
+        - 'create' (POST): Permitido para cualquier usuario autenticado (para que puedan hacerse socios).
+        - Otras acciones (GET, PUT, DELETE): Solo permitidas para roles específicos (admin, profe, dirigente).
+        """
+        if self.action == 'create':
+            return [IsAuthenticated()]
+        else:
+            return [RolePermission()]
 
     def get_queryset(self):
         """

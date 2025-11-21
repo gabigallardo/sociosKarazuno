@@ -1,22 +1,21 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import { FaArrowLeft } from "react-icons/fa"; 
+import { FaArrowLeft, FaUserEdit } from "react-icons/fa"; 
 
 // API Imports
-import { getUsuarioById, updateUsuario } from "../../api/usuarios.api";
-import { getAllRoles } from "../../api/roles.api";
-import { getAllDisciplinas } from "../../api/disciplinas.api";
-import { getAllCategorias } from "../../api/categorias.api";
+import { getUsuarioById, updateUsuario } from "../../api/usuarios.api"; //
+import { getAllRoles } from "../../api/roles.api"; //
+import { getAllDisciplinas } from "../../api/disciplinas.api"; //
+import { getAllCategorias } from "../../api/categorias.api"; //
 
 // Componente Formulario
-import UsuariosForm from "../../features/usuarios/usuariosForm";
+import UsuariosForm from "../../features/usuarios/usuariosForm"; //
 
 export default function UsuariosEditarPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   
-  // Estados
   const [usuario, setUsuario] = useState(null);
   const [roles, setRoles] = useState([]);
   const [disciplinas, setDisciplinas] = useState([]);
@@ -27,7 +26,6 @@ export default function UsuariosEditarPage() {
     async function loadAllData() {
       try {
         setLoading(true);
-        // Carga paralela de datos
         const [userData, rolesData, disciplinasData, categoriasData] = await Promise.all([
           getUsuarioById(id),
           getAllRoles(),
@@ -41,8 +39,8 @@ export default function UsuariosEditarPage() {
         setCategorias(categoriasData);
         
       } catch (error) {
-        console.error("Error cargando datos para la edición:", error);
-        toast.error("No se pudieron cargar los datos del usuario.");
+        console.error("Error cargando datos:", error);
+        toast.error("No se pudieron cargar los datos.");
         navigate("/usuarios"); 
       } finally {
         setLoading(false);
@@ -54,45 +52,52 @@ export default function UsuariosEditarPage() {
 
   const handleUpdate = async (usuarioData) => {
     try {
-      console.log("Enviando payload COMPLETO:", usuarioData);
       await updateUsuario(id, usuarioData);
       toast.success("Usuario actualizado con éxito!");
       navigate("/usuarios");
     } catch (error) {
-      console.error("Error actualizando usuario:", error);
-      toast.error("Error al actualizar. Revisa la consola.");
+      console.error("Error actualizando:", error);
+      const errorMsg = error.response?.data?.error || "Error al actualizar usuario.";
+      toast.error(errorMsg);
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Cargando editor de usuario...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-500">Cargando editor...</div>;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      
-      {/* --- Encabezado con Botón Volver --- */}
-      <div className="flex items-center gap-4 mb-6 border-b pb-4">
-        <button 
-          onClick={() => navigate(-1)} 
-          className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors"
-          title="Volver atrás"
-        >
-          <FaArrowLeft className="text-xl" />
-        </button>
-        <h1 className="text-2xl font-extrabold text-gray-800">Editar Usuario</h1>
-      </div>
-
-      {/* --- Formulario --- */}
-      {usuario && (
-        <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-            <UsuariosForm
-            onSubmit={handleUpdate}
-            initialValues={usuario}
-            allRoles={roles}
-            allDisciplinas={disciplinas}
-            allCategorias={categorias}
-            />
+    <div className="min-h-screen bg-gray-50 p-6 fade-in-enter">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* --- Header --- */}
+        <div className="flex items-center gap-4 mb-8">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-100 p-3 rounded-full shadow-sm border border-gray-200 transition-all"
+          >
+            <FaArrowLeft />
+          </button>
+          <div>
+            <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
+                <FaUserEdit className="text-red-600" /> Editar Usuario
+            </h1>
+            <p className="text-sm text-gray-500">Modifica la información y permisos del usuario.</p>
+          </div>
         </div>
-      )}
+
+        {/* --- Form Container --- */}
+        {usuario && (
+          <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+            <UsuariosForm
+              onSubmit={handleUpdate}
+              initialValues={usuario}
+              allRoles={roles}
+              allDisciplinas={disciplinas}
+              allCategorias={categorias}
+              isEditing={true} // Prop opcional para ajustar textos del botón
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

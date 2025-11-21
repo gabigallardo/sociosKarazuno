@@ -15,7 +15,7 @@ class SocioInfoSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='usuario.email', read_only=True)
     nro_documento = serializers.CharField(source='usuario.nro_documento', read_only=True)
     telefono = serializers.CharField(source='usuario.telefono', read_only=True)
-    
+    foto_url = serializers.CharField(source='usuario.foto_url', read_only=True)
     qr_token = serializers.UUIDField(source='usuario.qr_token', read_only=True)
     
     # Nombre de disciplina
@@ -34,6 +34,7 @@ class SocioInfoSerializer(serializers.ModelSerializer):
             'nro_documento',
             'telefono',
             'qr_token', 
+            'foto_url',
             'cuota_al_dia',
             'nivel_socio',
             'nivel_socio_info',

@@ -1,54 +1,79 @@
-// src/pages/GestionClubPage.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
     FaFutbol,      
-    FaUsersCog,    
     FaCalendarCheck,
-    FaClock 
+    FaClock,
+    FaArrowRight
 } from 'react-icons/fa';
 
-export default function GestionClubPage() {
-  
-  const cardStyle = "flex flex-col items-center justify-center p-8 bg-white rounded-lg shadow-lg border border-gray-200 cursor-pointer transition-all hover:shadow-xl hover:border-red-500 hover:-translate-y-1";
-  const iconStyle = "text-5xl text-red-700 mb-4";
-  const titleStyle = "text-2xl font-bold text-gray-800";
+const MenuCard = ({ to, icon: Icon, title, description }) => (
+  <Link 
+    to={to} 
+    className="group relative flex flex-col items-start p-8 bg-white rounded-2xl shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-red-200 overflow-hidden"
+  >
+    <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-red-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-  return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-extrabold text-red-700 mb-8">
-        Gestión del Club
-      </h1>
-      
-      <p className="text-xl text-gray-700 mb-6">
-        Selecciona el área que deseas administrar:
+    <div className="relative p-4 mb-6 rounded-xl bg-red-50 text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors duration-300">
+      <Icon className="text-3xl" />
+    </div>
+
+    <div className="relative z-10 w-full">
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-xl font-bold text-gray-900 group-hover:text-red-700 transition-colors">
+          {title}
+        </h2>
+        <FaArrowRight className="text-gray-300 group-hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-1" />
+      </div>
+      <p className="text-sm text-gray-500 leading-relaxed">
+        {description}
       </p>
+    </div>
+  </Link>
+);
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
+export default function GestionClubPage() {
+  return (
+    <div className="min-h-[80vh] bg-gray-50/50 p-6 md:p-12">
+      <div className="max-w-7xl mx-auto">
+        {/* Encabezado */}
+        <div className="mb-12 text-center md:text-left">
+          <span className="text-sm font-semibold text-red-600 tracking-wider uppercase mb-2 block">
+            Administración
+          </span>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
+            Gestión del Club
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl">
+            Controla las disciplinas, organiza eventos y define los horarios de entrenamiento desde un solo lugar.
+          </p>
+        </div>
 
+        {/* Grid de Opciones */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          
+          <MenuCard 
+            to="/deportes"
+            icon={FaFutbol}
+            title="Deportes"
+            description="Administra las disciplinas activas y configura las categorías disponibles para los socios."
+          />
 
-        {/*  Deportes */}
-        <Link to="/deportes" className={cardStyle}>
-          <FaFutbol className={iconStyle} />
-          <h2 className={titleStyle}>Deportes</h2>
-          <p className="text-gray-600 text-center mt-2">Administrar disciplinas y categorías.</p>
-        </Link>
+          <MenuCard 
+            to="/eventos"
+            icon={FaCalendarCheck}
+            title="Eventos"
+            description="Planifica competiciones, reuniones y eventos especiales en el calendario del club."
+          />
 
-        {/*  Eventos */}
-        <Link to="/eventos" className={cardStyle}>
-          <FaCalendarCheck className={iconStyle} />
-          <h2 className={titleStyle}>Eventos</h2>
-          <p className="text-gray-600 text-center mt-2">Organizar y visualizar eventos del club.</p>
-        </Link>
+          <MenuCard 
+            to="/horarios"
+            icon={FaClock}
+            title="Horarios"
+            description="Gestiona la disponibilidad de canchas, sesiones de entrenamiento y turnos."
+          />
 
-        {/* Gestionar Horarios */}
-        <Link to="/horarios" className={cardStyle}>
-          <FaClock className={iconStyle} />
-          <h2 className={titleStyle}>Horarios</h2>
-          <p className="text-gray-600 text-center mt-2">Gestionar sesiones y horarios de entrenamiento.</p>
-        </Link>
-
+        </div>
       </div>
     </div>
   );

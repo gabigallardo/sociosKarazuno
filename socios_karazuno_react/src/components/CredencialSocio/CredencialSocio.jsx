@@ -1,7 +1,7 @@
 import React from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
-import { FaQrcode } from 'react-icons/fa';
-import patternImg from '../../assets/pattern.jpg';
+import { FaQrcode, FaIdCard, FaBirthdayCake, FaVenusMars, FaUser } from 'react-icons/fa';
+import patternImg from '../../assets/pattern.jpg'; //
 
 import { generarReportePDF } from '../../utils/pdfUtils';
 import PlantillaCredencialPDF from '../Reporte/PlantillaCredencialPDF';
@@ -10,25 +10,42 @@ function CredencialSocio({ userData }) {
 
   const handleDescargarPase = () => {
     const nombreArchivo = `Pase_Acceso_${userData.nombreCompleto.replace(/\s+/g, '_')}.pdf`;
+    // El elemento ya no está "hidden", así que html2canvas puede capturarlo
     generarReportePDF('plantilla-pase-acceso-oculta', nombreArchivo);
   };
 
   return (
     <section
       id="credencial-completa"
-      className="bg-gradient-to-br from-red-800 via-red-700 to-black text-white p-6 rounded-3xl shadow-2xl transition duration-300 transform hover:scale-[1.03] hover:shadow-red-900/50 relative overflow-hidden flex flex-col"
-      style={{ height: '450px' }}
+      className="relative overflow-hidden rounded-3xl shadow-2xl bg-black text-white transition-all duration-500 hover:shadow-red-900/50 hover:-translate-y-1 border border-white/20 flex flex-col p-6"
+      style={{ minHeight: '460px' }}
     >
-      <div className="absolute inset-0 opacity-10 bg-repeat bg-center" style={{ backgroundImage: `url(${patternImg})` }}></div>
-      <h2 className="font-extrabold uppercase tracking-widest text-xl mb-4 text-center z-10 relative">Credencial de Socio</h2>
+      {/* --- Fondo: Gradiente Rojo a Negro --- */}
+      <div className="absolute inset-0 bg-gradient-to-br from-red-600 via-red-900 to-black z-0"></div>
       
-      <div className="grid grid-cols-3 gap-3 flex-1 z-10 relative">
+      {/* Patrón sutil superpuesto */}
+      <div 
+        className="absolute inset-0 opacity-20 z-0 mix-blend-overlay" 
+        style={{ 
+            backgroundImage: `url(${patternImg})`,
+            backgroundSize: '150px',
+            backgroundRepeat: 'repeat'
+        }}
+      ></div>
+      
+      <h2 className="font-black uppercase tracking-[0.2em] text-xl mb-6 text-center z-10 relative text-white drop-shadow-md border-b border-white/20 pb-2 mx-auto w-fit">
+        Credencial de Socio
+      </h2>
+      
+      {/* --- GRID ORIGINAL --- */}
+      <div className="grid grid-cols-3 gap-4 flex-1 z-10 relative">
+        
         {/* --- Foto de Perfil --- */}
         <div 
           id="foto-perfil-container" 
-          className="row-span-2 col-span-1 flex flex-col items-center justify-center p-2 bg-black/50 rounded-lg backdrop-blur-sm shadow-inner border border-white/30"
+          className="row-span-2 col-span-1 flex flex-col items-center justify-center p-3 bg-black/40 rounded-2xl backdrop-blur-sm border border-white/10 shadow-inner"
         >
-          <div className="w-40 h-40 border-4 border-white rounded-md overflow-hidden shadow-lg mb-2 transition duration-300 hover:ring-4 ring-white/50">
+          <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden shadow-lg border-4 border-white/80 bg-gray-300">
             <img 
               src={userData.fotoUrl} 
               alt="Foto de perfil" 
@@ -36,60 +53,64 @@ function CredencialSocio({ userData }) {
               crossOrigin="anonymous"
             />
           </div>
-          <p className="text-sm text-center">Foto perfil</p>
+          <p className="text-[10px] text-white/80 mt-2 uppercase tracking-widest font-bold">Socio Activo</p>
         </div>
         
         {/* --- DNI --- */}
-        <div className="col-span-2 bg-black/70 flex flex-col items-center justify-center p-2 rounded-lg backdrop-blur-sm shadow-inner border border-white/30 transition duration-200 hover:bg-black/80">
-          <span className="text-sm font-bold text-red-200 uppercase">Número DNI</span>
-          <span className="text-xl font-extrabold tracking-wider">{userData.numeroDNI}</span>
+        <div className="col-span-2 bg-white/10 flex flex-col items-center justify-center p-3 rounded-2xl backdrop-blur-sm border border-white/10 shadow-lg">
+          <span className="text-[10px] font-bold text-white/90 uppercase tracking-widest mb-1">Número DNI</span>
+          <span className="text-3xl font-black tracking-widest text-white drop-shadow-md font-mono">
+            {userData.numeroDNI}
+          </span>
         </div>
         
         {/* --- Fecha Nacimiento --- */}
-        <div className="col-span-1 bg-black/70 flex flex-col items-center justify-center p-2 rounded-lg backdrop-blur-sm shadow-inner border border-white/30 transition duration-200 hover:bg-black/80">
-          <span className="text-sm font-bold text-red-200 uppercase">Fecha Nacimiento</span>
-          <span className="text-xl font-extrabold tracking-wider">{userData.fechaNacimiento}</span>
+        <div className="col-span-1 bg-white/10 flex flex-col items-center justify-center p-2 rounded-2xl backdrop-blur-sm border border-white/10">
+          <span className="text-[9px] font-bold text-white/80 uppercase mb-1">Nacimiento</span>
+          <span className="text-lg font-bold text-white">{userData.fechaNacimiento}</span>
         </div>
         
-        {/* --- Código QR () --- */}
-        <div className="col-span-1 flex flex-col items-center justify-center p-2 bg-black/70 rounded-lg backdrop-blur-sm shadow-inner border border-white/30">
-          <div className="p-1 bg-white rounded shadow-xl mb-1">
-            {/* Este QR es el que se ve en la web */}
-            <QRCodeCanvas id="qr-code-canvas" value={userData.uuidQr} size={80} bgColor="#fff" fgColor="#000" />
+        {/* --- Código QR --- */}
+        <div className="col-span-1 flex flex-col items-center justify-center p-2 bg-white rounded-2xl shadow-lg">
+          <div className="p-1">
+            <QRCodeCanvas id="qr-code-canvas" value={userData.uuidQr} size={75} bgColor="#fff" fgColor="#000" />
           </div>
         </div>
         
         {/* --- Nombre y Apellido --- */}
-        <div className="col-span-2 bg-black/70 flex flex-col items-center justify-center p-2 rounded-lg backdrop-blur-sm shadow-inner border border-white/30 transition duration-200 hover:bg-black/80">
-          <span className="text-sm font-bold text-red-200 uppercase">Nombre y Apellido</span>
-          <span className="text-2xl font-extrabold tracking-wider text-center">{userData.nombreCompleto.toUpperCase()}</span>
+        <div className="col-span-2 bg-gradient-to-r from-red-950/50 to-black/50 flex flex-col items-center justify-center p-3 rounded-2xl backdrop-blur-sm border border-white/10">
+          <span className="text-[10px] font-bold text-white/80 uppercase tracking-widest mb-1">Nombre y Apellido</span>
+          <span className="text-lg md:text-xl font-black tracking-wide text-center text-white leading-tight uppercase drop-shadow-md">
+            {userData.nombreCompleto}
+          </span>
         </div>
         
         {/* --- Sexo --- */}
-        <div className="col-span-1 bg-black/70 flex flex-col items-center justify-center p-2 rounded-lg backdrop-blur-sm shadow-inner border border-white/30 transition duration-200 hover:bg-black/80">
-          <span className="text-sm font-bold text-red-200 uppercase">Sexo</span>
-          <span className="text-2xl font-extrabold tracking-wider">{userData.sexo.toUpperCase()}</span>
+        <div className="col-span-1 bg-white/10 flex flex-col items-center justify-center p-2 rounded-2xl backdrop-blur-sm border border-white/10">
+          <span className="text-[9px] font-bold text-white/80 uppercase mb-1">Sexo</span>
+          <span className="text-lg font-bold text-white">{userData.sexo.toUpperCase()}</span>
         </div>
       </div>
 
-      {/* --- Sección de Botón Único --- */}
-      <div className="flex justify-end items-center gap-3 mt-4 z-10 relative">
-        
+      {/* --- Botón --- */}
+      <div className="flex justify-center mt-6 z-10 relative">
         <button 
           onClick={handleDescargarPase}
-          className="text-sm bg-white text-gray-800 px-4 py-2 rounded-full flex items-center gap-2 font-bold shadow-lg transition duration-300 hover:bg-gray-100 transform hover:scale-105 cursor-pointer" 
+          className="bg-white text-red-800 hover:bg-gray-100 px-6 py-2.5 rounded-full flex items-center gap-2 font-bold shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 border-2 border-transparent hover:border-red-600" 
           title="Descargar Pase de Acceso PDF"
         >
-          <FaQrcode className="text-xl" /> Descargar Pase PDF
+          <FaQrcode className="text-xl" /> 
+          <span className="uppercase text-sm tracking-wide">Descargar Pase PDF</span>
         </button>
-
       </div>
 
-
-      <PlantillaCredencialPDF 
-        id="plantilla-pase-acceso-oculta"
-        userData={userData}
-      />
+      {/* Elemento oculto visualmente pero disponible para html2canvas */}
+      <div style={{ position: 'absolute', top: 0, left: '-9999px', width: '210mm' }}>
+        <PlantillaCredencialPDF 
+            id="plantilla-pase-acceso-oculta"
+            userData={userData}
+        />
+      </div>
 
     </section>
   );

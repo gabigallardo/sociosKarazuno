@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/poppins": "^5.2.7",
+    "@tailwindcss/vite": "^4.1.17",
     "axios": "^1.12.2",
     "date-fns": "^4.1.0",
     "html2canvas": "^1.4.1",

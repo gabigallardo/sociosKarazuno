@@ -1,49 +1,55 @@
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/User.Context.jsx";
-import { FaSignInAlt } from "react-icons/fa";
 import AuthLayout from "../components/Auth/AuthLayout";
 import InputField from "../components/Form/InputField";
 import SubmitButton from "../components/Form/SubmitButton";
-import api from "../config/axiosConfig"; // 1. Importa tu instancia de Axios
+import api from "../config/axiosConfig"; //
 
 function Login() {
   const { login } = useContext(UserContext);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", contrasena: "" });
   const [message, setMessage] = useState("");
+  const [status, setStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (message) {
+      setMessage("");
+      setStatus(null);
+    }
   };
 
-  // 2. Lógica de inicio de sesión corregida
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setMessage("Iniciando sesión...");
+    setMessage("Autenticando...");
+    setStatus(null); // Estado neutro para loading
+
     try {
-      // Realiza la llamada a la API para el login
       const response = await api.post("/socios/login/", {
         email: formData.email,
         contrasena: formData.contrasena,
       });
 
-      // Si la llamada es exitosa, obtén el token y los datos del usuario
       const { token, usuario } = response.data;
-
-      // Llama a la función login del contexto con los datos correctos
       login(token, usuario);
 
-      setMessage("¡Inicio de sesión exitoso! Redirigiendo...");
-      navigate("/dashboard");
+      setStatus("success");
+      setMessage("¡Bienvenido de nuevo!");
+      
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 800);
+
     } catch (error) {
-      console.error("Error al iniciar sesión:", error);
-      const errorMessage =
-        error.response?.data?.error || "Email o contraseña incorrectos";
-      setMessage(`Error: ${errorMessage}`);
+      console.error("Error login:", error);
+      setStatus("error");
+      const errorMessage = error.response?.data?.error || "Credenciales incorrectas.";
+      setMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -51,53 +57,71 @@ function Login() {
 
   return (
     <AuthLayout
-      title="Bienvenido Socio"
-      subtitle="Accede a tu cuenta"
+      title="Acceso Socios"
+      subtitle="Bienvenido al equipo"
       size="md"
     >
+      {/* Mensaje de Estado - CORREGIDO PARA ALTO CONTRASTE */}
       {message && (
-        <p
-          className={`text-center mb-4 p-3 rounded-lg font-medium ${
-            message.includes("Error")
-              ? "bg-red-100 text-red-700"
-              : "bg-green-100 text-green-700"
+        <div
+          className={`mb-6 p-4 rounded-xl text-sm font-bold text-center border shadow-sm transition-all duration-300 ${
+            status === "error"
+              ? "bg-red-100 text-red-800 border-red-200" // Rojo oscuro sobre claro
+              : status === "success"
+              ? "bg-green-100 text-green-800 border-green-200" // Verde oscuro sobre claro
+              : "bg-gray-100 text-gray-800 border-gray-200 animate-pulse" // Gris oscuro (Loading)
           }`}
         >
           {message}
-        </p>
+        </div>
       )}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <InputField
-          type="email"
-          label="Email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="tu.correo@ejemplo.com"
-          required
-        />
-        <InputField
-          type="password"
-          label="Contraseña"
-          name="contrasena"
-          value={formData.contrasena}
-          onChange={handleChange}
-          placeholder="Contraseña segura"
-          required
-        />
-        <SubmitButton icon={FaSignInAlt} disabled={isLoading}>
-          {isLoading ? "Entrando..." : "Entrar"}
-        </SubmitButton>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-1">
+            <InputField
+                type="email"
+                label="Correo Electrónico"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="ejemplo@karazuno.com"
+                required
+            />
+        </div>
+
+        <div className="space-y-1">
+            <InputField
+                type="password"
+                label="Contraseña"
+                name="contrasena"
+                value={formData.contrasena}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+            />
+        </div>
+
+        <div className="pt-4">
+          <SubmitButton 
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 text-white font-bold py-3 rounded-xl shadow-lg transform transition hover:scale-[1.02] active:scale-95 border border-red-500/30 cursor-pointer"
+          >
+            {isLoading ? "Verificando..." : "INICIAR SESIÓN"}
+          </SubmitButton>
+        </div>
       </form>
-      <p className="mt-6 text-center text-sm text-gray-600">
-        ¿No tienes una cuenta?{" "}
+
+      <div className="mt-8 text-center">
+        <p className="text-sm text-gray-500 mb-2">
+          ¿Aún no eres parte del equipo?
+        </p>
         <Link
           to="/register"
-          className="text-red-600 font-semibold hover:text-red-800"
+          className="inline-block text-red-700 font-bold hover:text-black transition-colors duration-300 border-b-2 border-red-100 hover:border-black pb-0.5"
         >
-          Regístrate aquí
+          CREAR CUENTA
         </Link>
-      </p>
+      </div>
     </AuthLayout>
   );
 }

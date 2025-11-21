@@ -171,13 +171,28 @@ export default function DeportesPage() {
 
             {/* LISTA AGRUPADA (La gran mejora UX) */}
             <div className="space-y-6">
-                {deportesFiltrados.map(deporte => {
+                {deportesFiltrados.map((deporte, index) => {
                     const catsDeEsteDeporte = obtenerCategoriasPorDeporte(deporte.id);
+
+                    // Lógica para alternar estilos
+                    const esPar = index % 2 === 0;
+
+                    // Definimos clases dinámicas según si es par o impar
+                    const cardBackground = esPar ? "bg-white" : "bg-slate-50";
+                    const cardBorder = esPar ? "border-gray-200" : "border-slate-200";
+                    
+                    // Opcional: Un borde lateral de color para diferenciar aún más
+                    // Alternamos entre Rojo y un Gris oscuro, o podrías usar colores por deporte
+                    const accentColor = esPar ? "border-l-4 border-l-red-600" : "border-l-4 border-l-slate-500";
                     
                     return (
-                        <div key={deporte.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div 
+                            key={deporte.id} 
+                            className={`${cardBackground} ${cardBorder} ${accentColor} rounded-xl shadow-sm border overflow-hidden transition-all hover:shadow-md`}
+                        >
                             {/* Cabecera del Deporte */}
-                            <div className="bg-gray-50 px-6 py-4 flex justify-between items-center border-b border-gray-100">
+                            {/* Ajustamos el fondo del header para que contraste ligeramente con la tarjeta */}
+                            <div className={`${esPar ? 'bg-gray-50' : 'bg-slate-100'} px-6 py-4 flex justify-between items-center border-b border-gray-100`}>
                                 <div className="flex items-center gap-3">
                                     <div className="bg-white p-2 rounded-full shadow-sm text-red-600">
                                         <FaFutbol />
@@ -194,11 +209,9 @@ export default function DeportesPage() {
                                     <button onClick={() => handleDelete(deporte.id, 'disciplina')} className="text-red-600 hover:bg-red-100 p-2 rounded-lg transition">
                                         <FaTrash />
                                     </button>
-                                    {/* Botón rápido para crear categoría en ESTE deporte */}
                                     <button 
                                         onClick={() => {
                                             abrirModalCrear('categoria');
-                                            // Truco: Pre-seleccionar el deporte en el formulario
                                             setTimeout(() => setValue('disciplina', deporte.id), 100); 
                                         }}
                                         className="ml-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1 rounded-lg text-sm font-medium flex items-center gap-1"
@@ -213,7 +226,12 @@ export default function DeportesPage() {
                                 {catsDeEsteDeporte.length > 0 ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 py-4">
                                         {catsDeEsteDeporte.map(cat => (
-                                            <div key={cat.id} className="flex justify-between items-center p-3 rounded-lg border border-gray-100 hover:border-red-200 hover:bg-red-50 transition group">
+                                            <div 
+                                                key={cat.id} 
+                                                // 3. Hacemos que las tarjetas de categoría sean siempre blancas
+                                                // para que resalten sobre el fondo gris (si es impar)
+                                                className="bg-white flex justify-between items-center p-3 rounded-lg border border-gray-100 hover:border-red-200 hover:shadow-sm transition group"
+                                            >
                                                 <div>
                                                     <h4 className="font-semibold text-gray-800">{cat.nombre_categoria}</h4>
                                                     <div className="text-xs text-gray-500 flex gap-2 mt-1">
@@ -240,7 +258,7 @@ export default function DeportesPage() {
                             </div>
                         </div>
                     );
-                })}
+            })}
                 
                 {deportesFiltrados.length === 0 && (
                     <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">

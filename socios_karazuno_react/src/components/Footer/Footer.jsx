@@ -39,18 +39,29 @@ const Footer = () => {
             </ul>
           </nav>
 
-          {/* 3. Redes Sociales (Iconos sutiles) */}
-          <div className="flex gap-5">
-            <SocialLink href="#" icon={<FaFacebookF />} />
-            <SocialLink href="#" icon={<FaInstagram />} />
-            <SocialLink href="#" icon={<FaTwitter />} />
-            <SocialLink href="#" icon={<FaYoutube />} />
-          </div>
+          {/* 3. Redes Sociales  */}
+ {/* <div className="flex gap-5">
+            <SocialLink 
+              href="https://www.facebook.com/profile.php?id=61573903053445" 
+              icon={<FaFacebookF />} 
+              label="Visítanos en Facebook" 
+            />
+            <SocialLink 
+              href="https://www.instagram.com/puntokarazunobeach/" 
+              icon={<FaInstagram />} 
+              label="Síguenos en Instagram" 
+            />
+            <SocialLink 
+              href="https://www.youtube.com/@PuntoKarazuno" 
+              icon={<FaYoutube />} 
+              label="Suscríbete a nuestro canal de YouTube" 
+            />
+          </div> */}
         </div>
 
-        {/* Copyright Sutil */}
+        {/* Copyright */}
         <div className="mt-8 pt-6 border-t border-gray-800 text-center">
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-white">
             © {new Date().getFullYear()} Club Deportivo Karazuno. Todos los derechos reservados.
           </p>
         </div>
@@ -66,7 +77,7 @@ const SocialLink = ({ href, icon }) => (
     href={href} 
     target="_blank" 
     rel="noopener noreferrer"
-    className="text-gray-400 hover:text-white hover:scale-110 transition-all duration-200 text-lg"
+    className="text-white hover:text-white hover:scale-110 transition-all duration-200 text-lg"
   >
     {icon}
   </a>

@@ -110,13 +110,13 @@ function CredencialSocio({ userData, className = "" }) {
         </button>
       </div>
 
-      {/* Elemento oculto visualmente pero disponible para html2canvas */}
+      {/* Elemento oculto visualmente pero disponible para html2canvas
       <div style={{ position: 'absolute', top: 0, left: '-9999px', width: '210mm' }}>
         <PlantillaCredencialPDF 
             id="plantilla-pase-acceso-oculta"
             userData={userData}
         />
-      </div>
+      </div> */}
 
     </section>
   );

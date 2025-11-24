@@ -19,7 +19,7 @@ const locales = { es: es };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
 const DISCIPLINE_COLORS = [
-  "#E53935", "#1E88E5", "#43A047", "#FB8C00", "#8E24AA", "#00ACC1", "#3949AB", "#FDD835",
+  "#c61b18ff", "#005299ff", "#146718ff", "#a85e02ff", "#8E24AA", "#007484ff", "#0117aaff", "#9d8000ff",
 ];
 
 const getId = (item) => {
@@ -34,6 +34,7 @@ const CustomToolbar = ({ label, onNavigate, onView, view, compacto }) => {
       <button 
         onClick={() => onNavigate('PREV')} 
         className="p-2 rounded-full hover:bg-red-50 text-red-700 transition-colors"
+        aria-label="Mes anterior"  
       >
         <FaChevronLeft />
       </button>
@@ -52,6 +53,7 @@ const CustomToolbar = ({ label, onNavigate, onView, view, compacto }) => {
          <button 
             onClick={() => onNavigate('NEXT')} 
             className="p-2 rounded-full hover:bg-red-50 text-red-700 transition-colors"
+            aria-label="Mes siguiente"
         >
             <FaChevronRight />
         </button>
@@ -163,10 +165,8 @@ export default function CalendarioSocio({ compacto = false }) {
         if (esAdmin || esDirigente || esEmpleado) {
             eventosVisibles = eventosProcesados;
         } else if (esProfesor) {
-             // ... tu lógica profesor
              eventosVisibles = eventosProcesados.filter(ev => { /*...*/ return true; }); // Simplificado para el ejemplo
         } else if (esSocio) {
-             // ... tu lógica socio
              const info = user.socio_info || user.socioinfo || {};
              const miDisciplinaId = getId(info.disciplina);
              const miCategoriaId = getId(info.categoria);
@@ -181,9 +181,7 @@ export default function CalendarioSocio({ compacto = false }) {
             });
         }
 
-        // 4. COMBINAR TODO
-        // Las sesiones ya vienen filtradas desde el backend ("mis-sesiones"), 
-        // así que las agregamos directamente.
+
         setEventos([...eventosVisibles, ...sesionesProcesadas]);
         
       } catch (error) {
@@ -199,9 +197,7 @@ export default function CalendarioSocio({ compacto = false }) {
   const eventStyleGetter = (event) => {
     let backgroundColor = "#3174ad";
 
-    // LÓGICA DE COLORES
     if (event.tipo === 'entrenamiento') {
-        // Color específico para entrenamientos (ej: Violeta oscuro o Gris oscuro)
         backgroundColor = "#6D28D9"; 
         if (event.estado === 'cancelada') backgroundColor = "#EF4444"; // Rojo si se canceló
     } else {
@@ -216,8 +212,8 @@ export default function CalendarioSocio({ compacto = false }) {
                 backgroundColor = DISCIPLINE_COLORS[index];
             }
         } else {
-            if (event.esGeneral) backgroundColor = "#F59E0B";
-            else backgroundColor = "#10B981";
+            if (event.esGeneral) backgroundColor = "#885702ff";
+            else backgroundColor = "#007a51ff";
         }
     }
 
@@ -242,7 +238,6 @@ export default function CalendarioSocio({ compacto = false }) {
       if (event.tipo === 'evento') {
           navigate(`/eventos/${event.originalId}`);
       } else {
-          // Opcional: Mostrar un toast o modal simple con info del entrenamiento
           toast(`Entrenamiento: ${event.title}\nHorario: ${format(event.start, 'HH:mm')} - ${format(event.end, 'HH:mm')}`);
       }
   };
@@ -303,7 +298,7 @@ export default function CalendarioSocio({ compacto = false }) {
           popup={true}
           messages={{
             noEventsInRange: "Sin eventos",
-            showMore: (total) => `+${total} más`, // Traduce "+2 more" a "+2 más"
+            showMore: (total) => `+${total} más`, 
             next: "Siguiente",
             previous: "Anterior",
             today: "Hoy",

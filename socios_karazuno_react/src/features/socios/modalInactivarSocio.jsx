@@ -1,35 +1,58 @@
 import { useState, useEffect } from "react";
 import { FaExclamationTriangle, FaTimes } from "react-icons/fa";
 
+const OPCIONES_MOTIVOS = [
+  "Falta de pago",
+  "Baja voluntaria",
+  "Conducta indebida",
+  "Lesión / Salud",
+  "Cambio de residencia",
+  "Otros motivos" // Esta opción activará el textarea
+];
+
 export default function ModalInactivarSocio({ socio, isOpen, onClose, onConfirm, loading }) {
-  const [razon, setRazon] = useState("");
+  const [motivoSeleccionado, setMotivoSeleccionado] = useState("");
+  const [detalleOtros, setDetalleOtros] = useState("");
   const [error, setError] = useState("");
 
   // Este hook se asegura de que el modal esté siempre limpio al abrirse
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => { // Pequeño delay para no ver el cambio al cerrar
-        setRazon("");
+        setMotivoSeleccionado("");
+        setDetalleOtros("");
         setError("");
       }, 200);
     }
   }, [isOpen]);
 
   const handleSubmit = () => {
-    if (!razon.trim()) {
-      setError("La razón de inactivación es obligatoria");
+    // Validar que se haya seleccionado una opción
+    if (!motivoSeleccionado) {
+      setError("Debes seleccionar un motivo de la lista.");
       return;
     }
     
-    if (razon.trim().length < 5) {
-      setError("La razón debe tener al menos 5 caracteres");
-      return;
+    let razonFinal = motivoSeleccionado;
+
+    // Si es "Otros motivos", validar y concatenar el detalle
+    if (motivoSeleccionado === "Otros motivos") {
+      if (!detalleOtros.trim()) {
+        setError("Por favor, especifica el motivo detallado.");
+        return;
+      }
+      if (detalleOtros.trim().length < 5) {
+        setError("El detalle debe tener al menos 5 caracteres.");
+        return;
+      }
+      // Formato final que se enviará al backend
+      razonFinal = `Otros: ${detalleOtros}`;
     }
     
     setError("");
-    onConfirm(razon);
-    setRazon("");
+    onConfirm(razonFinal);
   };
+
 
   if (!isOpen) return null;
 
@@ -64,21 +87,50 @@ export default function ModalInactivarSocio({ socio, isOpen, onClose, onConfirm,
 
           <div className="mb-4">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Razón de inactivación *
+              Motivo de Inactivación *
             </label>
-            <textarea
-              value={razon}
+            
+            {/* SELECTOR DE OPCIONES */}
+            <select
+              value={motivoSeleccionado}
               onChange={(e) => {
-                setRazon(e.target.value);
+                setMotivoSeleccionado(e.target.value);
                 setError("");
               }}
-              placeholder="Ej: Falta de pago, baja voluntaria, etc."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 resize-none"
-              rows="4"
               disabled={loading}
-            />
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-white mb-3"
+            >
+              <option value="">-- Selecciona un motivo --</option>
+              {OPCIONES_MOTIVOS.map((opcion) => (
+                <option key={opcion} value={opcion}>
+                  {opcion}
+                </option>
+              ))}
+            </select>
+
+            {/* TEXTAREA CONDICIONAL (Solo aparece si elige "Otros motivos") */}
+            {motivoSeleccionado === "Otros motivos" && (
+              <div className="animate-fadeIn">
+                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  Detalle del motivo:
+                </label>
+                <textarea
+                  value={detalleOtros}
+                  onChange={(e) => {
+                    setDetalleOtros(e.target.value);
+                    setError("");
+                  }}
+                  placeholder="Escriba aquí los detalles..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 resize-none text-sm"
+                  rows="3"
+                  disabled={loading}
+                  autoFocus
+                />
+              </div>
+            )}
+
             {error && (
-              <p className="mt-2 text-sm text-red-600 font-medium">{error}</p>
+              <p className="mt-2 text-sm text-red-600 font-medium">❌ {error}</p>
             )}
           </div>
 

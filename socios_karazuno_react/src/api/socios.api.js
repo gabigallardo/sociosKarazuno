@@ -151,3 +151,33 @@ export const verificarAcceso = async (qrData) => {
     throw error;
   }
 };
+
+/**
+ * Registrar pago de cuotas específicas de un socio activo.
+ * @param {number} usuarioId - ID del usuario
+ * @param {Array} cuotas - Array de objetos cuota (debe tener .id)
+ * @param {object} datosPago - { medio_pago: string, comprobante: string }
+ */
+export const registrarPagoCuotas = async (usuarioId, cuotas, datosPago) => {
+  try {
+    // Extraemos solo los IDs de las cuotas
+    const cuotaIds = cuotas.map(c => c.id);
+
+    const payload = {
+      cuota_ids: cuotaIds,
+      medio_pago: datosPago.medio_pago,
+      comprobante: datosPago.comprobante
+    };
+
+    const response = await api.post(
+      `${BASE_PATH}/usuarios/${usuarioId}/registrar-pago/`,
+      payload
+    );
+    
+    console.log("✅ Pago registrado:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error registrando pago:", error.response?.status, error.response?.data);
+    throw error;
+  }
+};

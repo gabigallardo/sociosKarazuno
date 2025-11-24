@@ -245,3 +245,59 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(usuario)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+    @action(detail=True, methods=['post'], permission_classes=[RolePermission], url_path='registrar-pago')
+    def registrar_pago(self, request, pk=None):
+        """
+        Registrar el pago de cuotas específicas para un usuario.
+        Espera: { 
+            "cuota_ids": [1, 2], 
+            "medio_pago": "efectivo", 
+            "comprobante": "..." 
+        }
+        """
+        usuario = self.get_object()
+        cuota_ids = request.data.get('cuota_ids', [])
+        medio_pago = request.data.get('medio_pago')
+        comprobante = request.data.get('comprobante')
+
+        if not cuota_ids:
+            return Response({"error": "No se seleccionaron cuotas para pagar."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not medio_pago:
+            return Response({"error": "Debe especificar el medio de pago."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            with transaction.atomic():
+                # Filtramos las cuotas que pertenecen a este usuario y están en la lista de IDs
+                cuotas_a_pagar = Cuota.objects.filter(
+                    id__in=cuota_ids, 
+                    usuario=usuario
+                ).exclude(
+                    id__in=Pago.objects.filter(estado='completado').values_list('cuota_id', flat=True)
+                )
+
+                if not cuotas_a_pagar.exists():
+                    return Response({"error": "Las cuotas seleccionadas no existen o ya están pagadas."}, status=status.HTTP_400_BAD_REQUEST)
+
+                pagos_creados = []
+                for cuota in cuotas_a_pagar:
+                    pago = Pago.objects.create(
+                        cuota=cuota,
+                        monto=cuota.monto,
+                        estado='completado',
+                        medio_pago=medio_pago,
+                        comprobante=comprobante,
+                        fecha=timezone.now()
+                    )
+                    pagos_creados.append(pago)
+
+            return Response({
+                "message": "Pago registrado exitosamente.",
+                "pagos_registrados": len(pagos_creados),
+                "total_pagado": sum(p.monto for p in pagos_creados)
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": f"Error al registrar pago: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    

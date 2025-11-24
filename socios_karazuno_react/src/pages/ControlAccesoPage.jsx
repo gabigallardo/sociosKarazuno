@@ -63,6 +63,20 @@ export default function ControlAccesoPage() {
         audio.play().catch(e => console.error("Error reproduciendo audio:", e));
     };
 
+    const hablarMensaje = (texto) => {
+        if (!texto) return;
+
+        // Cancelar cualquier audio anterior para que no se solapen
+        window.speechSynthesis.cancel();
+
+        const locucion = new SpeechSynthesisUtterance(texto);
+        locucion.lang = 'es-ES'; // Español
+        locucion.rate = 1.1; // Un poco más rápido para agilidad
+        locucion.pitch = 1; 
+
+        window.speechSynthesis.speak(locucion);
+    };
+
     // --- 5. MANEJO DEL ESCANEO ---
     const handleScan = async (e) => {
         e.preventDefault();
@@ -81,11 +95,17 @@ export default function ControlAccesoPage() {
 
             if (data.estado === 'aprobado') {
                 reproducirSonido('exito');
+                // Si el backend nos mandó un texto para leer (el saludo + recordatorio)
+                if (data.texto_tts) {
+                    // Esperamos 500ms para que no se pise con el sonido del "Ding"
+                    setTimeout(() => hablarMensaje(data.texto_tts), 500);
+                }
             } else {
                 reproducirSonido('error');
             }
-
-            setTimeout(resetear, 3500);
+            // Aumentamos un poco el tiempo de reset para que termine de hablar si el mensaje es largo
+            const tiempoReset = data.texto_tts ? 5000 : 3500;
+            setTimeout(resetear, tiempoReset);
 
         } catch (error) {
             console.error("Error de escaneo:", error);

@@ -6,6 +6,8 @@ from django.utils import timezone
 from ..models.socio import SocioInfo
 from ..models.usuario import Usuario
 from ..models.cuota import Cuota
+from ..models.evento import Evento
+from django.db.models import Q
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -83,10 +85,39 @@ def validar_acceso(request):
             })
 
         # 5. Acceso Permitido
+        mensaje_voz = f"Hola {usuario.nombre}." # Mensaje por defecto
+        
+        try:
+            # Buscamos eventos futuros (desde hoy)
+            # Que sean Generales (sin categoria) O de la categoría del socio
+            eventos_proximos = Evento.objects.filter(
+                fecha_inicio__gte=hoy,
+                fecha_inicio__lte=hoy + timezone.timedelta(days=7) # Solo eventos en los próximos 7 días
+            ).filter(
+                Q(categoria__isnull=True) |  # Evento general
+                Q(categoria=socio_info.categoria) # Evento de su categoría
+            ).order_by('fecha_inicio')
+
+            evento_cercano = eventos_proximos.first()
+
+            if evento_cercano:
+                dias_es = {
+                    0: "lunes", 1: "martes", 2: "miércoles", 3: "jueves", 
+                    4: "viernes", 5: "sábado", 6: "domingo"
+                }
+                dia_semana = dias_es[evento_cercano.fecha_inicio.weekday()]
+                mensaje_voz = f"Hola {usuario.nombre}. Recuerda: {evento_cercano.titulo}, el próximo {dia_semana}."
+
+        except Exception as e:
+            # Si falla la búsqueda del evento, no bloqueamos el acceso, solo ignoramos el error
+            print(f"Error buscando eventos para TTS: {e}")
+
+
         return Response({
             'estado': 'aprobado',
             'mensaje': 'BIENVENIDO',
-            'socio': nombre_completo
+            'socio': nombre_completo,
+            'texto_tts': mensaje_voz  # <--- Enviamos el texto para que el frontend lo hable
         })
 
     except Exception as e:

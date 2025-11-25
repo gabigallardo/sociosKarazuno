@@ -13,9 +13,11 @@ import {
 } from 'react-icons/fa';
 import JugadorCard from '../../features/jugadores/JugadorCard'; 
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 export default function JugadoresPage() {
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   
   const globalInputRef = useRef(null);
   const categoryInputRef = useRef(null);
@@ -112,6 +114,10 @@ export default function JugadoresPage() {
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') e.preventDefault();
+  };
+
+  const handleJugadorClick = (jugadorId) => {
+    navigate(`/socios/${jugadorId}`);
   };
 
   // --- Filtro ---
@@ -255,7 +261,9 @@ export default function JugadoresPage() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {globalResultados.map(jugador => (
+                          <div key={jugador.usuario} onClick={() => handleJugadorClick(jugador.usuario)} className="cursor-pointer transition-transform hover:scale-[1.02]">
                             <JugadorCard key={jugador.usuario} jugador={jugador} />
+                          </div>
                         ))}
                     </div>
                 )}
@@ -331,7 +339,9 @@ export default function JugadoresPage() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {categoriaResultados.map(jugador => (
-                                    <JugadorCard key={jugador.usuario} jugador={jugador} />
+                                  <div key={jugador.usuario} onClick={() => handleJugadorClick(jugador.usuario)} className="cursor-pointer transition-transform hover:scale-[1.02]">
+                                    <JugadorCard jugador={jugador} />
+                                  </div>
                                 ))}
                             </div>
                         )}

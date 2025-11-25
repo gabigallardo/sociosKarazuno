@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllSocios, inactivarSocio, activarSocio, getCuotasPendientes } from "../../api/socios.api";
 import ListaSocios from "../../features/socios/listaSocios";
-import { FaUsers, FaUserPlus } from "react-icons/fa";
+import { FaUsers, FaUserPlus, FaUserCheck, FaUserTimes } from "react-icons/fa";
 import ModalInactivarSocio from "../../features/socios/modalInactivarSocio";
 import ModalActivarSocio from "../../features/socios/modalActivarSocio";
 import { toast } from "react-hot-toast";
@@ -11,19 +11,16 @@ export default function SociosPage() {
   const [socios, setSocios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Estados para modal de inactivación
+
+  // Estados modales
   const [showModalInactivar, setShowModalInactivar] = useState(false);
-  
-  // Estados para modal de activación
   const [showModalActivar, setShowModalActivar] = useState(false);
   const [socioSeleccionado, setSocioSeleccionado] = useState(null);
   const [cuotasPendientes, setCuotasPendientes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const navigate = useNavigate();
 
-  // Cargar todos los socios
   const fetchSocios = async () => {
     setLoading(true);
     setError(null);
@@ -32,7 +29,7 @@ export default function SociosPage() {
       setSocios(data);
     } catch (error) {
       console.error("Error cargando socios:", error);
-      setError("No se pudieron cargar los socios. Por favor, intenta nuevamente.");
+      setError("No se pudieron cargar los socios. Intente nuevamente.");
     } finally {
       setLoading(false);
     }
@@ -42,11 +39,9 @@ export default function SociosPage() {
     fetchSocios();
   }, []);
 
-  const handleViewDetail = (socio) => {
-    navigate(`/socios/${socio.usuario}`);
-  };
+  const handleViewDetail = (socio) => navigate(`/socios/${socio.usuario}`);
 
-  // ==================== INACTIVAR SOCIO ====================
+  // --- Lógica Inactivar ---
   const handleInactivar = (socio) => {
     setSocioSeleccionado(socio);
     setShowModalInactivar(true);
@@ -56,37 +51,28 @@ export default function SociosPage() {
     setIsSubmitting(true);
     try {
       await inactivarSocio(socioSeleccionado.usuario, razon);
-      
-      toast.success(
-        `✅ Socio "${socioSeleccionado.nombre_completo}" ha sido inactivado.`
-      );
-      
+      toast.success(`✅ Socio "${socioSeleccionado.nombre_completo}" inactivado.`);
       setShowModalInactivar(false);
       setSocioSeleccionado(null);
       await fetchSocios();
-
     } catch (error) {
-      console.error("Error inactivando socio:", error);
-      const errorMsg = error.response?.data?.error || "Error al inactivar el socio";
+      const errorMsg = error.response?.data?.error || "Error al inactivar";
       toast.error(`❌ ${errorMsg}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // ==================== ACTIVAR SOCIO ====================
+  // --- Lógica Activar ---
   const handleActivar = async (socio) => {
     setSocioSeleccionado(socio);
     setIsSubmitting(true);
-    
     try {
-      // Obtener cuotas pendientes
       const cuotas = await getCuotasPendientes(socio.usuario);
       setCuotasPendientes(cuotas);
       setShowModalActivar(true);
     } catch (error) {
-      console.error("Error al obtener cuotas pendientes:", error);
-      toast.error("❌ Error al obtener cuotas pendientes");
+      toast.error("❌ Error al obtener datos del socio");
       setSocioSeleccionado(null);
     } finally {
       setIsSubmitting(false);
@@ -96,38 +82,28 @@ export default function SociosPage() {
   const handleConfirmarActivacion = async (datoPago) => {
     setIsSubmitting(true);
     try {
-      const resultado = await activarSocio(socioSeleccionado.usuario, datoPago);
-      
-      const pagosMsg = resultado.pagos_registrados > 0 
-        ? ` Se registraron ${resultado.pagos_registrados} pago${resultado.pagos_registrados !== 1 ? 's' : ''}.`
-        : '';
-      
-      toast.success(
-        `✅ Socio "${socioSeleccionado.nombre_completo}" activado exitosamente.${pagosMsg}`
-      );
-      
+      const res = await activarSocio(socioSeleccionado.usuario, datoPago);
+      const msg = res.pagos_registrados > 0 ? ` (${res.pagos_registrados} pagos)` : '';
+      toast.success(`✅ Socio activado exitosamente${msg}`);
       setShowModalActivar(false);
       setSocioSeleccionado(null);
       setCuotasPendientes([]);
       await fetchSocios();
-
     } catch (error) {
-      console.error("Error activando socio:", error);
-      const errorMsg = error.response?.data?.error || "Error al activar el socio";
+      const errorMsg = error.response?.data?.error || "Error al activar";
       toast.error(`❌ ${errorMsg}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // ==================== RENDER ====================
-
+  // --- Render ---
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-700 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando socios...</p>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+          <p className="text-gray-500 font-medium animate-pulse">Cargando directorio...</p>
         </div>
       </div>
     );
@@ -135,14 +111,11 @@ export default function SociosPage() {
 
   if (error) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          <p className="font-semibold">Error</p>
+      <div className="p-8 max-w-5xl mx-auto text-center">
+        <div className="bg-red-50 text-red-600 p-6 rounded-xl border border-red-100 shadow-sm">
+          <p className="text-lg font-bold mb-2">Ocurrió un problema</p>
           <p>{error}</p>
-          <button
-            onClick={fetchSocios}
-            className="mt-2 bg-red-700 text-white px-4 py-2 rounded hover:bg-red-800"
-          >
+          <button onClick={fetchSocios} className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
             Reintentar
           </button>
         </div>
@@ -150,59 +123,60 @@ export default function SociosPage() {
     );
   }
 
+  // Cálculos para tarjetas
+  const totalSocios = socios.length;
+  const activos = socios.filter(s => s.estado === 'activo').length;
+  const inactivos = socios.filter(s => s.estado === 'inactivo').length;
+
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-extrabold text-red-700 flex items-center gap-2">
-              <FaUsers />
-              Gestión de Socios
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Administra las membresías del club
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => navigate("/usuarios")}
-              className="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold shadow hover:bg-gray-600 transition"
-            >
-              Ver Usuarios
-            </button>
-            <button
-              onClick={() => navigate("/hacerse-socio")}
-              className="bg-red-700 text-white px-4 py-2 rounded-lg font-semibold shadow hover:bg-red-800 transition flex items-center gap-2"
-            >
-              <FaUserPlus />
-              Nuevo Socio
-            </button>
-          </div>
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 min-h-screen bg-gray-50/50">
+      
+      {/* Header y Acciones Principales */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Gestión de Socios</h1>
+          <p className="text-gray-500 mt-1">Administración integral de membresías del club</p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => navigate("/usuarios")}
+            className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm transition"
+          >
+            Ver Usuarios
+          </button>
+          <button
+            onClick={() => navigate("/hacerse-socio")}
+            className="px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-md shadow-red-200 flex items-center gap-2 transition-all transform hover:scale-105"
+          >
+            <FaUserPlus />
+            Nuevo Socio
+          </button>
         </div>
       </div>
 
-      {/* Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-          <p className="text-sm text-gray-600 font-semibold">Total de Socios</p>
-          <p className="text-3xl font-extrabold text-red-700">{socios.length}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-          <p className="text-sm text-gray-600 font-semibold">Socios Activos</p>
-          <p className="text-3xl font-extrabold text-green-600">
-            {socios.filter(s => s.estado === "activo").length}
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-          <p className="text-sm text-gray-600 font-semibold">Socios Inactivos</p>
-          <p className="text-3xl font-extrabold text-orange-600">
-            {socios.filter(s => s.estado === "inactivo").length}
-          </p>
-        </div>
+      {/* Tarjetas de Estadísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatCard 
+          title="Total Socios" 
+          value={totalSocios} 
+          icon={<FaUsers className="text-blue-600" />} 
+          color="bg-blue-50 border-blue-100" 
+        />
+        <StatCard 
+          title="Activos" 
+          value={activos} 
+          icon={<FaUserCheck className="text-emerald-600" />} 
+          color="bg-emerald-50 border-emerald-100" 
+        />
+        <StatCard 
+          title="Inactivos" 
+          value={inactivos} 
+          icon={<FaUserTimes className="text-gray-500" />} 
+          color="bg-gray-100 border-gray-200" 
+        />
       </div>
 
-      {/* Tabla de socios */}
+      {/* Componente de Lista */}
       <ListaSocios 
         socios={socios} 
         onViewDetail={handleViewDetail}
@@ -210,31 +184,38 @@ export default function SociosPage() {
         onActivar={handleActivar}
       />
 
-      {/* Modal de inactivación */}
+      {/* Modales */}
       <ModalInactivarSocio
         socio={socioSeleccionado}
         isOpen={showModalInactivar}
-        onClose={() => {
-          setShowModalInactivar(false);
-          setSocioSeleccionado(null);
-        }}
+        onClose={() => { setShowModalInactivar(false); setSocioSeleccionado(null); }}
         onConfirm={handleConfirmarInactivacion}
         loading={isSubmitting}
       />
 
-      {/* Modal de activación */}
       <ModalActivarSocio
         socio={socioSeleccionado}
         cuotasPendientes={cuotasPendientes}
         isOpen={showModalActivar}
-        onClose={() => {
-          setShowModalActivar(false);
-          setSocioSeleccionado(null);
-          setCuotasPendientes([]);
-        }}
+        onClose={() => { setShowModalActivar(false); setSocioSeleccionado(null); setCuotasPendientes([]); }}
         onConfirm={handleConfirmarActivacion}
         loading={isSubmitting}
       />
+    </div>
+  );
+}
+
+// Componente pequeño auxiliar para las tarjetas
+function StatCard({ title, value, icon, color }) {
+  return (
+    <div className={`p-5 rounded-xl border shadow-sm flex items-center justify-between ${color}`}>
+      <div>
+        <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">{title}</p>
+        <p className="text-3xl font-bold text-gray-800 mt-1">{value}</p>
+      </div>
+      <div className="p-3 bg-white bg-opacity-60 rounded-lg text-xl">
+        {icon}
+      </div>
     </div>
   );
 }

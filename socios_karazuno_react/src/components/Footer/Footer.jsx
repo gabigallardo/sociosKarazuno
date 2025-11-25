@@ -40,7 +40,7 @@ const Footer = () => {
           </nav>
 
           {/* 3. Redes Sociales  */}
- {/* <div className="flex gap-5">
+ <div className="flex gap-5">
             <SocialLink 
               href="https://www.facebook.com/profile.php?id=61573903053445" 
               icon={<FaFacebookF />} 
@@ -56,7 +56,7 @@ const Footer = () => {
               icon={<FaYoutube />} 
               label="Suscríbete a nuestro canal de YouTube" 
             />
-          </div> */}
+          </div>
         </div>
 
         {/* Copyright */}

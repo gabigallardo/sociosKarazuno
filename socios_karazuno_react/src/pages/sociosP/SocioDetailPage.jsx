@@ -4,7 +4,8 @@ import { getSocioById, getCuotasDeSocio, activarSocio, registrarPagoCuotas } fro
 import { 
   FaUserCircle, FaEnvelope, FaIdCard, FaPhone, FaCheckCircle, 
   FaTimesCircle, FaArrowLeft, FaShieldAlt, FaStar, FaRunning,
-  FaTag, FaCalendarTimes, FaInfoCircle, FaFileInvoiceDollar,FaUserEdit, FaMoneyBillWave, FaCopy
+  FaTag, FaCalendarTimes, FaInfoCircle, FaFileInvoiceDollar,FaUserEdit,
+  FaMoneyBillWave, FaCopy, FaHistory, FaArrowRight
 
 } from "react-icons/fa";
 import { toast } from "react-hot-toast";
@@ -325,25 +326,68 @@ export default function SocioDetailPage() {
             </div>
           )}
 
+          {/* --- SECCIÓN HISTORIAL DE ESTADOS --- */}
+          {socio.historial && socio.historial.length > 0 && (
+              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 md:col-span-2 mt-6">
+                  <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center gap-2">
+                      <FaHistory className="text-gray-600" />
+                      Historial de Cambios de Estado
+                  </h2>
+                  
+                  <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-300 before:to-transparent">
+                      {socio.historial.map((evento, index) => (
+                          <div key={index} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                              
+                              {/* Icono central */}
+                              <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-gray-100 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                                  {evento.nuevo_estado === 'activo' 
+                                      ? <FaCheckCircle className="text-green-600" /> 
+                                      : <FaTimesCircle className="text-red-600" />
+                                  }
+                              </div>
+                              
+                              {/* Tarjeta de detalle */}
+                              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-gray-200 shadow-sm bg-gray-50">
+                                  <div className="flex items-center justify-between space-x-2 mb-1">
+                                      <div className="font-bold text-gray-900 capitalize">
+                                          {evento.nuevo_estado === 'activo' ? 'Reactivación' : 'Inactivación'}
+                                      </div>
+                                      <time className="font-mono text-xs text-gray-500">
+                                          {new Date(evento.fecha_cambio).toLocaleDateString()}
+                                      </time>
+                                  </div>
+                                  <div className="text-sm text-gray-700">
+                                      <p><span className="font-semibold">Motivo:</span> {evento.motivo}</p>
+                                      {evento.registrado_por_nombre && (
+                                          <p className="text-xs text-gray-500 mt-1">Por: {evento.registrado_por_nombre}</p>
+                                      )}
+                                  </div>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          )}
+
         </div>
       </div>
       <ModalActivarSocio 
-                socio={socio}
-                cuotasPendientes={cuotasPendientes}
-                isOpen={showModalActivar}
-                onClose={() => setShowModalActivar(false)}
-                onConfirm={handleConfirmarActivacion}
-                loading={isSubmitting}
-            />
+          socio={socio}
+          cuotasPendientes={cuotasPendientes}
+          isOpen={showModalActivar}
+          onClose={() => setShowModalActivar(false)}
+          onConfirm={handleConfirmarActivacion}
+          loading={isSubmitting}
+      />
 
-            <ModalRegistrarPago
-                socio={socio}
-                cuotasPendientes={cuotasPendientes}
-                isOpen={showModalPago}
-                onClose={() => setShowModalPago(false)}
-                onConfirm={handleConfirmarPago}
-                loading={isSubmitting}
-            />
+      <ModalRegistrarPago
+          socio={socio}
+          cuotasPendientes={cuotasPendientes}
+          isOpen={showModalPago}
+          onClose={() => setShowModalPago(false)}
+          onConfirm={handleConfirmarPago}
+          loading={isSubmitting}
+      />
     </div>
   );
 }

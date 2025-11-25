@@ -7,7 +7,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from socios.models import Usuario, UsuarioRol, Rol, NivelSocio, SocioInfo, Cuota, Pago
+from socios.models import Usuario, UsuarioRol, Rol, NivelSocio, SocioInfo, Cuota, Pago, HistorialEstado
 from socios.serializers import UsuarioSerializer, SocioInfoSerializer, CuotaSerializer
 from socios.permissions import RolePermission
 
@@ -135,6 +135,14 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         
         razon = request.data.get('razon', 'Falta de pago')
         
+        HistorialEstado.objects.create(
+            socio=socio_info,
+            estado_anterior=socio_info.estado,
+            nuevo_estado='inactivo',
+            motivo=razon,
+            registrado_por=request.user # El admin que ejecuta la acción
+        )
+
         socio_info.estado = 'inactivo'
         socio_info.fecha_inactivacion = timezone.now()
         socio_info.razon_inactivacion = razon
@@ -213,6 +221,15 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                             medio_pago=medio_pago, comprobante=comprobante, fecha=timezone.now()
                         )
                         pagos_creados.append(pago)
+                
+                # Guardar Historial
+                HistorialEstado.objects.create(
+                    socio=socio_info,
+                    estado_anterior=socio_info.estado,
+                    nuevo_estado='activo',
+                    motivo=f"Reactivación mediante pago ({medio_pago})",
+                    registrado_por=request.user
+                )
                 
                 socio_info.estado = 'activo'
                 socio_info.fecha_inactivacion = None

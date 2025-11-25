@@ -1,7 +1,7 @@
 from .usuario import UsuarioSerializer, RegisterSerializer
 from .rol import RolSerializer
 from .evento import EventoSerializer, AsistenciaEntrenamientoSerializer
-from .socio import SocioInfoSerializer, NivelSocioSerializer
+from .socio import SocioInfoSerializer, NivelSocioSerializer, HistorialEstadoSerializer
 from .cuota import CuotaSerializer
 from .disciplina import DisciplinaSerializer, CategoriaSerializer, HorarioEntrenamientoSerializer, SesionEntrenamientoSerializer
 
@@ -18,4 +18,5 @@ __all__ = [
     'HorarioEntrenamientoSerializer',
     'SesionEntrenamientoSerializer',
     'AsistenciaEntrenamientoSerializer',
+    'HistorialEstadoSerializer',
 ]

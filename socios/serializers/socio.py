@@ -1,10 +1,17 @@
 from rest_framework import serializers
-from socios.models import SocioInfo, NivelSocio, Usuario, Cuota, Pago
+from socios.models import SocioInfo, NivelSocio, Usuario, Cuota, Pago, HistorialEstado
 
 class NivelSocioSerializer(serializers.ModelSerializer):
     class Meta:
         model = NivelSocio
         fields = '__all__'
+
+class HistorialEstadoSerializer(serializers.ModelSerializer):
+    registrado_por_nombre = serializers.CharField(source='registrado_por.nombre', read_only=True)
+    
+    class Meta:
+        model = HistorialEstado
+        fields = ['estado_anterior', 'nuevo_estado', 'fecha_cambio', 'motivo', 'registrado_por_nombre']
 
 class SocioInfoSerializer(serializers.ModelSerializer):
     # Campo anidado para mostrar info completa del nivel
@@ -24,6 +31,9 @@ class SocioInfoSerializer(serializers.ModelSerializer):
 
     # Declarar cuota_al_dia como un campo calculado
     cuota_al_dia = serializers.SerializerMethodField()
+
+    # Campo anidado
+    historial = HistorialEstadoSerializer(many=True, read_only=True)
     
     class Meta:
         model = SocioInfo
@@ -44,7 +54,8 @@ class SocioInfoSerializer(serializers.ModelSerializer):
             'categoria_nombre',
             'estado',
             'fecha_inactivacion',
-            'razon_inactivacion'
+            'razon_inactivacion',
+            'historial',
         ]
         read_only_fields = ['fecha_inactivacion']
 

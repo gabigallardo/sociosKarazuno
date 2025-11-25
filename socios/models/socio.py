@@ -103,3 +103,27 @@ class GrupoFamiliarIntegrante(models.Model):
 
     def __str__(self):
         return f"{self.usuario} en {self.grupo_familiar}"
+    
+class HistorialEstado(models.Model):
+    socio = models.ForeignKey(
+        SocioInfo, 
+        on_delete=models.CASCADE, 
+        related_name='historial' # Clave para acceder desde el socio
+    )
+    estado_anterior = models.CharField(max_length=20)
+    nuevo_estado = models.CharField(max_length=20)
+    fecha_cambio = models.DateTimeField(auto_now_add=True)
+    motivo = models.TextField(blank=True, null=True)
+    
+    # Opcional: Saber qué empleado hizo el cambio
+    registrado_por = models.ForeignKey(
+        'Usuario', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )
+
+    class Meta:
+        ordering = ['-fecha_cambio'] # El más reciente primero
+        verbose_name = "Historial de Estado"
+

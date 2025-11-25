@@ -2,13 +2,13 @@ import React from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { FaQrcode } from 'react-icons/fa';
 import patternImg from '../../assets/pattern.jpg';
-// import { generarReportePDF } from '../../utils/pdfUtils';
+import { generarReportePDF } from '../../utils/pdfUtils';
 import PlantillaCredencialPDF from '../Reporte/PlantillaCredencialPDF';
 
 function CredencialSocio({ userData, className = "" }) {
   const handleDescargarPase = () => {
     const nombreArchivo = `Pase_Acceso_${userData.nombreCompleto.replace(/\s+/g, '_')}.pdf`;
-    // generarReportePDF('plantilla-pase-acceso-oculta', nombreArchivo);
+    generarReportePDF('plantilla-pase-acceso-oculta', nombreArchivo);
     // Nota: Asegúrate de tener implementada la función generarReportePDF o usar la librería correspondiente
   };
 

@@ -8,7 +8,8 @@ import {
   FaIdCard,
   FaUsersCog,
   FaChartLine,
-  FaClipboardList
+  FaClipboardList,
+  FaCalendarCheck
 } from 'react-icons/fa';
 
 // Importamos las APIs
@@ -87,18 +88,11 @@ function PanelDeControl({ nombreUsuario }) {
         {/* Elemento decorativo de fondo */}
         <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
         
-        {/* Escudo del equipo */}
-        <div className="relative z-10 flex-shrink-0">
-            <img 
-                src={logoClub} 
-                alt="Escudo Karazuno" 
-                className="w-24 h-24 md:w-32 md:h-32 object-contain drop-shadow-2xl filter brightness-110" 
-            />
-        </div>
+
 
         <div className="relative z-10 flex-1 text-center md:text-left">
           <h1 className="text-3xl md:text-4xl font-extrabold mb-2">
-            ¡Hola, {nombreUsuario}! 👋
+            ¡Bienvenido de nuevo! 👋
           </h1>
           <p className="text-red-100 text-lg opacity-90">
             Panel de administración oficial del Club Karazuno.
@@ -113,7 +107,7 @@ function PanelDeControl({ nombreUsuario }) {
       </div>
 
       {/* Sección de Métricas (KPIs) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <StatCard 
           title="Socios Totales" 
           value={stats.totalSocios} 
@@ -128,13 +122,7 @@ function PanelDeControl({ nombreUsuario }) {
           color="bg-purple-600" 
           subtext="Actividades registradas"
         />
-        <StatCard 
-          title="Estado Financiero" 
-          value="--" 
-          icon={FaClipboardList} 
-          color="bg-emerald-600" 
-          subtext="Gestión de cuotas al día"
-        />
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -149,24 +137,24 @@ function PanelDeControl({ nombreUsuario }) {
             <ActionButton 
               to="/mi-calendario" 
               icon={FaCalendarAlt} 
-              label="Calendario Club" 
+              label="Calendario del club" 
               desc="Ver agenda completa" 
             />
 
-            {/* 2. Gestionar Usuarios */}
+            {/* 2. crear evento */}
             <ActionButton 
-              to="/gestionar-usuarios" 
-              icon={FaUsersCog} 
-              label="Gestionar Usuarios" 
-              desc="Roles y permisos" 
+              to="/eventos/crear" 
+              icon={FaCalendarCheck} 
+              label="Crear Evento" 
+              desc="Agregar nueva actividad" 
             />
 
-            {/* 3. Gestión del Club */}
+            {/* 3. Gestionar horarios */}
             <ActionButton 
-              to="/gestion-club" 
+              to="/horarios" 
               icon={FaCogs} 
-              label="Gestión del Club" 
-              desc="Deportes y horarios" 
+              label="Gestión horarios" 
+              desc="Agregar, editar y eliminar horarios deportivos" 
             />
 
             {/* 4. Panel de Jugadores */}

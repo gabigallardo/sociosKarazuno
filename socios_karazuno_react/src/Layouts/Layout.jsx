@@ -23,8 +23,8 @@ export default function Layout() {
     
     const esAdmin = userRoles.includes('admin');
 
-    const puedeVerNavegacion = !esAdmin && userRoles.some(rol =>
-        ['socio', 'profesor', 'dirigente', 'empleado'].includes(rol) 
+    const puedeVerNavegacion = userRoles.some(rol =>
+        ['socio', 'profesor', 'admin','dirigente', 'empleado'].includes(rol) 
     );
 
     return (

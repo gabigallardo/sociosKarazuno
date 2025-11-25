@@ -1,4 +1,4 @@
-
+// src/utils/pdfUtils.js
 
 export const descargarCanvasComoPDF = async (canvasId, fileName, pdfSize = [120, 120]) => {
   const canvas = document.getElementById(canvasId);
@@ -7,7 +7,7 @@ export const descargarCanvasComoPDF = async (canvasId, fileName, pdfSize = [120,
     return;
   }
 
-  // Importación dinámica
+  // Importación dinámica de jsPDF 
   const { default: jsPDF } = await import('jspdf');
 
   const imageData = canvas.toDataURL('image/png');
@@ -34,7 +34,7 @@ export const descargarElementoComoPDF = async (elementId, fileName) => {
   // Importación dinámica paralela
   const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
     import('jspdf'),
-    import('html2canvas')
+    import('html2canvas-pro') 
   ]);
 
   html2canvas(input, { 
@@ -71,7 +71,7 @@ export const generarReportePDF = async (elementId, fileName) => {
   // Importación dinámica paralela
   const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
     import('jspdf'),
-    import('html2canvas')
+    import('html2canvas-pro')
   ]);
 
   const originalOverflow = input.style.overflow;

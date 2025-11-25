@@ -147,7 +147,7 @@ function PanelDeControl({ nombreUsuario }) {
 
             {/* 1. Calendario del Club */}
             <ActionButton 
-              to="/eventos" 
+              to="/mi-calendario" 
               icon={FaCalendarAlt} 
               label="Calendario Club" 
               desc="Ver agenda completa" 

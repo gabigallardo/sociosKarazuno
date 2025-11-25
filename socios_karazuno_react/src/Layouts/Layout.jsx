@@ -20,13 +20,17 @@ export default function Layout() {
     };
 
     const userRoles = user?.roles || [];
-    const puedeVerNavegacion = userRoles.some(rol =>
-        ['socio', 'admin', 'profesor', 'dirigente', 'empleado'].includes(rol) 
+    
+    const esAdmin = userRoles.includes('admin');
+
+    const puedeVerNavegacion = !esAdmin && userRoles.some(rol =>
+        ['socio', 'profesor', 'dirigente', 'empleado'].includes(rol) 
     );
 
     return (
         <div className="flex min-h-screen bg-gray-50" style={{ fontFamily: "'Poppins', sans-serif" }}>
 
+            {/* La navegación se renderiza solo si puedeVerNavegacion es true */}
             {puedeVerNavegacion && (
                 <Navigation 
                     isOpen={mobileMenuOpen} 

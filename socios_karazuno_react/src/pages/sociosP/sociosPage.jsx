@@ -144,13 +144,7 @@ export default function SociosPage() {
           >
             Ver Usuarios
           </button>
-          <button
-            onClick={() => navigate("/hacerse-socio")}
-            className="px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-md shadow-red-200 flex items-center gap-2 transition-all transform hover:scale-105"
-          >
-            <FaUserPlus />
-            Nuevo Socio
-          </button>
+  
         </div>
       </div>
 

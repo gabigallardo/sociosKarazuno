@@ -76,12 +76,6 @@ export default function UsuariosPage() {
             <p className="text-gray-500 mt-1">Administra el acceso y roles del personal del club.</p>
           </div>
           
-          <button
-            onClick={() => navigate("/usuarios/crear")}
-            className="flex items-center gap-2 bg-gray-900 hover:bg-black text-white px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 font-bold"
-          >
-            <FaUserPlus /> Nuevo Usuario
-          </button>
         </div>
 
         {/* --- Barra de Búsqueda --- */}

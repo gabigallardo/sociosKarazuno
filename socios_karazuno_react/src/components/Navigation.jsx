@@ -1,4 +1,3 @@
-// src/components/Navigation.jsx
 import React, { useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -11,7 +10,7 @@ import {
     FaCalendarCheck,
     FaUsersCog,
     FaQrcode,
-    FaTimes // Importamos icono de cerrar para el menú móvil
+    FaTimes
 } from "react-icons/fa";
 import logoImg from '../assets/logo.webp'; 
 import { UserContext } from "../contexts/User.Context"; 
@@ -21,10 +20,6 @@ function Navigation({ isOpen, onClose }) {
     const { user } = useContext(UserContext);
     const userRoles = user?.roles || [];
 
-    const navItems = [
-        { to: "/dashboard", icon: FaHome, label: "Inicio" }, 
-    ];
-
     // Definición de roles
     const esSocio = userRoles.includes("socio");
     const esJugador = userRoles.includes("jugador");
@@ -33,13 +28,21 @@ function Navigation({ isOpen, onClose }) {
     const esEmpleado = userRoles.includes("empleado");
     const esProfesor = userRoles.includes("profesor"); 
 
+    // --- CONDICIÓN SOLICITADA: OCULTAR EN VISTA ADMIN ---
+    if (esAdmin) {
+        return null;
+    }
+    // ---------------------------------------------------
+
+    const navItems = [
+        { to: "/dashboard", icon: FaHome, label: "Inicio" }, 
+    ];
+
     // Variables de permisos
-    const puedeVerJugadores = esAdmin || esDirigente || esProfesor;
-    const puedeGestionarClub = esAdmin || esDirigente || esEmpleado || esProfesor;
-    const puedeGestionarUsuarios = esAdmin || esDirigente || esEmpleado || esProfesor;
-    
-    // Permiso para Control de Acceso (Portería)
-    const puedeControlarAcceso = esAdmin || esDirigente || esEmpleado;
+    const puedeVerJugadores = esDirigente || esProfesor;
+    const puedeGestionarClub = esDirigente || esEmpleado || esProfesor;
+    const puedeGestionarUsuarios = esDirigente || esEmpleado || esProfesor;
+    const puedeControlarAcceso = esDirigente || esEmpleado;
 
     // --- Items específicos para Socios ---
     if (esSocio) {
@@ -56,7 +59,7 @@ function Navigation({ isOpen, onClose }) {
     }
 
     // Calendario visible para todos los roles internos y socios ---
-    if (esSocio || esJugador || esAdmin || esDirigente || esEmpleado || esProfesor) {
+    if (esSocio || esJugador || esDirigente || esEmpleado || esProfesor) {
         navItems.push(
             { to: "/mi-calendario", icon: FaCalendarAlt, label: "Mi calendario" } 
         );
@@ -132,7 +135,7 @@ function Navigation({ isOpen, onClose }) {
                     <ul className="space-y-2 text-base font-semibold">
                         {navItems.map((item) => {
                             const isActive = location.pathname === item.to ||
-                                           (item.to !== "/dashboard" && location.pathname.startsWith(item.to));
+                                             (item.to !== "/dashboard" && location.pathname.startsWith(item.to));
                             
                             return (
                                 <li key={item.to}>

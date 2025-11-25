@@ -229,7 +229,7 @@ export default function JugadoresPage() {
                         </button>
                     ) : (
                         <div className="hidden md:flex items-center gap-2 text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
-                            <FaQrcode /> <span>SCAN READY</span>
+                            <FaQrcode /> <span>ESCANEA</span>
                         </div>
                     )}
                 </div>

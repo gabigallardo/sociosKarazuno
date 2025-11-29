@@ -97,6 +97,7 @@ const stepsConfig = [
 
 export default function EventosForm({ onSubmit, initialValues, usuarios, disciplinas, categorias, isLoading = false }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const organizadores = usuarios?.filter(u => Array.isArray(u.roles) && u.roles.some(rol => ['admin', 'profesor', 'empleado'].includes(rol))) || [];
   const profesores = usuarios?.filter(u => Array.isArray(u.roles) && u.roles.includes('profesor')) || [];
   
   const [formData, setFormData] = useState({
@@ -379,7 +380,7 @@ const handleSubmit = () => {
             {currentStep.id === 'organizador' ? (
               <>
                 <option value="">-- Seleccionar --</option>
-                {usuarios?.map(u => <option key={u.id} value={u.id}>{`${u.nombre} ${u.apellido}`}</option>)}
+                {organizadores.map(u => (<option key={u.id} value={u.id}>{`${u.nombre} ${u.apellido}`}</option>))}
               </>
             ) : (
               currentStep.options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)

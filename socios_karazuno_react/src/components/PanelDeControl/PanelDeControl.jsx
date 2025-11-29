@@ -112,14 +112,14 @@ function PanelDeControl({ nombreUsuario }) {
           title="Socios Totales" 
           value={stats.totalSocios} 
           icon={FaUsers} 
-          color="bg-blue-600" 
+          color="bg-red-600" 
           subtext={`${stats.sociosActivos} activos actualmente`}
         />
         <StatCard 
           title="Eventos Globales" 
           value={stats.totalEventos} 
           icon={FaChartLine} 
-          color="bg-purple-600" 
+          color="bg-red-600" 
           subtext="Actividades registradas"
         />
 

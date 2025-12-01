@@ -1,13 +1,21 @@
+from rest_framework import generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
+from django.db.models import Q
+from datetime import datetime, time 
+
+# Modelos
 from ..models.socio import SocioInfo
 from ..models.usuario import Usuario
 from ..models.cuota import Cuota
 from ..models.evento import Evento
-from django.db.models import Q
+from ..models.registro_acceso import RegistroAcceso
+
+# Serializers
+from ..serializers.registro_acceso import RegistroAccesoSerializer
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -18,10 +26,33 @@ def validar_acceso(request):
         if not qr_data:
             return Response({'error': 'Código vacío'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Reemplazamos apóstrofes (') por guiones (-) por si hay error de teclado ES/US
+        # Limpieza de datos
         qr_data_limpio = qr_data.replace("'", "-").replace('"', '-').strip()
-
         usuario = None
+
+        # --- Función auxiliar para registrar en BD y responder ---
+        def registrar_y_responder(estado, mensaje, motivo_bd, motivo_front, usuario_obj=None, tts=None):
+            try:
+                RegistroAcceso.objects.create(
+                    usuario=usuario_obj,
+                    estado=estado,
+                    motivo=motivo_bd,
+                    datos_ingresados=qr_data_limpio
+                )
+            except Exception as ex:
+                print(f"Error guardando registro de acceso: {ex}")
+
+            respuesta = {
+                'estado': estado,
+                'mensaje': mensaje,
+                'socio': f"{usuario_obj.nombre} {usuario_obj.apellido}" if usuario_obj else 'Desconocido',
+                'motivo': motivo_front
+            }
+            if tts:
+                respuesta['texto_tts'] = tts
+            
+            return Response(respuesta)
+        # ---------------------------------------------------------
 
         # 1. Búsqueda del usuario (QR Token, DNI o ID)
         try:
@@ -37,11 +68,12 @@ def validar_acceso(request):
                         pass
 
         if not usuario:
-            return Response({
-                'estado': 'denegado',
-                'mensaje': f'Usuario NO ENCONTRADO (Leído: {qr_data_limpio})',
-                'color': 'bg-gray-800'
-            })
+            return registrar_y_responder(
+                'denegado', 
+                f'Usuario NO ENCONTRADO (Leído: {qr_data_limpio})', 
+                'Usuario no encontrado', 
+                'error'
+            )
 
         nombre_completo = f"{usuario.nombre} {usuario.apellido}"
 
@@ -49,21 +81,23 @@ def validar_acceso(request):
         try:
             socio_info = usuario.socioinfo
         except SocioInfo.DoesNotExist:
-            return Response({
-                'estado': 'denegado',
-                'mensaje': 'NO ES SOCIO',
-                'socio': nombre_completo,
-                'motivo': 'no_socio'
-            })
+            return registrar_y_responder(
+                'denegado', 
+                'NO ES SOCIO', 
+                'No es socio', 
+                'no_socio', 
+                usuario
+            )
 
         # 3. Verificar si está Activo
         if socio_info.estado != 'activo':
-            return Response({
-                'estado': 'denegado',
-                'mensaje': f'Socio {socio_info.get_estado_display().upper()}',
-                'socio': nombre_completo,
-                'motivo': 'inactivo'
-            })
+            return registrar_y_responder(
+                'denegado', 
+                f'Socio {socio_info.get_estado_display().upper()}', 
+                'Socio inactivo', 
+                'inactivo', 
+                usuario
+            )
 
         # 4. Verificar Cuotas Vencidas
         hoy = timezone.now().date()
@@ -77,25 +111,27 @@ def validar_acceso(request):
 
         if cuotas_impagas.exists():
             cantidad = cuotas_impagas.count()
-            return Response({
-                'estado': 'denegado',
-                'mensaje': f'ACCESO DENEGADO: Debe {cantidad} cuota(s)',
-                'socio': nombre_completo,
-                'motivo': 'deuda'
-            })
+            return registrar_y_responder(
+                'denegado', 
+                f'ACCESO DENEGADO: Debe {cantidad} cuota(s)', 
+                'Deuda de cuotas', 
+                'deuda', 
+                usuario
+            )
 
         # 5. Acceso Permitido
-        mensaje_voz = f"Hola {usuario.nombre}." # Mensaje por defecto
+        mensaje_voz = f"Hola {usuario.nombre}." 
         
         try:
-            # Buscamos eventos futuros (desde hoy)
-            # Que sean Generales (sin categoria) O de la categoría del socio
+            inicio_rango = timezone.make_aware(datetime.combine(hoy, time.min))
+            fin_rango = inicio_rango + timezone.timedelta(days=7)
+
             eventos_proximos = Evento.objects.filter(
-                fecha_inicio__gte=hoy,
-                fecha_inicio__lte=hoy + timezone.timedelta(days=7) # Solo eventos en los próximos 7 días
+                fecha_inicio__gte=inicio_rango,
+                fecha_inicio__lte=fin_rango
             ).filter(
-                Q(categoria__isnull=True) |  # Evento general
-                Q(categoria=socio_info.categoria) # Evento de su categoría
+                Q(categoria__isnull=True) | 
+                Q(categoria=socio_info.categoria)
             ).order_by('fecha_inicio')
 
             evento_cercano = eventos_proximos.first()
@@ -109,22 +145,27 @@ def validar_acceso(request):
                 mensaje_voz = f"Hola {usuario.nombre}. Recuerda: {evento_cercano.titulo}, el próximo {dia_semana}."
 
         except Exception as e:
-            # Si falla la búsqueda del evento, no bloqueamos el acceso, solo ignoramos el error
             print(f"Error buscando eventos para TTS: {e}")
 
-
-        return Response({
-            'estado': 'aprobado',
-            'mensaje': 'BIENVENIDO',
-            'socio': nombre_completo,
-            'texto_tts': mensaje_voz  # <--- Enviamos el texto para que el frontend lo hable
-        })
+        return registrar_y_responder(
+            'aprobado', 
+            'BIENVENIDO', 
+            'Cuota al día', 
+            'ok', 
+            usuario, 
+            tts=mensaje_voz
+        )
 
     except Exception as e:
-        # Logueamos el error en consola del servidor para debug
         print(f"❌ Error en validación de acceso: {str(e)}")
         return Response({
             'estado': 'denegado', 
             'mensaje': f'Error del servidor: {str(e)}',
             'socio': 'Sistema'
         }, status=status.HTTP_200_OK)
+
+# Vista para el Historial
+class HistorialAccesoView(generics.ListAPIView):
+    queryset = RegistroAcceso.objects.all().order_by('-fecha_hora') 
+    serializer_class = RegistroAccesoSerializer
+    permission_classes = [IsAuthenticated]

@@ -151,7 +151,17 @@ export const verificarAcceso = async (qrData) => {
     throw error;
   }
 };
+export const getHistorialAccesos = async () => {
+    try {
 
+        const response = await api.get('/socios/api/control-acceso/historial/');
+        console.log("✅ Historial cargado:", response.data.length);
+        return response.data;
+    } catch (error) {
+        console.error("❌ Error cargando historial:", error);
+        throw error;
+    }
+};
 /**
  * Registrar pago de cuotas específicas de un socio activo.
  * @param {number} usuarioId - ID del usuario

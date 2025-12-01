@@ -35,6 +35,7 @@ const HorariosPage = lazy(() => import("./pages/HorariosPage.jsx"));
 const MiCalendarioPage = lazy(() => import("./pages/MiCalendarioPage"));
 const GestionClubPage = lazy(() => import("./pages/GestionClubPage.jsx"));
 const ControlAccesoPage = lazy(() => import("./pages/ControlAccesoPage.jsx"));
+const HistorialAccesosPage = lazy(() => import("./pages/HistorialAccesos.jsx"));
 // Componente de carga simple y ligero
 const Loading = () => (
   <div className="flex items-center justify-center h-screen w-full bg-gray-50">
@@ -96,6 +97,14 @@ function App() {
                                     <ProtectedRoute allowedRoles={rolesGestionAdmin}>
                                         <ControlAccesoPage />
                                     </ProtectedRoute>
+                                } 
+                            />
+                            <Route 
+                                path="/historial-acceso" 
+                                element={
+                                <ProtectedRoute allowedRoles={rolesGestionAdmin}>
+                                    <HistorialAccesosPage />
+                                </ProtectedRoute>
                                 } 
                             />
                             {/* Entrenadores */}

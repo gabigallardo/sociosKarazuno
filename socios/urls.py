@@ -13,8 +13,7 @@ from socios.views import (
     DisciplinaViewSet, CategoriaViewSet, CuotaViewSet, 
     HorarioEntrenamientoViewSet, SesionEntrenamientoViewSet, 
 )
-# Importamos la vista específica para el control de acceso (QR)
-from socios.views.acceso import validar_acceso
+from socios.views.acceso import validar_acceso, HistorialAccesoView
 
 router = routers.DefaultRouter()
 router.register(r'usuarios', UsuarioViewSet, 'usuarios')
@@ -41,7 +40,7 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
     path("register/", RegisterView.as_view(), name="register"),
 
-    # Control de Acceso (Endpoint para el lector QR)
-
+    # Control de Acceso
     path('api/control-acceso/', validar_acceso, name='control_acceso'),
+    path('api/control-acceso/historial/', HistorialAccesoView.as_view(), name='historial_acceso'),
 ]

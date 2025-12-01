@@ -7,9 +7,11 @@ import {
     FaExclamationTriangle, 
     FaSpinner, 
     FaExpand, 
-    FaCompress 
+    FaCompress,
+    FaHistory // Importamos el icono de historial
 } from 'react-icons/fa';
 import { verificarAcceso } from '../api/socios.api';
+import { useNavigate } from 'react-router-dom'; // Importamos hook de navegación
 
 export default function ControlAccesoPage() {
     const [estado, setEstado] = useState('esperando'); // esperando | procesando | aprobado | denegado
@@ -17,6 +19,7 @@ export default function ControlAccesoPage() {
     const [isFullScreen, setIsFullScreen] = useState(false); // Estado para controlar la UI
     const inputRef = useRef(null);
     const pageRef = useRef(null); // Referencia al contenedor principal
+    const navigate = useNavigate(); // Instanciamos hook
 
     // --- 1. LÓGICA DE FOCO (Kiosco Mode) ---
     useEffect(() => {
@@ -128,22 +131,32 @@ export default function ControlAccesoPage() {
             case 'aprobado': return 'from-emerald-500 to-green-600 shadow-green-500/50';
             case 'denegado': return 'from-rose-500 to-red-600 shadow-red-500/50';
             case 'procesando': return 'from-blue-500 to-indigo-600 shadow-blue-500/50';
-            default: return 'from-slate-700 to-slate-800 shadow-slate-500/20';
+            default: return 'from-slate-700 to-black shadow-slate-500/20';
         }
     };
 
     return (
         // El contenedor principal tiene la referencia 'pageRef' para solicitar fullscreen sobre ÉL MISMO
-        // Cuando está en fullscreen, el navegador lo pone al frente de todo automáticamente.
-        // Si NO está en fullscreen pero queremos que tape el layout (opcional), podemos usar clases fixed.
         <div 
             ref={pageRef}
             className={`
-                flex flex-col items-center justify-center relative overflow-hidden bg-slate-900 transition-all duration-300
+                flex flex-col items-center justify-center relative overflow-hidden bg-black transition-all duration-300
                 ${isFullScreen ? 'fixed inset-0 w-screen h-screen z-[9999]' : 'min-h-[calc(100vh-4rem)] w-full'}
             `}
         >
             
+            {/* BOTÓN HISTORIAL (NUEVO) */}
+            <button 
+                onClick={() => navigate('/historial-acceso')}
+                className="absolute top-6 left-6 z-50 p-3 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 text-blue-200 rounded-full backdrop-blur-md transition-all hover:scale-110 shadow-lg flex items-center gap-2 group"
+                title="Ver Historial"
+            >
+                <FaHistory className="text-xl" />
+                <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap text-sm font-medium px-0 group-hover:px-2">
+                    Historial
+                </span>
+            </button>
+
             {/* Botón Flotante para Pantalla Completa */}
             <button 
                 onClick={toggleFullScreen}
@@ -160,8 +173,8 @@ export default function ControlAccesoPage() {
 
             {/* Fondo decorativo animado */}
             <div className={`absolute inset-0 bg-gradient-to-br opacity-20 transition-all duration-700 ease-out 
-                ${estado === 'aprobado' ? 'from-green-900 via-emerald-900 to-slate-900' : 
-                  estado === 'denegado' ? 'from-red-900 via-rose-900 to-slate-900' : 
+                ${estado === 'aprobado' ? 'from-green-900 via-emerald-900 to-black' : 
+                  estado === 'denegado' ? 'from-red-900 via-rose-900 to-black' : 
                   'from-slate-800 via-gray-900 to-black'}`} 
             />
 

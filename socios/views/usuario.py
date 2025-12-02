@@ -19,7 +19,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         # 👇 SOLUCIÓN DEL CONFLICTO 1: Usamos la lista que incluye 'me'
-        if self.action in ['list', 'actualizar_perfil_deportivo', 'hacerse_socio', 'me']:
+        if self.action in ['list', 'actualizar_perfil_deportivo', 'hacerse_socio', 'me', 'registrar_uso']:
             permission_classes = [IsAuthenticated]
         elif self.action in ['inactivar_socio', 'activar_socio']:
             permission_classes = [RolePermission]

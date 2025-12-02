@@ -36,6 +36,13 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         """Convertir un usuario en socio o reactivar socio inactivo SIN generar cuota."""
         usuario = self.get_object()
 
+        serializer = self.get_serializer(usuario, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            # Si los datos no son válidos, retornamos el error inmediatamente
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         # Verificar si ya tiene el rol socio
         if UsuarioRol.objects.filter(usuario=usuario, rol__nombre='socio').exists():
             try:

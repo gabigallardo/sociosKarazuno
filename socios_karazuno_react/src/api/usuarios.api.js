@@ -56,9 +56,9 @@ export const deleteUsuario = async (id) => {
   }
 };
 
-export const hacerseSocio = async (usuarioId) => {
+export const hacerseSocio = async (usuarioId, data) => {
   try {
-    const response = await api.post(`/socios/api/v1/usuarios/${usuarioId}/hacerse_socio/`);
+    const response = await api.post(`/socios/api/v1/usuarios/${usuarioId}/hacerse_socio/`, data);
     console.log("✅ Usuario se hizo socio:", response.data);
     return response.data;
   } catch (error) {

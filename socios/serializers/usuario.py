@@ -43,7 +43,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
             'email', 'contrasena', 'telefono', 'fecha_nacimiento', 'direccion',
             'sexo', 'activo', 'foto_url', 'roles', 'roles_ids', 'qr_token',
             'disciplinas_a_cargo', 'disciplinas_a_cargo_ids', 'categorias_a_cargo',
-              'categorias_a_cargo_ids', 'socioinfo'
+              'categorias_a_cargo_ids', 'socioinfo', 'preferencias_gui'
         ]
 
     def create(self, validated_data):

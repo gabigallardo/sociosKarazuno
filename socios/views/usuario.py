@@ -316,5 +316,25 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"error": f"Error al registrar pago: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated], url_path='registrar-uso')
+    def registrar_uso(self, request):
+        """Incrementa el contador de uso para una funcionalidad específica"""
+        feature_id = request.data.get('feature_id')
+        
+        if not feature_id:
+            return Response({"error": "Falta feature_id"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        usuario = request.user
+        
+        # Aseguramos que sea un diccionario
+        if not isinstance(usuario.preferencias_gui, dict):
+            usuario.preferencias_gui = {}
+            
+        current_count = usuario.preferencias_gui.get(feature_id, 0)
+        usuario.preferencias_gui[feature_id] = current_count + 1
+        usuario.save(update_fields=['preferencias_gui'])
+        
+        return Response({"status": "ok", "new_count": usuario.preferencias_gui[feature_id]}, status=status.HTTP_200_OK)
 
     

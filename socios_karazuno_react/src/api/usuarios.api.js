@@ -88,3 +88,12 @@ export const getMe = async () => {
     throw error;
   }
 };
+
+export const registrarUsoFeature = async (featureId) => {
+  try {
+    // Esto se envía en "segundo plano", no necesitamos esperar la respuesta para navegar
+    api.post(`${BASE_PATH}/registrar-uso/`, { feature_id: featureId });
+  } catch (error) {
+    console.error("No se pudo registrar la interacción:", error);
+  }
+};

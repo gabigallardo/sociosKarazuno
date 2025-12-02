@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { use, useEffect, useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   FaUsers, 
   FaCalendarAlt, 
@@ -18,6 +18,17 @@ import { getAllEventos } from '../../api/eventos.api';
 
 // Importamos el logo (Asegúrate de que la ruta sea correcta)
 import logoClub from '../../assets/logo.webp';
+import { UserContext } from '../../contexts/User.Context';
+import { registrarUsoFeature } from '../../api/usuarios.api';
+
+// Definimos los accesos con un ID único para cada uno
+const ACCESOS_BASE = [
+  { id: 'calendario_club', to: "/mi-calendario", icon: FaCalendarAlt, label: "Calendario del club", desc: "Ver agenda completa" },
+  { id: 'crear_evento', to: "/eventos/crear", icon: FaCalendarCheck, label: "Crear Evento", desc: "Agregar nueva actividad" },
+  { id: 'gestion_horarios', to: "/horarios", icon: FaCogs, label: "Gestión horarios", desc: "Agregar, editar y eliminar horarios deportivos" },
+  { id: 'panel_jugadores', to: "/jugadores", icon: FaRunning, label: "Panel Jugadores", desc: "Fichas y equipos" },
+  { id: 'control_acceso', to: "/control-acceso", icon: FaIdCard, label: "Control Acceso", desc: "Escaner QR Portería" },
+];
 
 function PanelDeControl({ nombreUsuario }) {
   const [stats, setStats] = useState({
@@ -26,6 +37,9 @@ function PanelDeControl({ nombreUsuario }) {
     totalEventos: 0
   });
   const [loading, setLoading] = useState(true);
+  const { user } = useContext(UserContext);
+  const navigate = useNavigate();
+  const [accesosOrdenados, setAccesosOrdenados] = useState(ACCESOS_BASE);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,6 +64,20 @@ function PanelDeControl({ nombreUsuario }) {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (user && user.preferencias_gui) {
+      const ranking = user.preferencias_gui;
+      
+      const ordenados = [...ACCESOS_BASE].sort((a, b) => {
+        const usoA = ranking[a.id] || 0;
+        const usoB = ranking[b.id] || 0;
+        return usoB - usoA; // Mayor uso primero
+      });
+      
+      setAccesosOrdenados(ordenados);
+    }
+  }, [user]);
+
   // Componente interno para Tarjetas de Estadísticas (KPI)
   const StatCard = ({ title, value, icon: Icon, color, subtext }) => (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 flex items-center gap-4">
@@ -64,21 +92,28 @@ function PanelDeControl({ nombreUsuario }) {
     </div>
   );
 
-  // Componente interno para Botones de Acción Rápida
-  const ActionButton = ({ to, icon: Icon, label, desc }) => (
-    <Link 
-      to={to} 
-      className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-red-500 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center gap-3"
+  // Componente ActionButton modificado para manejar el click
+  const ActionButton = ({ item }) => (
+    <div 
+      onClick={() => handleNavigation(item.to, item.id)}
+      className="cursor-pointer group bg-white p-5 rounded-xl border border-gray-200 hover:border-red-500 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center gap-3"
     >
       <div className="p-3 bg-gray-50 text-red-700 rounded-full group-hover:bg-red-600 group-hover:text-white transition-colors">
-        <Icon size={24} />
+        <item.icon size={24} />
       </div>
       <div>
-        <h4 className="font-bold text-gray-800 group-hover:text-red-700">{label}</h4>
-        <p className="text-xs text-gray-500 mt-1">{desc}</p>
+        <h4 className="font-bold text-gray-800 group-hover:text-red-700">{item.label}</h4>
+        <p className="text-xs text-gray-500 mt-1">{item.desc}</p>
       </div>
-    </Link>
+    </div>
   );
+
+  const handleNavigation = (to, id) => {
+    // 1. Registramos el uso en la BD (sin await para no bloquear la navegación)
+    registrarUsoFeature(id);
+    // 2. Navegamos
+    navigate(to);
+  };
 
   return (
     <div className="space-y-8 fade-in">
@@ -133,45 +168,9 @@ function PanelDeControl({ nombreUsuario }) {
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
 
-            {/* 1. Calendario del Club */}
-            <ActionButton 
-              to="/mi-calendario" 
-              icon={FaCalendarAlt} 
-              label="Calendario del club" 
-              desc="Ver agenda completa" 
-            />
-
-            {/* 2. crear evento */}
-            <ActionButton 
-              to="/eventos/crear" 
-              icon={FaCalendarCheck} 
-              label="Crear Evento" 
-              desc="Agregar nueva actividad" 
-            />
-
-            {/* 3. Gestionar horarios */}
-            <ActionButton 
-              to="/horarios" 
-              icon={FaCogs} 
-              label="Gestión horarios" 
-              desc="Agregar, editar y eliminar horarios deportivos" 
-            />
-
-            {/* 4. Panel de Jugadores */}
-            <ActionButton 
-              to="/jugadores" 
-              icon={FaRunning} 
-              label="Panel Jugadores" 
-              desc="Fichas y equipos" 
-            />
-
-            {/* 5. Control de Acceso */}
-            <ActionButton 
-              to="/control-acceso" 
-              icon={FaIdCard} 
-              label="Control Acceso" 
-              desc="Escaner QR Portería" 
-            />
+            {accesosOrdenados.map((acceso) => (
+              <ActionButton key={acceso.id} item={acceso} />
+            ))}
 
           </div>
         </div>

@@ -30,6 +30,7 @@ class Usuario(models.Model):
     fecha_alta = models.DateTimeField(auto_now_add=True)
     activo = models.BooleanField(default=True)
     roles = models.ManyToManyField("Rol", through="UsuarioRol", related_name="usuarios")
+    preferencias_gui = models.JSONField(default=dict, blank=True)
 
     disciplinas_a_cargo = models.ManyToManyField(
         Disciplina,

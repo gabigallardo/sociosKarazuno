@@ -54,8 +54,7 @@ function Register() {
     setFormData(prev => ({ ...prev, [name]: value }));
     setMessage("");
   };
-
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate(formData)) return;
     
@@ -63,7 +62,6 @@ function Register() {
     setMessage("");
     
     try {
-      // api ya tiene la baseURL configurada
       await api.post("/socios/register/", {
         nombre: formData.nombre,
         apellido: formData.apellido,
@@ -76,10 +74,23 @@ function Register() {
     } catch (error) {
       console.error("Error registro:", error);
       let msg = "No se pudo completar el registro.";
+      
       if (error.response?.data) {
         const data = error.response.data;
-        // Intenta extraer el primer mensaje de error disponible
-        msg = data.error || Object.values(data)[0]?.[0] || msg;
+        
+        if (data.error) {
+            if (typeof data.error === "object") {
+                const errorKeys = Object.keys(data.error);
+                if (errorKeys.length > 0) {
+                    const firstField = errorKeys[0];
+                    const firstErrorMsg = data.error[firstField];
+                    const errorText = Array.isArray(firstErrorMsg) ? firstErrorMsg[0] : firstErrorMsg;
+                    msg = `${firstField}: ${errorText}`; 
+                }
+            } else {
+                msg = data.error;
+            }
+        }
       }
       setMessage(msg);
     } finally {
